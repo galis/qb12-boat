@@ -361,7 +361,7 @@ for fx in (1 / 3, 2 / 3):
         bat = bat + m3d.Manifold.cylinder(1.2, 2.3, circular_segments=24).translate((cx, py, FLOOR_Z - 0.5 + BAT_WH + 4.0 - 1.2))
 body = body + bat
 
-# 舱罩橡皮筋挂钩：舱罩两侧（船尾 x=60,y=±47；船头 x=182,y=±33；盖板沿 x 抽出的通道上不能有东西）桥甲板上各一个蘑菇头柱，两根橡皮筋从舱罩顶上横跨压住
+# 舱罩橡皮筋挂钩：舱罩两侧（船尾 x=60,y=±47；船头 x=182,y=±33）桥甲板上各一个蘑菇头柱，两根橡皮筋从舱罩顶上横跨压住
 hooks = None
 for (px, py) in ((60.0, 47.0), (182.0, 33.0)):
     for sy in (1, -1):

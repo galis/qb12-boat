@@ -121,7 +121,7 @@ missing something or has a bug, work around it inside your lesson and describe t
 
 ## Build and test (parallel-safe)
 ```bash
-cd pcbcourse
+cd courses/pcb
 python3 build.py --only N --strict          # writes _build_pN.html + _preview_pN.html (lesson 0 + yours only)
 PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers python3 tools/test.py --page _preview_pN.html   # framework checks
 ```

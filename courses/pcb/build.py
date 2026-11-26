@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """把骨架 src.html + 查看器 + 数据 + 各课片段拼成一个自包含页面 qb12-pcb-course.html。
 
-用法：python3 build.py            （在 pcbcourse/ 目录或任意目录都行）
+用法：python3 build.py            （在 courses/pcb/ 目录或任意目录都行）
       python3 build.py --strict   有警告就失败（交付前用）
 
 片段约定（详见 README.md）：

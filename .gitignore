@@ -1,4 +1,3 @@
-# 视频太大，不进 Git；版本靠 outputs/MEDIA_MANIFEST.md 里的 md5 记录
 *.mp4
 *.mov
 *.wav
@@ -17,34 +16,18 @@ node_modules/
 # 本仓库自己的 Python 环境和大模型
 .venv/
 .venv-kicad/
-video/dl/
 
 # KiCad 10 3D 导出的中间文件（成品拷到 outputs/）
 hardware/pcb/out/3d/
 viewer/pcb_preview.glb
 hardware/pcb/pkg/*.zip
-video/_xfer/
-# 视频工具每集的中间产物（配音、时间轴、渲染分段在 build/，质检报告和截帧在 qc/）
-video/**/qc/
-video/**/_status.txt
 
 # 固件
 firmware/.arduino/
 firmware/build/
 
-# HyperFrames 每集的缓存、配音分段、质检截帧、渲染日志（都能重新生成）
-video/**/.media/
-video/**/.check/
-video/**/.hyperframes/
-video/**/render_split.log
-# Noto CJK 字体单个 16 MB，从 video-gen skill 的 assets/fonts 拷
-video/boardcheck/**/fonts/
 # QB12_KiCad工程.zip 已经在库里，解压出来的目录不重复进库
 outputs/QB12/QB12_KiCad/
-video/firmware/**/fonts/
-video/firmware/**/.media/
-video/firmware/**/renders/
-video/firmware/**/.check/
 
 # Claude Code 本机设置，不进库
 .claude/
@@ -54,3 +37,8 @@ courses/pcb/raw/
 hardware/pcb/pkg/QB12_KiCad/
 # gen_*.py 生成后拷到 outputs/QB12/，这里不重复进库
 viewer/QB12_*.html
+
+# 布线和 DRC 运行时生成的日志
+hardware/pcb/r3/fr19.*
+hardware/pcb/r3/logs/
+hardware/pcb/board/logs/

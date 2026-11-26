@@ -5,7 +5,7 @@ design files, and one fragment set per lesson. It is the sequel to the circuit c
 and copies its look exactly (tokens, typography, components). **Everything the reader sees is Simplified Chinese.**
 
 ```
-pcbcourse/
+courses/pcb/
   build.py                 stitches everything into qb12-pcb-course.html (+ _preview.html for testing)
   src.html                 page skeleton: <title>, CSS tokens/components, header + nav, 9 lesson slots, core JS (C.*)
   viewer/boardviewer.js    BoardViewer module (API documented at the top of the file and below)
@@ -26,7 +26,7 @@ pcbcourse/
 ## Build and test
 
 ```bash
-cd pcbcourse
+cd courses/pcb
 python3 build.py                 # writes qb12-pcb-course.html and _preview.html, prints size + warnings
 python3 build.py --strict        # exit 1 on any warning (use before handing off)
 PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers python3 tools/test.py    # never run `playwright install`

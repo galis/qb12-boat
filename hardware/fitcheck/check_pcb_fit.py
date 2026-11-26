@@ -1,6 +1,6 @@
 """PCB 和船体是否匹配：用真实文件量，不看截图。
   python check_pcb_fit.py [glb]   glb 由 KiCad 10 导出（见 CLAUDE.md 的 PCB 3D 一行：kicad-cli pcb export glb --subst-models --include-pads --grid-origin）
-板子放在电子舱里的位置默认 x=60..116、y=±19（和 plan.png 一致），可用 BX、BY 环境变量改。
+板子放在电子舱里的位置默认 x=60..116、y=±19，可用 BX、BY 环境变量改。
 数据来源：hardware/hull/out 的 QB12_body_assembled.stl（船体 + 甲板装好）、QB12_hull.stl、QB12_deck.stl、QB12_canopy.stl、glb（板子和元件）、build_model.py 里的舱罩尺寸。"""
 import os, sys
 import numpy as np, trimesh

@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QB12 打印和材料</title>
+<meta name="description" content="Boat QB12 船体怎么打印、要买哪些材料和工具。">
+<style>
+:root {
+  --bg: #f7f7f5; --card: #ffffff; --text: #1c1d1f; --muted: #5d6168; --line: #e3e3df;
+  --accent: #1f6feb; --accent-soft: #e8f0fe; --tag: #f1f1ee; --warn: #9a6700; --warn-soft: #fff8e5;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111214; --card: #1a1b1e; --text: #e8e8e6; --muted: #a0a3a8; --line: #2c2d31;
+    --accent: #6ea8fe; --accent-soft: #1c2a40; --tag: #24252a; --warn: #e3b341; --warn-soft: #2a2414;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font: 16px/1.65 -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+}
+main { max-width: 960px; margin: 0 auto; padding: 32px 16px 64px; }
+.back { font-size: 14px; }
+h1 { font-size: 30px; line-height: 1.25; margin: 12px 0 8px; }
+.sub { color: var(--muted); margin: 0 0 8px; }
+nav.toc { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 0; }
+nav.toc a { padding: 4px 12px; border-radius: 99px; background: var(--tag); color: var(--text); text-decoration: none; font-size: 14px; }
+h2 { font-size: 22px; margin: 44px 0 12px; scroll-margin-top: 16px; }
+h3 { font-size: 17px; margin: 24px 0 8px; }
+.wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--line); border-radius: 10px; background: var(--card); }
+table { width: 100%; border-collapse: collapse; font-size: 15px; }
+th, td { padding: 9px 12px; border-top: 1px solid var(--line); text-align: left; vertical-align: top; }
+th { border-top: 0; color: var(--muted); font-weight: 600; font-size: 13px; background: var(--tag); white-space: nowrap; }
+td.n { white-space: nowrap; }
+code, kbd { font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--tag); padding: 1px 6px; border-radius: 4px; }
+kbd { background: var(--accent-soft); color: var(--text); }
+ul, ol { padding-left: 22px; margin: 8px 0; }
+li { margin: 4px 0; }
+.note { color: var(--muted); font-size: 14px; }
+.box { padding: 12px 16px; border-radius: 10px; background: var(--warn-soft); border: 1px solid var(--line); margin: 12px 0; }
+.box b { color: var(--warn); }
+a { color: var(--accent); }
+footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+td:first-child { white-space: nowrap; }
+@media (max-width: 720px) { .wrap table { min-width: 720px; } }
+@media (max-width: 520px) { h1 { font-size: 25px; } th, td { padding: 8px 10px; } }
+</style>
+</head>
+<body>
+<main>
+  <a class="back" href="./">← 返回首页</a>
+  <h1>打印船体、准备材料</h1>
+  <p class="sub">做一艘 QB12 需要：4 种打印件、一块主控板（嘉立创 SMT，见首页「做一艘」）、下面这些电机和小零件。</p>
+  <nav class="toc"><a href="#print">打印船体</a><a href="#parts">材料清单</a><a href="#tools">工具</a><a href="#order">顺序建议</a></nav>
+
+  <h2 id="print">打印船体</h2>
+  <div class="wrap"><table>
+    <tr><th>文件</th><th>数量</th><th>外形尺寸（mm）</th><th>体积</th><th>说明</th></tr>
+    <tr><td><a href="outputs/QB12/QB12_hull.stl">QB12_hull.stl</a></td><td class="n">1</td><td class="n">239 × 163 × 45</td><td class="n">128 cm³</td><td>船体：两个浮体、尾管座、电机卡环、PCB 托盘、电池仓</td></tr>
+    <tr><td><a href="outputs/QB12/QB12_deck.stl">QB12_deck.stl</a></td><td class="n">1</td><td class="n">239 × 164 × 21</td><td class="n">53 cm³</td><td>甲板：两个电机鼓包、船头两块插舌</td></tr>
+    <tr><td><a href="outputs/QB12/QB12_canopy.stl">QB12_canopy.stl</a></td><td class="n">1</td><td class="n">156 × 84 × 28</td><td class="n">33 cm³</td><td>电子舱舱罩</td></tr>
+    <tr><td><a href="outputs/QB12/QB12_knob.stl">QB12_knob.stl</a></td><td class="n">2</td><td class="n">小件</td><td class="n">—</td><td>船尾两个锁甲板的旋钮</td></tr>
+  </table></div>
+  <p class="note">打印件合计约 247 g（树脂密度按 1.15 算），整船装好约 345 g，吃水约 25 mm。</p>
+
+  <h3>我们怎么打的</h3>
+  <ul>
+    <li>在<b>嘉立创 3D 打印</b>下单，<b>光敏树脂（SLA）</b>，我们用过 9600 树脂。上传 4 个 STL，旋钮数量填 2。</li>
+    <li>船体和甲板最长 239 mm，大多数桌面树脂打印机放不下，找代打比较省事。</li>
+    <li>下单备注里写上：尾管两端 Ø2.4 的小孔<b>不要堵、不要扩</b>；电机卡环内圈不要留支撑痕；内腔洗干净。</li>
+    <li>审核如果报「法向错误」，可能是误报（我们用 trimesh 查过没有翻转的面），可以选官方人工处理。</li>
+  </ul>
+
+  <h3>设计时按树脂打印考虑的地方</h3>
+  <ul>
+    <li>壁厚 1.6 mm，卡环壁厚 1.8 mm。</li>
+    <li>树脂打印的小孔会比设计小约 0.2 mm，所以尾轴孔画的是 Ø2.4，打出来约 Ø2.2，配 Ø2 尾轴，抹点硅脂。</li>
+    <li>电机卡环内径比电机小 0.2 mm，靠树脂弹性卡住。卡环会反复受力，<b>最好选韧性一点的树脂</b>，脆的树脂可能掰断。</li>
+    <li>普通光敏树脂约 50–60 °C 就会软化。电机堵转会发热，桨被缠住要马上松油门。</li>
+  </ul>
+  <div class="box"><b>没试过的：</b>FDM（普通 PLA 打印机）没有试过。0.4 mm 喷嘴打 Ø2.4 小孔和卡环精度不够，可能要自己改 <code>hardware/hull/build_model.py</code> 里的参数重新出 STL。</div>
+
+  <h3>拿到打印件后</h3>
+  <ol>
+    <li>去掉支撑，用尾轴在尾管孔里来回转几下，让它能顺畅转动。</li>
+    <li>电机卡环、甲板插舌、旋钮这些配合面不要打磨过多，也不要喷漆。</li>
+    <li>装好后先不放电子件，空船泡水 30 分钟，打开看舱里有没有水。</li>
+    <li>装配步骤看 <a href="outputs/QB12/QB12_装配动画.html">装配动画</a>（14 步）。</li>
+  </ol>
+
+  <h2 id="parts">材料清单</h2>
+  <p>主控板上的元件已经在 <a href="outputs/QB12/QB12_BOM_嘉立创SMT.csv">BOM</a> 里，嘉立创贴好。下面是板子以外要自己买的。<kbd>搜索词</kbd>可以直接在淘宝或立创商城里搜，规格按「规格」一列核对。</p>
+  <div class="wrap"><table>
+    <tr><th>零件</th><th>规格</th><th>数量</th><th>搜索词</th></tr>
+    <tr><td>电机</td><td>万宝至 RF-130CH-12250，Ø17.1 × 22.8 mm，6 V，轴 Ø1.5。卡环按这个尺寸做的，换型号要改模型</td><td class="n">2（另备 2 个）</td><td><kbd>RF-130CH-12250</kbd></td></tr>
+    <tr><td>尾轴</td><td>304 不锈钢光轴 Ø2 mm，切成 2 根，每根至少 136 mm，两根切成一样长</td><td class="n">1 根，≥ 30 cm</td><td><kbd>304 不锈钢光轴 2mm</kbd></td></tr>
+    <tr><td>联轴器</td><td>硅胶管，内径 1.3 mm（外径 2.3），每段 ≤ 10 mm，连电机轴和尾轴</td><td class="n">2 段</td><td><kbd>硅胶管 内径1.3</kbd></td></tr>
+    <tr><td>螺旋桨</td><td>尼龙二叶，直径 26 mm，孔径约 1.95（直接插 Ø2 轴），<b>正反各一个</b></td><td class="n">1 对</td><td><kbd>26mm 螺旋桨 正反桨 2mm孔</kbd></td></tr>
+    <tr><td>电池</td><td>603450 锂聚合物电池，3.7 V 1200 mAh，<b>带保护板</b>，不超过 50 × 34 × 6 mm（电池仓内腔 51 × 35）</td><td class="n">1</td><td><kbd>603450 锂电池 1200mAh 保护板</kbd></td></tr>
+    <tr><td>电池插头线</td><td>PH2.0-2P 端子线，一头带胶壳，200 mm，26AWG（立创 C5221412）。焊到电池裸线上，插板子 J2</td><td class="n">1</td><td><kbd>PH2.0 2P 端子线 单头</kbd></td></tr>
+    <tr><td>电机线</td><td>PH2.0-2P 端子线，单头，100 mm，26AWG。另一头焊电机，插 J3、J4</td><td class="n">2</td><td><kbd>PH2.0 2P 端子线 单头 10cm</kbd></td></tr>
+    <tr><td>电机滤波电容</td><td>瓷片电容 100 nF（印字 104），每个电机两端焊一个</td><td class="n">2</td><td><kbd>瓷片电容 104 50V</kbd></td></tr>
+    <tr><td>密封泡棉条</td><td>单面背胶 EVA 或硅胶泡棉条，厚 1 mm、宽 3 mm，贴船体顶面一圈槽，舱罩裙边也贴一圈</td><td class="n">约 2 m</td><td><kbd>背胶泡棉条 1mm厚 3mm宽</kbd></td></tr>
+    <tr><td>双面泡棉胶</td><td>厚约 0.8 mm，宽 1 cm，粘电池</td><td class="n">一小段</td><td><kbd>3M 双面泡棉胶 0.8mm</kbd></td></tr>
+    <tr><td>橡皮筋</td><td>普通橡皮筋。2 根压电池、2 根压舱罩</td><td class="n">4</td><td><kbd>橡皮筋</kbd></td></tr>
+    <tr><td>硅脂</td><td>硅基润滑脂，抹尾轴孔</td><td class="n">1 小支</td><td><kbd>硅脂 润滑</kbd></td></tr>
+    <tr><td>热缩管</td><td>Ø2–3 mm，包焊点</td><td class="n">少量</td><td><kbd>热缩管 套装</kbd></td></tr>
+    <tr><td>手柄</td><td>Xbox Series 无线手柄（型号 1914，蓝牙），固件 v5.15 以上。没有手柄也可以用手机连船上的 Wi‑Fi 热点，网页遥控</td><td class="n">1（可选）</td><td>—</td></tr>
+  </table></div>
+  <p class="note">规格来自设计文件和我们实际买的东西。商家页面上的尺寸不一定准，电机、电池到手先用卡尺量一下；和上面不一样就改 <code>build_model.py</code> 里的 <code>MOTOR_*</code>、<code>BAT_*</code>，重跑装配检查再出 STL。</p>
+
+  <h2 id="tools">工具</h2>
+  <ul>
+    <li><b>电烙铁、焊锡</b>：焊电池插头线、电机线和电容。电池线焊接看 <a href="outputs/QB12/QB12_电池接线动画.html">电池接线动画</a>。</li>
+    <li><b>万用表</b>：焊之前量电池极性，上电前量板子有没有短路。</li>
+    <li><b>斜口钳或小砂轮</b>：剪不锈钢尾轴。</li>
+    <li><b>数显卡尺</b>（建议有）：量电机、电池实物尺寸。</li>
+    <li><b>USB-C 数据线</b>：烧固件、给电池充电。</li>
+  </ul>
+
+  <h2 id="order">顺序建议</h2>
+  <ol>
+    <li>先下单主控板（嘉立创 PCB + SMT，选标准型贴片），它最慢。</li>
+    <li>同时下单打印件和材料。</li>
+    <li>板子到了先不装船：按 <a href="https://github.com/galis/qb12-boat/tree/main/firmware">firmware/README</a> 烧固件，桌上接电池和电机试转，确认手柄能连、方向对。</li>
+    <li>打印件到了先空船泡水测漏，再按装配动画装。</li>
+    <li>第一次下水在近处试：Rev A 的蓝牙距离不到 10 m（PCB 天线离水面太近），手机 Wi‑Fi 模式的距离还没测过。</li>
+  </ol>
+
+  <footer>
+    <a href="./">← 返回首页</a> · 有问题或做出来了，欢迎在 <a href="https://github.com/galis/qb12-boat/issues">GitHub Issues</a> 里说。
+  </footer>
+</main>
+</body>
+</html>

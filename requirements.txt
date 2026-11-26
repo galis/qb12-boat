@@ -2,18 +2,15 @@
 numpy
 trimesh
 scipy             # trimesh 算连通分量要用（glb2usdz.py）
-networkx          # trimesh.repair.fix_normals 要用（boat3d/build_model.py）
+networkx          # trimesh.repair.fix_normals 要用（hardware/hull/build_model.py）
 manifold3d
 shapely
 usd-core          # pxr：生成 USDZ
 pillow
 openpyxl          # BOM xlsx
 playwright        # 课程页测试、视频逐帧渲染
-sherpa-onnx       # 视频配音 Kokoro / 语音识别 SenseVoice
-soundfile
-pypinyin
-cairosvg          # pcb/tex/make_tex.py：板子 SVG → 贴图
-matplotlib        # 只用它自带的 DejaVu 字体（pcb/plot_place.py 在 Mac 上找字体）
+cairosvg          # hardware/pcb/tex/make_tex.py：板子 SVG → 贴图
+matplotlib        # 只用它自带的 DejaVu 字体（hardware/pcb/plot_place.py 在 Mac 上找字体）
 gerbonara         # 比较新旧 Gerber（逐像素核对用，可选）
 # pcbnew 不在这里：用 KiCad 10 自带的 Python 建的 .venv-kicad（见 requirements-kicad.txt）
 esptool==4.8.1   # 固件编译：Apple Silicon 上 Arduino 板包自带的 x86 esptool 跑不了，用它代替（见 firmware/README.md）
