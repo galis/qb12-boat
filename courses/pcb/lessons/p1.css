@@ -1,0 +1,172 @@
+/* 第 1 课：PCB 是什么做的 */
+#p1{--p1-fr4:#C9B57C;--p1-fr4d:#9E8A52;--p1-cu:#D08A4E;--p1-cudk:#7E4B24;--p1-mask:#1F6B3B;--p1-silk:#F4F4EF;
+  --p1-tin:#AEB5BC;--p1-film:#6A5ACD;--p1-hasl:#CDD2D7;--p1-enig:#DDB559;--p1-steel:#A3ACB4}
+#p1 .p1-mono{font-family:var(--f-mono);font-size:.92em}
+#p1 .p1-gap{margin-left:10px}
+#p1 .p1-sp{flex:1}
+#p1 .p1-shot img{width:100%;height:auto;max-height:640px;object-fit:contain}
+#p1 .p1-more{font-size:14px;color:var(--muted)}
+#p1 a.p1-more{font-weight:600;text-decoration:none;color:var(--sig)}
+#p1 .p1-file{font-size:12.5px;white-space:nowrap}
+#p1 #p1-mkbv[data-mk="2"] .g-silkF{display:none!important}
+@media (max-width:640px){
+  #p1 .p1-rt table{min-width:0}
+  #p1 .p1-rt thead{display:none}
+  #p1 .p1-rt tr{display:block;padding:10px 14px;border-bottom:1px solid var(--line)}
+  #p1 .p1-rt tr:last-child{border-bottom:none}
+  #p1 .p1-rt td{display:block;border:none;padding:1px 0}
+  #p1 .p1-rt td:first-child{font-size:15px;font-weight:600}
+  #p1 .p1-rt td[data-l]::before{content:attr(data-l) "：";color:var(--muted);font-size:12.5px;font-family:var(--f-body)}
+  #p1 .p1-rt .p1-file{white-space:normal;overflow-wrap:anywhere}
+}
+#p1 .explain .states span:first-child{white-space:nowrap;color:var(--muted)}
+#p1 .explain .states span:last-child{font-family:var(--f-body);font-size:13.5px;text-align:right}
+#p1 .explain .states div{align-items:baseline}
+
+/* 1.1 拆开的层 */
+#p1 .p1-isostage{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px;align-items:start}
+@media (max-width:900px){#p1 .p1-isostage{grid-template-columns:minmax(0,1fr)}}
+#p1 .p1-isoleft{display:flex;flex-direction:column;gap:8px;min-width:0}
+#p1 #p1-iso{width:100%;height:auto;display:block;overflow:visible;user-select:none;-webkit-user-select:none}
+#p1 .p1-chips .btn{font-size:13px;padding:4px 9px}
+#p1 .p1-slab{transition:transform .75s cubic-bezier(.5,0,.2,1),opacity .3s;cursor:pointer}
+#p1 .p1-slab.dim{opacity:.2}
+#p1 .p1-ol{fill:none;stroke:color-mix(in srgb,var(--muted) 70%,transparent);stroke-width:1;vector-effect:non-scaling-stroke}
+#p1 .p1-slab.hov .p1-ol{stroke:var(--sig);stroke-width:2}
+#p1 .p1-slab.on .p1-ol,#p1 #p1-iso.p1-edge .p1-ol{stroke:var(--hl);stroke-width:2.4}
+#p1 .p1-hit{fill:transparent;stroke:none}
+#p1 #p1-iso .f{fill:currentColor;stroke:none;fill-rule:evenodd}
+#p1 .p1-steel{fill:var(--p1-steel);opacity:.85}
+#p1 .p1-plate{fill:rgba(14,28,30,.62)}
+#p1 .p1-silk{color:var(--p1-silk)}
+#p1 .p1-msheet{fill:var(--p1-mask);opacity:.93}
+#p1 .p1-cu{color:var(--p1-cu);fill:currentColor;stroke:currentColor}
+#p1 .p1-holes{fill:var(--panel)}
+#p1 .p1-holes line{stroke:var(--panel)}
+#p1 #p1-iso.p1-drill .p1-holes{fill:var(--hl);stroke:var(--hl);stroke-width:2.2}
+#p1 #p1-iso.p1-drill .p1-holes circle{vector-effect:non-scaling-stroke}
+#p1 .p1-fr4{fill:var(--p1-fr4)}
+#p1 .p1-sf1{fill:var(--p1-fr4d)}
+#p1 .p1-sf2{fill:color-mix(in srgb,var(--p1-fr4d) 72%,#000)}
+#p1 .p1-kcore{fill:none;stroke:var(--muted);stroke-width:1.2;stroke-dasharray:5 4;vector-effect:non-scaling-stroke}
+#p1 #p1-iso.kicad .p1-r,#p1 #p1-iso.kicad .p1-side{display:none}
+#p1 #p1-iso:not(.kicad) .p1-k{display:none}
+#p1 #p1-iso.kicad .p1-cuF{color:var(--bv-fcu)}
+#p1 #p1-iso.kicad .p1-cuB{color:var(--bv-bcu)}
+#p1 #p1-iso.kicad .p1-silkF{color:var(--bv-fsilk)}
+#p1 #p1-iso.kicad .p1-silkB{color:var(--bv-bsilk)}
+#p1 .p1-lab{cursor:pointer}
+#p1 .p1-lab line{stroke:var(--muted);stroke-width:1}
+#p1 .p1-lab text{font-size:14.5px;fill:var(--body);font-family:var(--f-body)}
+#p1 .p1-lab .p1-lk{font-family:var(--f-mono);fill:var(--fg);font-weight:600;font-size:13.5px}
+#p1 .p1-lab.on text,#p1 .p1-lab.on .p1-lk{fill:var(--hl)}
+#p1 .p1-lab.on line{stroke:var(--hl)}
+
+/* 1.2 厚度 */
+#p1 .p1-thbox{max-width:860px}
+#p1 .p1-thbox svg,#p1 #p1-ozsvg,#p1 #p1-tgsvg{width:100%;height:auto;display:block}
+#p1 .p1-xfr4w{fill:url(#p1-weave)}
+#p1 .p1-xcu{fill:var(--p1-cu)}
+#p1 .p1-xmask{fill:var(--p1-mask)}
+#p1 .p1-xfilm{fill:var(--p1-film);opacity:.92}
+#p1 .p1-xtin{fill:var(--p1-tin)}
+#p1 .p1-xsilk{fill:var(--p1-silk);stroke:#8E9A9C;stroke-width:.8}
+#p1 .p1-xhasl{fill:var(--p1-hasl);stroke:#8A939B;stroke-width:.8}
+#p1 .p1-xenig{fill:var(--p1-enig)}
+#p1 .p1-lead{fill:none;stroke:var(--muted);stroke-width:1}
+#p1 .p1-tt{font-size:15px;fill:var(--body);font-family:var(--f-body)}
+#p1 .p1-tth{fill:var(--fg);font-weight:700}
+#p1 .p1-ts{font-size:13px;fill:var(--muted);font-family:var(--f-body)}
+#p1 .p1-dim{fill:none;stroke:var(--muted);stroke-width:1.2}
+#p1 .p1-magbox{fill:none;stroke:var(--hl);stroke-width:1.5}
+#p1 .p1-magc{fill:none;stroke:var(--hl);stroke-width:2.2}
+#p1 .p1-magbg{fill:var(--panel)}
+#p1 .p1-tm{font-size:13px;fill:#fff;font-weight:700;paint-order:stroke;stroke:rgba(0,0,0,.6);stroke-width:3px;font-family:var(--f-body)}
+#p1 .p1-two{align-items:stretch}
+#p1 .p1-wh{font-size:15px}
+#p1 .p1-tgtxt{font-size:14px;color:var(--body)}
+#p1 .p1-checks{display:flex;flex-direction:column;gap:7px}
+#p1 .p1-ck{display:grid;grid-template-columns:22px minmax(0,1fr);gap:8px;font-size:14px;color:var(--body);align-items:start;line-height:1.6}
+#p1 .p1-ck i{font-style:normal;font-weight:700;width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;margin-top:2px}
+#p1 .p1-ck.good i{background:color-mix(in srgb,var(--ok) 22%,transparent);color:var(--ok)}
+#p1 .p1-ck.warn i{background:color-mix(in srgb,var(--hl) 26%,transparent);color:var(--hl)}
+#p1 .p1-ck.bad i{background:color-mix(in srgb,var(--pow) 24%,transparent);color:var(--pow)}
+#p1 .p1-note{font-size:12.5px;color:var(--muted)}
+#p1 .p1-axis{stroke:var(--muted);stroke-width:1.2}
+#p1 .p1-tn{font-size:10.5px;fill:var(--muted);font-family:var(--f-mono)}
+#p1 .p1-btg{fill:color-mix(in srgb,var(--c2) 75%,transparent)}
+#p1 .p1-brf{fill:color-mix(in srgb,var(--pow) 78%,transparent)}
+#p1 .p1-btd{fill:color-mix(in srgb,var(--c3) 75%,transparent)}
+#p1 .p1-room{stroke:var(--sig);stroke-width:2.5}
+#p1 .p1-tl2{font-size:12px;fill:var(--muted);font-family:var(--f-body)}
+#p1 .p1-tl2.b{fill:var(--fg);font-weight:700}
+#p1 .p1-tgmk path{fill:var(--hl)}
+
+/* 1.3 / 1.4 / 1.5 查看器上的标注 */
+#p1 .p1-ann *{vector-effect:non-scaling-stroke}
+#p1 .p1-ann .p1-ad{fill:var(--hl);stroke:var(--bv-bg);stroke-width:1.5}
+#p1 .p1-ann .p1-al{stroke:var(--hl);stroke-width:1.6;fill:none}
+#p1 .p1-ann .p1-al.ok{stroke:var(--ok);stroke-width:2.4}
+#p1 .p1-ann .p1-al.no{stroke:var(--pow);stroke-width:2.4;stroke-dasharray:6 5}
+#p1 .p1-ann .p1-pt{fill:none;stroke:var(--hl);stroke-width:2.5}
+#p1 .p1-ann .p1-cutline{fill:none;stroke:var(--hl);stroke-width:3;stroke-dasharray:10 6}
+#p1 .p1-ann text{font-family:var(--f-body);font-weight:600}
+
+/* 1.4 工序 */
+#p1 .p1-steps{display:flex;flex-wrap:wrap;gap:6px}
+#p1 .p1-steps .btn{font-size:13px;padding:4px 10px}
+#p1 .p1-fstage{grid-template-columns:minmax(0,1fr) 330px}
+@media (max-width:900px){#p1 .p1-fstage{grid-template-columns:minmax(0,1fr)}}
+#p1 .p1-fleft{display:flex;flex-direction:column;gap:12px;min-width:0}
+#p1 .p1-xbox{background:var(--bv-bg);border:1px solid var(--line);border-radius:10px;padding:6px}
+#p1 #p1-xsec{width:100%;height:auto;display:block}
+#p1 .p1-xl{font-size:15px;fill:var(--fg);font-family:var(--f-body)}
+#p1 .p1-xl.sm{font-size:14px}
+#p1 .p1-xl.mu{fill:var(--muted)}
+#p1 #p1-xsec.n .p1-xl{font-size:28px}
+#p1 #p1-xsec.n .p1-xl.sm{font-size:26px}
+#p1 .p1-xbox .cap{padding:2px 6px 0}
+#p1 .p1-xedge{stroke:var(--muted);stroke-width:1.5;stroke-dasharray:6 5}
+#p1 .p1-xedge.on{stroke:var(--hl);stroke-dasharray:none;stroke-width:2.5}
+#p1 .p1-uv{stroke:#A78BFA;stroke-width:2.2;fill:none}
+#p1 .p1-bit{fill:#B8C0C8;stroke:#6B747C;stroke-width:1}
+#p1 .p1-bitl{stroke:#6B747C;stroke-width:1.5;fill:none}
+#p1 .p1-probe{stroke:#C9CFD3;stroke-width:3;stroke-linecap:round}
+#p1 .p1-probet{fill:var(--hl)}
+#p1 #p1-xsec.p1-anim .p1-drillbit,#p1 #p1-xsec.p1-anim .p1-router{animation:p1-drop 1s cubic-bezier(.4,0,.6,1) both}
+#p1 #p1-xsec.p1-anim .p1-new{animation:p1-fade .6s ease both}
+@keyframes p1-drop{from{transform:translateY(-40px)}to{transform:translateY(0)}}
+@keyframes p1-fade{from{opacity:0}to{opacity:1}}
+#p1 .p1-design{font-size:14.5px;color:var(--body)}
+#p1 .p1-design b{color:var(--fg)}
+#p1 .p1-src{font-size:12.5px;color:var(--muted)}
+#p1 .p1-finrow .bv-chip{font-size:12px}
+
+/* 1.4 真板：工序进行中的样子（只在“成品颜色”时生效；用 CSS 改查看器“成品样子”的材料色） */
+#p1 #p1-fbv[data-fc="made"][data-fs="0"] .bv-svg.made,#p1 #p1-fbv[data-fc="made"][data-fs="1"] .bv-svg.made,#p1 #p1-fbv[data-fc="made"][data-fs="2"] .bv-svg.made{--mk-sub:var(--p1-cu)}
+#p1 #p1-fbv[data-fc="made"][data-fs="3"] .bv-svg.made{--mk-sub:var(--p1-film);--mk-cu:var(--p1-cu)}
+#p1 #p1-fbv[data-fc="made"][data-fs="4"] .bv-svg.made{--mk-sub:var(--p1-film);--mk-cu:var(--p1-tin)}
+#p1 #p1-fbv[data-fc="made"][data-fs="5"] .bv-svg.made{--mk-sub:var(--p1-fr4);--mk-cu:var(--p1-cu)}
+#p1 #p1-fbv[data-fc="made"][data-fs="6"] .bv-svg.made,#p1 #p1-fbv[data-fc="made"][data-fs="7"] .bv-svg.made{--mk-pad:var(--p1-cu)}
+#p1 #p1-fbv[data-fc="made"][data-fs="0"] .g-zoneF,#p1 #p1-fbv[data-fc="made"][data-fs="0"] .g-cuF,#p1 #p1-fbv[data-fc="made"][data-fs="0"] .g-via,#p1 #p1-fbv[data-fc="made"][data-fs="0"] .g-mk,#p1 #p1-fbv[data-fc="made"][data-fs="0"] .g-silkF,#p1 #p1-fbv[data-fc="made"][data-fs="0"] .g-drill,
+#p1 #p1-fbv[data-fc="made"][data-fs="1"] .g-zoneF,#p1 #p1-fbv[data-fc="made"][data-fs="1"] .g-cuF,#p1 #p1-fbv[data-fc="made"][data-fs="1"] .g-via,#p1 #p1-fbv[data-fc="made"][data-fs="1"] .g-mk,#p1 #p1-fbv[data-fc="made"][data-fs="1"] .g-silkF,
+#p1 #p1-fbv[data-fc="made"][data-fs="2"] .g-zoneF,#p1 #p1-fbv[data-fc="made"][data-fs="2"] .g-cuF,#p1 #p1-fbv[data-fc="made"][data-fs="2"] .g-via,#p1 #p1-fbv[data-fc="made"][data-fs="2"] .g-mk,#p1 #p1-fbv[data-fc="made"][data-fs="2"] .g-silkF,
+#p1 #p1-fbv[data-fc="made"][data-fs="3"] .g-mk,#p1 #p1-fbv[data-fc="made"][data-fs="3"] .g-silkF,
+#p1 #p1-fbv[data-fc="made"][data-fs="4"] .g-mk,#p1 #p1-fbv[data-fc="made"][data-fs="4"] .g-silkF,
+#p1 #p1-fbv[data-fc="made"][data-fs="5"] .g-mk,#p1 #p1-fbv[data-fc="made"][data-fs="5"] .g-silkF,
+#p1 #p1-fbv[data-fc="made"][data-fs="6"] .g-silkF{display:none!important}
+/* 孔：镀铜后是铜色；图形转移、图形电镀时非金属化孔被干膜封住 */
+#p1 #p1-fbv[data-fc="made"][data-fs="2"] .g-drill :not(.np),#p1 #p1-fbv[data-fc="made"][data-fs="3"] .g-drill :not(.np),#p1 #p1-fbv[data-fc="made"][data-fs="5"] .g-drill :not(.np){fill:var(--p1-cudk);stroke:var(--p1-cudk)}
+#p1 #p1-fbv[data-fc="made"][data-fs="4"] .g-drill :not(.np){fill:#7D848A;stroke:#7D848A}
+#p1 #p1-fbv[data-fc="made"][data-fs="3"] .g-drill .np,#p1 #p1-fbv[data-fc="made"][data-fs="4"] .g-drill .np{fill:var(--p1-film);stroke:var(--p1-film)}
+/* 还没锣外形：板框外面也是同一张大板 */
+#p1 #p1-fbv[data-fc="made"][data-fs="0"] .bv-stage,#p1 #p1-fbv[data-fc="made"][data-fs="1"] .bv-stage,#p1 #p1-fbv[data-fc="made"][data-fs="2"] .bv-stage{background:var(--p1-cu)}
+#p1 #p1-fbv[data-fc="made"][data-fs="3"] .bv-stage,#p1 #p1-fbv[data-fc="made"][data-fs="4"] .bv-stage{background:var(--p1-film)}
+#p1 #p1-fbv[data-fc="made"][data-fs="5"] .bv-stage{background:var(--p1-fr4)}
+#p1 #p1-fbv[data-fc="made"][data-fs="6"] .bv-stage,#p1 #p1-fbv[data-fc="made"][data-fs="7"] .bv-stage,#p1 #p1-fbv[data-fc="made"][data-fs="8"] .bv-stage,#p1 #p1-fbv[data-fc="made"][data-fs="9"] .bv-stage{background:#14532F}
+#p1 #p1-fbv[data-fc="made"]:not([data-fs="10"]) .bv-svg.made .g-edge path{stroke:rgba(255,255,255,.75);stroke-width:.16;stroke-dasharray:.9 .6}
+
+@media (prefers-reduced-motion: reduce){
+  #p1 .p1-slab{transition:none}
+  #p1 #p1-xsec.p1-anim .p1-drillbit,#p1 #p1-xsec.p1-anim .p1-router,#p1 #p1-xsec.p1-anim .p1-new{animation:none}
+}

@@ -1,0 +1,180 @@
+/* ===== BoardViewer（板子查看器）=====
+   所有类名以 bv- 开头；颜色全部走 CSS 变量，深色 / 浅色主题各一套。
+   “层叠视图”配色仿 KiCad：顶层铜红、底层铜蓝、丝印黄；“成品样子”用真实材料色。 */
+:root{
+  --bv-bg:#0A1315; --bv-board:#10201F; --bv-fcu:#E2524A; --bv-bcu:#4A86E8;
+  --bv-fzone:color-mix(in srgb,#E2524A 20%,transparent); --bv-bzone:color-mix(in srgb,#4A86E8 24%,transparent);
+  --bv-via:#C9CFD3; --bv-fsilk:#F2E7A1; --bv-bsilk:#D7A6E0; --bv-fmask:color-mix(in srgb,#C45FE6 50%,transparent);
+  --bv-bmask:color-mix(in srgb,#3FC8A8 45%,transparent); --bv-fpaste:color-mix(in srgb,#B9BEC8 70%,transparent);
+  --bv-bpaste:color-mix(in srgb,#8C96A8 60%,transparent);
+  --bv-edge:#E8D44D; --bv-crt:#8FA5A8; --bv-keep:#FF8A4C; --bv-rats:#B9C7C9; --bv-label:#E9EFED; --bv-drc:#FFC94D;
+  --bv-film-paper:#F4F2EA; --bv-film-ink:#15191B;
+}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){
+  --bv-bg:#F3F5F2; --bv-board:#E4EBE8; --bv-fcu:#C8372D; --bv-bcu:#2C64C0;
+  --bv-fzone:color-mix(in srgb,#C8372D 20%,transparent); --bv-bzone:color-mix(in srgb,#2C64C0 22%,transparent);
+  --bv-via:#59636A; --bv-fsilk:#7A5C00; --bv-bsilk:#8E3FA0; --bv-fmask:color-mix(in srgb,#9A3CC0 40%,transparent);
+  --bv-bmask:color-mix(in srgb,#11806A 40%,transparent); --bv-fpaste:color-mix(in srgb,#5F6672 55%,transparent);
+  --bv-bpaste:color-mix(in srgb,#5F6672 45%,transparent);
+  --bv-edge:#9C7F00; --bv-crt:#5D7073; --bv-keep:#C2410C; --bv-rats:#4E5F62; --bv-label:#10201F; --bv-drc:#B07800}}
+:root[data-theme="light"]{
+  --bv-bg:#F3F5F2; --bv-board:#E4EBE8; --bv-fcu:#C8372D; --bv-bcu:#2C64C0;
+  --bv-fzone:color-mix(in srgb,#C8372D 20%,transparent); --bv-bzone:color-mix(in srgb,#2C64C0 22%,transparent);
+  --bv-via:#59636A; --bv-fsilk:#7A5C00; --bv-bsilk:#8E3FA0; --bv-fmask:color-mix(in srgb,#9A3CC0 40%,transparent);
+  --bv-bmask:color-mix(in srgb,#11806A 40%,transparent); --bv-fpaste:color-mix(in srgb,#5F6672 55%,transparent);
+  --bv-bpaste:color-mix(in srgb,#5F6672 45%,transparent);
+  --bv-edge:#9C7F00; --bv-crt:#5D7073; --bv-keep:#C2410C; --bv-rats:#4E5F62; --bv-label:#10201F; --bv-drc:#B07800}
+
+.bv{container-type:inline-size;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.bv.bare{padding:0;border:none;background:none}
+.bv-tools{display:flex;flex-direction:column;gap:8px}
+.bv-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.bv-row .bv-lab{font-size:12.5px;color:var(--muted);margin-right:2px}
+.bv-seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.bv-seg button{border:none;background:var(--panel2);padding:5px 11px;font-size:13px;cursor:pointer;color:var(--fg);font-family:inherit}
+.bv-seg button+button{border-left:1px solid var(--line)}
+.bv-seg button[aria-pressed="true"]{background:var(--sig);color:var(--bg);font-weight:700}
+.bv-btn{border:1px solid var(--line);background:var(--panel2);border-radius:8px;padding:5px 10px;font-size:13px;cursor:pointer;color:var(--fg);font-family:inherit;min-width:32px}
+.bv-btn:hover,.bv-chip:hover{border-color:var(--sig)}
+.bv-sp{flex:1}
+.bv-tools.collapsed .bv-extra{display:none}
+.bv-chip{border:1px solid var(--line);background:var(--panel2);border-radius:999px;padding:3px 10px 3px 8px;font-size:12.5px;cursor:pointer;color:var(--muted);font-family:var(--f-mono);display:inline-flex;align-items:center;gap:6px;line-height:1.5}
+.bv-chip i{width:10px;height:10px;border-radius:3px;display:inline-block;flex-shrink:0}
+.bv-chip small{font-family:var(--f-body);font-size:11.5px;color:var(--muted)}
+.bv-chip[aria-pressed="true"]{color:var(--fg);border-color:color-mix(in srgb,var(--sig) 60%,var(--line))}
+.bv-chip[aria-pressed="false"] i{opacity:.35}
+.bv-chip.w[aria-pressed="true"]{background:var(--hl);border-color:var(--hl);color:#1D2A2E}
+.bv-chip.w[aria-pressed="true"] small{color:#1D2A2E}
+.bv select{font:inherit;font-size:13px;background:var(--panel2);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:4px 8px;max-width:100%}
+
+.bv-body{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-items:start}
+@container (min-width:860px){.bv-body.has-panel{grid-template-columns:minmax(0,1fr) 280px}}
+.bv-stagewrap{position:relative;min-width:0}
+.bv-stage{position:relative;width:100%;border-radius:10px;overflow:hidden;background:var(--bv-bg);border:1px solid var(--line);touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.bv-stage.zoomed{touch-action:none;cursor:grab}
+.bv-stage.dragging{cursor:grabbing}
+.bv-stage svg{display:block;width:100%;height:auto}
+.bv-hint{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);background:color-mix(in srgb,var(--bg) 88%,transparent);border:1px solid var(--line);color:var(--fg);font-size:12.5px;padding:4px 10px;border-radius:8px;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap}
+.bv-hint.show{opacity:1}
+.bv-badge{position:absolute;left:10px;top:10px;font-family:var(--f-mono);font-size:12px;padding:3px 8px;border-radius:7px;background:color-mix(in srgb,var(--bg) 82%,transparent);border:1px solid var(--line);color:var(--fg);pointer-events:none}
+.bv-badge:empty{display:none}
+.bv-hov{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;min-height:1.6em;font-family:var(--f-mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bv-panel{display:flex;flex-direction:column;gap:10px;font-size:14px;min-width:0}
+.bv-panel h4{margin:0;font-size:18px;font-family:var(--f-mono);display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.bv-panel h4 span{font-size:13px;color:var(--muted);font-weight:500}
+.bv-panel .d{color:var(--body)}
+.bv-panel .empty{color:var(--muted);font-size:13.5px}
+.bv-kv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:3px 12px;font-size:13px}
+.bv-kv span{color:var(--muted)}
+.bv-kv b{font-family:var(--f-mono);font-weight:500;overflow-wrap:anywhere}
+.bv-pins{display:flex;flex-direction:column;gap:3px;font-size:13px;max-height:260px;overflow:auto}
+.bv-pins div{display:grid;grid-template-columns:3.6em minmax(0,1fr) auto;gap:8px;align-items:center;border-bottom:1px dashed var(--line);padding-bottom:3px}
+.bv-pins div > span:first-child{font-family:var(--f-mono);color:var(--muted)}
+.bv-net{font-family:var(--f-mono);font-size:12px;padding:1px 7px;border-radius:5px;border:1px solid var(--line);background:var(--panel2);cursor:pointer;color:var(--sig);white-space:nowrap}
+.bv-net.p{color:var(--pow);border-color:color-mix(in srgb,var(--pow) 45%,var(--line))}
+.bv-net.g{color:var(--fg)}
+.bv-net.nc{color:var(--muted);cursor:default}
+.bv-reflist{display:flex;flex-wrap:wrap;gap:4px}
+.bv-reflist button{font-family:var(--f-mono);font-size:12px;padding:1px 6px;border-radius:5px;border:1px solid var(--line);background:var(--panel2);cursor:pointer;color:var(--fg)}
+.bv-clear{align-self:flex-start;border:1px solid var(--line);background:none;border-radius:8px;padding:4px 10px;font-size:13px;cursor:pointer;color:var(--muted);font-family:inherit}
+
+/* ---- SVG 内部 ---- */
+.bv-svg{font-family:var(--f-mono)}
+.bv-svg *{vector-effect:none}
+.bv-svg .g-sub path{fill:var(--bv-board)}
+.bv-svg .g-zoneF path{fill:var(--bv-fzone);stroke:none;pointer-events:none}
+.bv-svg .g-zoneB path{fill:var(--bv-bzone);stroke:none;pointer-events:none}
+.bv-svg .g-cuF{stroke:var(--bv-fcu);fill:var(--bv-fcu)}
+.bv-svg .g-cuB{stroke:var(--bv-bcu);fill:var(--bv-bcu)}
+.bv-svg .g-cuF line,.bv-svg .g-cuB line{stroke-linecap:round;fill:none}
+.bv-svg .g-cuF .pd,.bv-svg .g-cuB .pd{stroke:none}
+.bv-svg .g-via circle{fill:var(--bv-via)}
+.bv-svg .g-silkF{color:var(--bv-fsilk);pointer-events:none}
+/* kicad-cli 导出的层：原文件根节点是 stroke-linecap/linejoin:round（数据里也补上了，这里再保险一次），
+   否则椭圆焊盘的开窗、丝印线头是平头，看起来比焊盘小 */
+.bv-svg .g-silkF,.bv-svg .g-silkB,.bv-svg .g-maskF,.bv-svg .g-maskB,.bv-svg .g-pasteF,.bv-svg .g-pasteB,.bv-svg .g-film,.bv-svg mask{stroke-linecap:round;stroke-linejoin:round}
+.bv-svg .g-silkB{color:var(--bv-bsilk);pointer-events:none}
+.bv-svg .g-maskF{color:var(--bv-fmask);pointer-events:none}
+.bv-svg .g-maskB{color:var(--bv-bmask);pointer-events:none}
+.bv-svg .g-pasteF{color:var(--bv-fpaste);pointer-events:none}
+.bv-svg .g-pasteB{color:var(--bv-bpaste);pointer-events:none}
+.bv-svg .f{fill:currentColor;stroke:none;fill-rule:evenodd}
+.bv-svg .g-drill{fill:var(--bv-bg);pointer-events:none}
+.bv-svg .g-drill .np{fill:var(--bv-bg);stroke:var(--bv-crt);stroke-width:.06}
+.bv-svg .g-drill line{stroke:var(--bv-bg)}
+.bv-svg .g-edge path{fill:none;stroke:var(--bv-edge);stroke-width:.12;pointer-events:none}
+.bv-svg .g-crt{fill:none;stroke:var(--bv-crt);stroke-width:.05;pointer-events:none}
+.bv-svg .g-keep{pointer-events:none}
+.bv-svg .g-keep rect{stroke:var(--bv-keep);stroke-width:.12;stroke-dasharray:.5 .35}
+.bv-svg .g-keep text{fill:var(--bv-keep);font-size:calc(1.05px / var(--bv-tz,1));font-family:var(--f-body);font-weight:700}
+.bv-svg .g-rats line{stroke:var(--bv-rats);stroke-width:.07;opacity:.85}
+.bv-svg .g-drc{pointer-events:none}
+.bv-svg .g-drc circle{fill:none;stroke:var(--bv-drc);stroke-width:.14}
+.bv-svg .g-drc circle.e{stroke:var(--pow)}
+.bv-svg .g-lab text{fill:var(--bv-label);font-size:.95px;font-weight:600;paint-order:stroke;stroke:var(--bv-bg);stroke-width:.25;pointer-events:none;text-anchor:middle;dominant-baseline:central}
+.bv-svg .g-pnum text{fill:var(--bv-label);font-size:calc(.32px / var(--bv-pz,1));text-anchor:middle;dominant-baseline:central;pointer-events:none;paint-order:stroke;stroke:var(--bv-bg);stroke-width:calc(.06px / var(--bv-pz,1))}
+.bv-svg .g-hit rect{fill:transparent;stroke:none;cursor:pointer}
+.bv-svg [data-k]{cursor:pointer}
+.bv-svg.flipped text{transform-box:fill-box;transform-origin:center;transform:scaleX(-1)}
+.bv-svg .fp{transition:transform .9s cubic-bezier(.6,.05,.25,1)}
+
+/* 高亮 / 变暗 */
+.bv-svg.dim .g-cuF,.bv-svg.dim .g-cuB,.bv-svg.dim .g-via,.bv-svg.dim .g-zoneF,.bv-svg.dim .g-zoneB,.bv-svg.dim .g-silkF,.bv-svg.dim .g-silkB,.bv-svg.dim .g-mk,.bv-svg.dim .g-rats{opacity:.2;transition:opacity .25s}
+.bv-svg .g-hl{pointer-events:none}
+.bv-svg .g-hl .glow{stroke:var(--hl);fill:var(--hl);opacity:.32}
+.bv-svg .g-hl .core{stroke:var(--hl);fill:var(--hl)}
+/* 焊盘 / 过孔是填充形状，只要一圈细边；不写的话会继承 1 mm 的默认线宽，糊成大斑 */
+.bv-svg .g-hl .core :not(line):not(g),.bv-svg .g-hl .glow rect,.bv-svg .g-hl .glow circle{stroke-width:.06}
+.bv-svg .g-hl line{stroke-linecap:round;fill:none}
+.bv-svg .g-hl .ring{fill:none;stroke:var(--hl);stroke-width:.16}
+.bv-svg .g-hl .po{fill:color-mix(in srgb,var(--hl) 55%,transparent);stroke:var(--hl);stroke-width:.06}
+.bv-svg .g-hl .box{fill:color-mix(in srgb,var(--hl) 10%,transparent);stroke:var(--hl);stroke-width:.14}
+.bv-svg .g-hl.pulse .glow{animation:bvPulse 1.3s ease-in-out infinite}
+@keyframes bvPulse{50%{opacity:.08}}
+.bv-svg .g-hl .w2{stroke:var(--c1, #56B4E9)}
+.bv-svg .g-ann{pointer-events:none}
+.bv-svg .g-ann text{font-family:var(--f-body);fill:var(--fg);font-size:calc(1.2px / var(--bv-tz,1));paint-order:stroke;stroke:var(--bv-bg);stroke-width:calc(.3px / var(--bv-tz,1))}
+.bv-svg .g-ann .ar{fill:none;stroke:var(--hl);stroke-width:.18;stroke-linecap:round;stroke-linejoin:round}
+.bv-svg .g-ann .bx{fill:color-mix(in srgb,var(--hl) 12%,transparent);stroke:var(--hl);stroke-width:.15;stroke-dasharray:.5 .3}
+
+/* 逐步显现 */
+.bv-svg .pop{animation:bvPop .45s cubic-bezier(.3,1.6,.5,1) both}
+@keyframes bvPop{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+.bv-svg .pop{transform-box:fill-box;transform-origin:center}
+.bv-svg .fadein{animation:bvFade .8s ease both}
+@keyframes bvFade{from{opacity:0}to{opacity:1}}
+
+/* 成品样子（真实材料色；板外是背景） */
+.bv-svg.made .g-sub path{fill:var(--mk-sub)}
+.bv-svg.made .g-cuF,.bv-svg.made .g-cuB{stroke:var(--mk-cu);fill:var(--mk-cu)}
+.bv-svg.made .g-zoneF path,.bv-svg.made .g-zoneB path{fill:var(--mk-cu)}
+.bv-svg.made .g-via circle{fill:var(--mk-cu)}
+.bv-svg.made .g-mk{color:var(--mk-pad)}
+.bv-svg.made .g-mk .pd{fill:var(--mk-pad);stroke:none}
+.bv-svg.made .g-silkF,.bv-svg.made .g-silkB{color:var(--mk-silk)}
+.bv-svg.made .g-edge path{stroke:color-mix(in srgb,var(--mk-sub) 60%,#000);stroke-width:.18}
+.bv-svg.made .g-drill{fill:var(--bv-bg)}
+.bv-svg.made .g-drill .np{stroke:none}
+.bv-svg.made .g-pasteF{color:color-mix(in srgb,#9AA0A8 92%,transparent)}
+.bv-svg.m-green{--mk-sub:#14532F;--mk-cu:#2A7A44;--mk-silk:#F4F4EF}
+.bv-svg.m-black{--mk-sub:#141719;--mk-cu:#272D30;--mk-silk:#F4F4EF}
+.bv-svg.m-blue{--mk-sub:#173E7A;--mk-cu:#26569E;--mk-silk:#F4F4EF}
+.bv-svg.f-hasl{--mk-pad:#C9CED3}
+.bv-svg.f-enig{--mk-pad:#D9B45A}
+
+/* 胶片（Gerber / 钻孔文件的样子） */
+.bv-svg.film .g-sub path{fill:var(--bv-film-paper)}
+.bv-svg .g-film{color:var(--bv-film-ink);fill:var(--bv-film-ink)}
+.bv-svg .g-film .np{fill:none;stroke:var(--bv-film-ink);stroke-width:.06}
+.bv-svg .g-film line{stroke:var(--bv-film-ink)}
+.bv-stage.film{background:var(--bv-film-paper)}
+/* 胶片是浅色纸：标注、位号、焊盘号、禁布区名字一律用深色墨水（两个主题都一样） */
+.bv-svg.film .g-ann text,.bv-svg.film .g-lab text,.bv-svg.film .g-pnum text{fill:var(--bv-film-ink);stroke:var(--bv-film-paper)}
+.bv-svg.film .g-keep text{fill:#B4400B}
+
+@media (prefers-reduced-motion: reduce){
+  .bv-svg .fp{transition:none}
+  .bv-svg .g-hl.pulse .glow{animation:none}
+  .bv-svg .pop,.bv-svg .fadein{animation:none}
+  .bv-hint{transition:none}
+}

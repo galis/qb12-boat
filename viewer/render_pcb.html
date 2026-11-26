@@ -1,0 +1,102 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>html,body{margin:0;background:#0D1719;overflow:hidden}canvas{display:block}</style>
+<script type="importmap">
+{"imports":{"three":"./node_modules/three/build/three.module.js","three/addons/":"./node_modules/three/examples/jsm/"}}
+</script>
+</head>
+<body>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+const params = new URLSearchParams(location.search);
+const view = params.get('view') || 'hero';
+const W = innerWidth, H = innerHeight;
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(1);
+renderer.setSize(W, H);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.0;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#0D1719');
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environmentIntensity = 0.55;
+
+const key = new THREE.DirectionalLight('#ffffff', 2.4);
+key.position.set(2.2, 4.0, 2.6);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+key.shadow.camera.left = -3; key.shadow.camera.right = 3;
+key.shadow.camera.top = 3; key.shadow.camera.bottom = -3;
+key.shadow.radius = 6;
+scene.add(key);
+const rim = new THREE.DirectionalLight('#4FD1D9', 1.6);
+rim.position.set(-3, 1.5, -2.5);
+scene.add(rim);
+scene.add(new THREE.HemisphereLight('#cfe9ec', '#0D1719', 0.5));
+
+const mats = {
+  Body: new THREE.MeshPhysicalMaterial({ color: '#E8EDEB', roughness: 0.42, clearcoat: 0.35, clearcoatRoughness: 0.3 }),
+  DeckPanel: new THREE.MeshStandardMaterial({ color: '#1B2D32', roughness: 0.65 }),
+  Stripes: new THREE.MeshStandardMaterial({ color: '#FF7A3D', roughness: 0.4 }),
+  Shafts: new THREE.MeshStandardMaterial({ color: '#C9A55A', roughness: 0.28, metalness: 1.0 }),
+  Props: new THREE.MeshStandardMaterial({ color: '#FF7A3D', roughness: 0.35, metalness: 0.2 }),
+};
+
+new GLTFLoader().load('./pcb_preview.glb', (gltf) => {
+  const root = gltf.scene;
+  root.scale.setScalar(20);
+  root.traverse((o) => {
+    if (!o.isMesh) return;
+    const n = o.name || '';
+    const key = null;
+    if (false) { o.material = new THREE.MeshPhysicalMaterial({ color: '#4FD1D9', roughness: 0.05, metalness: 0.1, clearcoat: 1.0, transparent: false }); o.castShadow = true; return; }
+    if (false) {
+      o.material = new THREE.MeshPhysicalMaterial({ color: '#22383E', roughness: 0.3, clearcoat: 0.6 });
+    } else if (key) {
+      o.material = mats[key];
+    }
+    o.castShadow = true;
+    o.receiveShadow = true;
+  });
+  scene.add(root);
+  root.updateMatrixWorld(true);
+  const box = new THREE.Box3().setFromObject(root);
+  const c = box.getCenter(new THREE.Vector3());
+  const size = box.getSize(new THREE.Vector3());
+
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.ShadowMaterial({ opacity: 0.45 }));
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = box.min.y - 0.002;
+  ground.receiveShadow = true;
+  scene.add(ground);
+
+  const dirs = {
+    hero: [0.9, 0.95, 1.15, 1.55], low: [0.4, 0.28, 1.0, 1.25],
+    rear: [-1.05, 0.42, 0.95, 2.15],
+    side: [0.0, 0.06, 1.0, 1.55],
+    top: [0.0001, 1.0, 0.0001, 2.7],
+  };
+  const [dx, dy, dz, dist] = dirs[view];
+  const cam = new THREE.PerspectiveCamera(view === 'top' || view === 'side' ? 22 : 30, W / H, 0.01, 100);
+  const d = new THREE.Vector3(dx, dy, dz).normalize();
+  const scale = Math.max(size.x, size.z);
+  cam.position.copy(c).addScaledVector(d, dist * scale);
+  if (view === 'top') cam.up.set(0, 0, -1);
+  cam.lookAt(c);
+  renderer.render(scene, cam);
+  window.__done = true;
+});
+</script>
+</body>
+</html>

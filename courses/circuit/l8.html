@@ -1,0 +1,176 @@
+
+<!-- ============ 第 8 课 ============ -->
+<section class="lesson" id="l8">
+  <div class="lhead"><span class="lnum">8</span><div><h2>H 桥电机驱动：让电机正转、反转、调速</h2><p>学完能说清：H 桥四个开关怎么组合、DRV8833 的 IN1/IN2 怎么给、PWM 为什么能调速、两种“衰减”有什么区别、0.2Ω 电阻为什么能限流。对应原理图 D 区：U2 和它周围的电容电阻。</p></div></div>
+
+  <div class="sec">
+    <h3><span class="k">8.1</span>为什么不能用 GPIO 直接带电机</h3>
+    <div class="txt">
+      <p>STM32 课上你可能用 GPIO 点过 LED，几毫安就够了。电机不一样：</p>
+      <p><strong>电流大得多</strong>：船上的小电机正常运转要几百毫安，刚启动时能到 2A 以上。ESP32 一个引脚最多给几十毫安，差了两个数量级。</p>
+      <p><strong>要能反转</strong>：直流电机的转向由电流方向决定。想倒车，就得把电机两端的正负对调。一个三极管或 MOS 管只能“通 / 断”，做不到对调。</p>
+      <p><strong>电机是个电感</strong>：线圈里的电流不能突变，一断电，线圈会产生很高的反向电压，直接接 GPIO 会把芯片打坏。</p>
+      <p>解决这三件事的标准电路叫 <strong>H 桥</strong>。STM32 课上常见的 L298N、TB6612 模块，里面装的也是 H 桥。我们用的 DRV8833 是同类芯片，体积小，适合 3–10V 的小电机。</p>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">8.2</span>H 桥：四个开关围着一个电机</h3>
+    <div class="txt">
+      <p>电机放在中间，左右两边各一根“桥腿”。每根桥腿有一个<strong>上管</strong>（接电源 VM）和一个<strong>下管</strong>（接地），四个开关排起来像字母 H，所以叫 H 桥。</p>
+      <p>点下图的四个开关试试，或者用下面的按钮。注意看电流怎么走、电机两端电压的正负，以及<strong>同一根桥腿的上下两个管同时闭合</strong>会发生什么。</p>
+    </div>
+    <div class="widget w">
+      <div class="ctrls">
+        <span class="lab">常用组合</span>
+        <button class="btn" data-hb="fwd">正转 S1+S4</button>
+        <button class="btn" data-hb="rev">反转 S2+S3</button>
+        <button class="btn" data-hb="brake">刹车 S3+S4</button>
+        <button class="btn" data-hb="coast">全断开（滑行）</button>
+      </div>
+      <div class="wscroll"><svg id="hbsvg" viewBox="0 0 640 340" role="img" aria-label="H 桥电路：四个开关、电机和螺旋桨，可以点击开关"></svg></div>
+      <div class="readout">
+        <div class="ro"><small>闭合的开关</small><b id="hbSw">无</b></div>
+        <div class="ro"><small>电机两端电压</small><b id="hbV">0 V</b></div>
+        <div class="ro"><small>电机转速</small><b id="hbW">0 %</b></div>
+      </div>
+      <p class="status" id="hbText">点一个开关，或者点“正转”。</p>
+    </div>
+    <div class="basics">
+      <div class="card"><b>正转、反转</b><p>对角的两个开关闭合（S1+S4 或 S2+S3），电机一端接 VM、一端接地。换一组对角，电流方向就反过来。</p></div>
+      <div class="card"><b>刹车和滑行</b><p>两个下管一起闭合，电机两端被短接。转动的电机这时是个发电机，自己发的电在短路里被消耗掉，很快停下，这叫刹车。四个全断开，电机靠惯性慢慢停，这叫滑行。</p></div>
+      <div class="card"><b>直通（shoot-through）</b><p>同一侧的上下管同时闭合，VM 直接经两个开关接地，中间没有任何负载。电流只受开关和导线的电阻限制，几安培甚至几十安培，管子会瞬间烧掉。写驱动时最要避免的就是这个。</p></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">8.3</span>DRV8833：把 H 桥和“防呆”做进一颗芯片</h3>
+    <div class="txt">
+      <p>DRV8833 里面有<strong>两个完整的 H 桥</strong>（A 路、B 路），每个都由 4 个 N 沟道 MOS 管组成，导通电阻上管加下管一共约 0.36Ω。它不让你直接碰四个开关，而是给每个 H 桥留两个输入脚：<strong>xIN1、xIN2</strong>。</p>
+      <p>两个脚只有四种组合，芯片按下表帮你开关管子。你会发现：<strong>没有哪种组合能造成直通</strong>。芯片每次切换还会自动插入约 450ns 的“全关”死区时间，保证先断后通。这就是用驱动芯片而不是自己搭四个 MOS 管的最大好处。</p>
+    </div>
+    <div class="widget w">
+      <div class="ctrls">
+        <span class="lab">交给 DRV8833：</span>
+        <button class="btn" id="hb2In1" aria-pressed="false">AIN1 = 0</button>
+        <button class="btn" id="hb2In2" aria-pressed="false">AIN2 = 0</button>
+        <span class="lab">（点按钮切换 0 / 1）</span>
+      </div>
+      <div class="two">
+        <div class="wscroll sm"><svg id="hb2svg" viewBox="0 0 640 340" role="img" aria-label="DRV8833 根据 AIN1、AIN2 控制 H 桥"></svg></div>
+        <div class="tbl"><table class="ptable" id="hbTT" style="min-width:0">
+          <thead><tr><th>IN1</th><th>IN2</th><th>OUT1</th><th>OUT2</th><th>电机</th></tr></thead>
+          <tbody>
+            <tr data-r="00"><td>0</td><td>0</td><td>断开</td><td>断开</td><td>滑行</td></tr>
+            <tr data-r="10"><td>1</td><td>0</td><td>高</td><td>低</td><td>正转</td></tr>
+            <tr data-r="01"><td>0</td><td>1</td><td>低</td><td>高</td><td>反转</td></tr>
+            <tr data-r="11"><td>1</td><td>1</td><td>低</td><td>低</td><td>刹车</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <p class="status" id="hb2Text"></p>
+    </div>
+    <div class="tip"><b>和 STM32 的关系</b>：你以前用 TB6612 时要给 IN1、IN2、PWM 三根线；DRV8833 只要两根，PWM 直接打在 IN1 或 IN2 上（下一节）。ESP32 用 IO4、IO5 管左电机，IO6、IO7 管右电机，一共 4 根线。</div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">8.4</span>PWM 调速，以及两种“衰减”</h3>
+    <div class="txt">
+      <p>电机的转速主要由它两端的<strong>平均电压</strong>决定。让开关以每秒 2 万次（20kHz）的速度快速通断，接通的时间占一半，电机感受到的就相当于一半的电压。接通时间所占的比例叫<strong>占空比</strong>。选 20kHz 是因为它刚好超出人耳范围，频率低了电机会发出刺耳的啸叫。</p>
+      <p>问题出在“断开”的那一段：线圈里的电流不能突变，必须找条路继续流，这叫<strong>续流</strong>。DRV8833 给了两种续流方式：</p>
+      <p><strong>快衰减</strong>（IN1 = PWM，IN2 = 0）：断开时四个管全关，电流只能经过 MOS 管自带的体二极管冲回电源。电机两端被反向加上约 −VM（再加上两个体二极管的压降，约 −5V），电流很快掉到零。</p>
+      <p><strong>慢衰减</strong>（IN1 = 1，IN2 = PWM）：断开时两个下管同时导通，电机两端被短接（就是“刹车”状态），电流在短路里慢慢减小，一直延续到下一次接通。</p>
+    </div>
+    <div class="widget w">
+      <div class="ctrls">
+        <span class="lab">续流方式</span>
+        <button class="btn" data-dm="slow" aria-pressed="true">慢衰减（IN1 = 1，IN2 = PWM）</button>
+        <button class="btn" data-dm="fast" aria-pressed="false">快衰减（IN1 = PWM，IN2 = 0）</button>
+      </div>
+      <div class="slider"><label for="pwmD">推动电机的时间占比 <span id="pwmDV">50 %</span></label><input type="range" id="pwmD" min="0" max="100" step="1" value="50"></div>
+      <div class="wscroll"><svg id="pwmsvg" viewBox="0 0 640 420" role="img" aria-label="PWM 波形：输入脚、电机电压、电机电流三个面板"></svg></div>
+      <p class="hov" id="pwmHov">把鼠标（或手指）放到波形上，看某一时刻的电压和电流。</p>
+      <div class="readout">
+        <div class="ro"><small>写进 PWM 的占空比</small><b id="pwmReg">—</b></div>
+        <div class="ro"><small>电机平均电压</small><b id="pwmVa">—</b></div>
+        <div class="ro"><small>电机平均电流</small><b id="pwmIa">—</b></div>
+        <div class="ro"><small>转速（相对满速）</small><b id="pwmSp">—</b></div>
+      </div>
+      <p class="status" id="pwmText"></p>
+    </div>
+    <div class="widget w">
+      <div class="wscroll"><svg id="spdsvg" viewBox="0 0 640 250" role="img" aria-label="两种衰减方式下转速随占空比变化的曲线"></svg></div>
+      <div class="legendrow"><span><i style="background:var(--c1)"></i>慢衰减</span><span><i style="background:var(--c2)"></i>快衰减</span><span>圆点：上面滑块当前的位置</span></div>
+    </div>
+    <div class="txt">
+      <p>看这张转速曲线：慢衰减几乎是一条直线，推多少给多少；快衰减在低速时有一段“推了也不转”的死区，中间也偏慢，因为每次断开时电流都被反向电压迅速打掉了，电机拿到的力气少。<strong>我们的程序用慢衰减</strong>，摇杆手感更线性，低速也有劲。</p>
+      <p>慢衰减有一个容易写错的地方：IN1 常高、IN2 打 PWM 时，IN2 为<strong>低</strong>的那段才是在推电机（表里的“10 正转”），为高的那段是刹车续流（“11”）。所以想要 30% 的速度，IN2 的占空比要写 70%。第 9 课的 <span class="net">drive()</span> 函数里那句 <span class="net">1 − |s|</span> 就是这个意思。</p>
+    </div>
+    <div class="tip"><b>示意模型</b>：波形按“电池 3.7V、电机内阻 1.6Ω、电感 150µH、带一个小螺旋桨负载”算出来，用来看趋势。你的电机参数不同，数字会变，但两种衰减的差别是一样的。</div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">8.5</span>限流：R15、R16 这两颗 0.2Ω 电阻</h3>
+    <div class="txt">
+      <p>电机刚启动或被水草缠住时，转子不转，没有反电动势来“顶”着，电流只受线圈电阻限制：3.7V ÷ 1.6Ω ≈ 2.3A。两个电机一起起步就是近 5A。后果有三个：</p>
+      <p><strong>电池电压被拉低</strong>：电池和线路都有电阻，大电流一拉，VSYS 往下掉，3.3V 稳压可能撑不住，ESP32 重启、手柄掉线（第 6 课）。<strong>触发过流保护</strong>：DRV8833 内部的过流保护最低 2A 就可能动作，一动作就关断 1.35ms 再重试，电机一顿一顿的。<strong>发热</strong>：电机、电池、芯片都在白白发热。</p>
+      <p>DRV8833 自带<strong>电流斩波</strong>：电机电流从 AISEN 脚经 R15 流到地，在 R15 上产生 I × R 的电压。芯片拿它和内部的 <strong>200mV</strong> 比较，一超过就切到慢衰减，等下一个内部 50kHz 周期（每 20µs）再接通。于是电流被限制在：</p>
+      <p style="font-family:var(--f-mono);color:var(--fg)">I<sub>限</sub> = 0.2V ÷ R15 = 0.2V ÷ 0.2Ω = 1A</p>
+    </div>
+    <div class="widget w">
+      <div class="ctrls">
+        <span class="lab">换一颗 R15 试试</span>
+        <button class="btn" data-rs="0.1">0.1Ω</button>
+        <button class="btn" data-rs="0.2" aria-pressed="true">0.2Ω（板上）</button>
+        <button class="btn" data-rs="0.33">0.33Ω</button>
+        <button class="btn" data-rs="0.5">0.5Ω</button>
+        <button class="btn primary" id="ocpGo">重放起步</button>
+      </div>
+      <div class="wscroll"><svg id="ocpsvg" viewBox="0 0 640 380" role="img" aria-label="电机起步时的电流和转速：不限流与限流对比"></svg></div>
+      <div class="legendrow"><span><i style="background:var(--c1)"></i>不限流（R15 换成 0Ω）</span><span><i style="background:var(--c2)"></i>用当前的 R15 限流</span><span><i style="background:var(--pow)"></i>过流保护最低 2A</span></div>
+      <p class="hov" id="ocpHov">把鼠标放到图上看某一时刻的数值。</p>
+      <div class="readout">
+        <div class="ro"><small>限流值 0.2V ÷ R</small><b id="ocpI">1.00 A</b></div>
+        <div class="ro"><small>起步峰值：限流 / 不限流</small><b id="ocpPk">—</b></div>
+        <div class="ro"><small>到 90% 转速：限流 / 不限流</small><b id="ocpT">—</b></div>
+        <div class="ro"><small>两个电机一起起步：电池电流 · VSYS 下跌</small><b id="ocpTot">—</b></div>
+      </div>
+      <p class="status" id="ocpText"></p>
+    </div>
+    <div class="txt">
+      <p>0.2Ω 是个折中：电流砍掉一半多，起步只慢了二十毫秒左右，人根本感觉不到。电阻再大，船就“肉”了；再小，就碰到过流保护的门槛。R15 选 1206 封装，因为限流时它要承受 1A² × 0.2Ω = 0.2W，1206 额定 0.25W；正常运转时只有零点几安，发热很小。图里的“VSYS 下跌”按电池内阻加线路电阻共约 0.2Ω 估算。</p>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">8.6</span>DRV8833 的 16 个脚</h3>
+    <div class="txt"><p>点芯片上的引脚，看它接到哪、为什么这样接。</p></div>
+    <div class="two">
+      <div class="widget w"><div class="wscroll sm"><svg id="drvsvg" viewBox="0 0 520 330" role="img" aria-label="DRV8833 引脚图，可点击"></svg></div></div>
+      <div class="card" id="drvInfo" style="display:flex;flex-direction:column;gap:8px"><p class="empty" style="color:var(--muted)">点左图的引脚。</p></div>
+    </div>
+    <div class="tip"><b>装配建议</b>：在两个电机的金属端子上各焊一颗 0.1µF 陶瓷电容（直接焊在电机尾部两个焊片之间）。电机电刷换向时会打出很多高频火花，这颗电容就地把它吸收掉，免得干扰蓝牙、让 ESP32 误复位。这颗电容不在 PCB 上，要你自己焊。</div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">8.7</span>两路分别接哪</h3>
+    <div class="tbl"><table>
+      <thead><tr><th>ESP32</th><th>DRV8833 输入</th><th>DRV8833 输出</th><th>接口</th><th>电机</th></tr></thead>
+      <tbody>
+        <tr><td>IO4 / IO5</td><td>AIN1 / AIN2</td><td>AOUT1（ML+）/ AOUT2（ML−）</td><td>J3</td><td>左电机</td></tr>
+        <tr><td>IO6 / IO7</td><td>BIN1 / BIN2</td><td>BOUT1（MR+）/ BOUT2（MR−）</td><td>J4</td><td>右电机</td></tr>
+      </tbody>
+    </table></div>
+    <div class="txt"><p>装好后如果某个电机转反了，不用改电路：把那个电机的两根线对调，或者在程序里把它的 s 取反。</p></div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">8.8</span>自测</h3>
+    <div class="quiz">
+      <details><summary>AIN1 = 1、AIN2 = 1 时，左电机是什么状态？</summary><div class="ans"><p>刹车。两个下管同时导通，电机两端被短接，电机靠惯性发出的电在短路里消耗掉，很快停下。</p><button class="show" data-nets="AIN1,AIN2">在原理图上标出 AIN1、AIN2</button></div></details>
+      <details><summary>用慢衰减想让电机正转 30%，IO4、IO5 怎么给？</summary><div class="ans"><p>IO4（AIN1）一直输出高电平，IO5（AIN2）输出 PWM，占空比 70%。IN2 为低的 30% 时间在推电机，为高的 70% 时间在刹车续流。</p></div></details>
+      <details><summary>把 R15 换成 0.1Ω，会怎样？</summary><div class="ans"><p>限流变成 0.2V ÷ 0.1Ω = 2A，刚好落在过流保护的最低门槛上。起步时可能触发过流保护，H 桥关断 1.35ms 再重试，电机一顿一顿的，nFAULT 被拉低报警；电池电压也被拉得更低。</p><button class="show" data-nets="ISENA,ISENB">在原理图上标出 ISENA、ISENB</button></div></details>
+      <details><summary>程序里忘了把 IO15 拉高，会怎样？</summary><div class="ans"><p>R9 把 nSLEEP 拉在低电平，DRV8833 一直在睡觉，H 桥全关。不管 IO4–IO7 怎么给，电机都不转。</p><button class="show" data-nets="nSLEEP">在原理图上标出 nSLEEP</button></div></details>
+    </div>
+  </div>
+</section>

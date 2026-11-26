@@ -1,0 +1,115 @@
+/* 第 4 课：走线 */
+#p4 .p4-shot img{width:100%;height:auto}
+#p4 .p4-shots{align-items:start}
+#p4 svg text{font-family:var(--f-body)}
+#p4 #p4-wsvg,#p4 #p4-gsvg,#p4 #p4-tsvg,#p4 #p4-msvg{max-width:640px;margin-inline:auto}
+#p4 #p4-bv .bv-chip.w,#p4 #p4-bv .bv-extra .bv-lab:nth-of-type(2){display:none}
+
+/* 4.1 线宽计算器 */
+#p4 .p4-calcsvg{min-width:0}
+#p4 .p4-t{font-size:13px;fill:var(--muted)}
+#p4 .p4-t.fg{fill:var(--fg)}
+#p4 .p4-t.mono{font-family:var(--f-mono);font-size:12.5px}
+#p4 .p4-t.big{font-family:var(--f-mono);font-size:14px;fill:var(--fg);font-weight:600}
+#p4 .p4-sub{fill:color-mix(in srgb,#3B6B4A 30%,var(--panel2));stroke:var(--line)}
+#p4 .p4-fr4{fill:color-mix(in srgb,#B8A55A 30%,var(--panel2));stroke:var(--line)}
+#p4 .p4-cu{fill:#C27A3E;transition:fill .25s}
+#p4 .p4-heat{fill:var(--pow);transition:opacity .25s}
+#p4 .p4-dot{fill:var(--hl)}
+#p4 .p4-dim{stroke:var(--fg);stroke-width:1;fill:none}
+#p4 .p4-tube{fill:var(--panel2);stroke:var(--line);stroke-width:1.5}
+#p4 .p4-merc{fill:var(--ok);transition:fill .25s}
+#p4 .p4-merc.warn{fill:var(--hl)}
+#p4 .p4-merc.bad{fill:var(--pow)}
+#p4 .p4-tick{stroke:var(--muted);stroke-width:1}
+#p4 .p4-tick.t10{stroke:var(--sig);stroke-width:2}
+#p4 #p4-wmarks .btn,#p4 #p4-amps .btn,#p4 #p4-wchips .btn,#p4 #p4-routes .btn{font-size:13.5px;padding:5px 10px}
+#p4 .btn small{color:var(--muted);font-size:11.5px;margin-left:4px;font-weight:400}
+#p4 .p4-calc .readout .ro b{font-size:15px}
+
+/* 4.2 网络类表 + 线宽 */
+#p4 #p4-cls td{font-size:14px}
+#p4 #p4-cls td:nth-child(2),#p4 #p4-cls td:nth-child(3),#p4 #p4-cls td:nth-child(4),#p4 #p4-cls td:nth-child(6){font-family:var(--f-mono);font-size:13px;white-space:nowrap}
+#p4 #p4-cls .net{margin:0 3px 3px 0;display:inline-block}
+@media (max-width:700px){
+  #p4 #p4-cls{min-width:0}
+  #p4 #p4-cls thead{display:none}
+  #p4 #p4-cls tr{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2px 10px;padding:10px 12px;border-bottom:1px solid var(--line)}
+  #p4 #p4-cls tr:last-child{border-bottom:none}
+  #p4 #p4-cls td{display:block;border:none;padding:2px 0;min-width:0}
+  #p4 #p4-cls td::before{content:attr(data-l);display:block;font-family:var(--f-body);font-size:11.5px;color:var(--muted);font-weight:400}
+  #p4 #p4-cls td:first-child{grid-column:1 / -1;font-size:16px;font-weight:700}
+  #p4 #p4-cls td:first-child::before{display:none}
+  #p4 #p4-cls td:nth-child(5),#p4 #p4-cls td:nth-child(7){grid-column:1 / -1}
+  #p4 #p4-cls td:nth-child(6){grid-column:1 / -1}
+}
+#p4 .p4-wcard{padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+#p4 .p4-wcard h4{margin:0;font-size:16px;font-family:var(--f-mono)}
+#p4 .p4-wcard p{color:var(--body);font-size:14.5px;max-width:80ch}
+#p4 .p4-annhl line{stroke:var(--hl);stroke-linecap:round;fill:none}
+#p4 .p4-annhl .gl{opacity:.32}
+#p4 .p4-ann line{stroke-linecap:round;fill:none}
+#p4 .p4-ann .cuF{stroke:var(--bv-fcu)}
+#p4 .p4-ann .cuB{stroke:var(--bv-bcu)}
+#p4 .p4-ann .glw{stroke:var(--hl);opacity:.35}
+#p4 .p4-ann circle.via{fill:var(--bv-via)}
+#p4 .p4-ann circle.vhl{fill:none;stroke:var(--hl);stroke-width:.14}
+#p4 .p4-ann .ko{stroke:var(--bv-keep);opacity:.55}
+#p4 .p4-ann circle.ko{fill:var(--bv-keep);stroke:none;opacity:.5}
+#p4 .p4-ann .rat{stroke:var(--bv-rats);stroke-width:.08;stroke-dasharray:.35 .25;opacity:.9}
+#p4 .p4-ann .gapl{stroke:var(--fg);stroke-width:.035}
+#p4 .p4-ann text.gapt{font-family:var(--f-mono);fill:var(--fg);font-weight:600}
+
+/* 4.3 间距 */
+#p4 .p4-tr{fill:var(--bv-fcu)}
+#p4 .p4-tr.b{fill:var(--c1)}
+#p4 .p4-tro{fill:none;stroke:var(--fg);stroke-width:1;stroke-dasharray:4 3;opacity:.7}
+#p4 .p4-band{fill:color-mix(in srgb,var(--pow) 14%,transparent);stroke:var(--pow);stroke-width:1;stroke-dasharray:5 3}
+#p4 .p4-over{fill:var(--pow)}
+#p4 .p4-dl{stroke:var(--hl);stroke-width:1.5;fill:none}
+#p4 .p4-gt{font-family:var(--f-mono);font-size:14px;fill:var(--hl);font-weight:600}
+
+/* 4.4 两层 */
+#p4 .p4-barh{font-size:14px}
+#p4 .p4-bar{display:flex;height:30px;border-radius:8px;overflow:hidden;border:1px solid var(--line)}
+#p4 .p4-bar div{display:flex;align-items:center;justify-content:center;min-width:44px;font-family:var(--f-mono);font-size:12.5px;color:#fff;font-weight:600;text-shadow:0 0 3px rgba(0,0,0,.55)}
+#p4 .p4-bar .F{background:var(--bv-fcu)}
+#p4 .p4-bar .B{background:var(--bv-bcu)}
+#p4 .p4-lgF,#p4 .p4-lgB{display:inline-block;height:10px;width:10px;border-radius:3px;vertical-align:-1px;margin-right:6px}
+#p4 .p4-lgF{background:var(--bv-fcu)}
+#p4 .p4-lgB{background:var(--bv-bcu)}
+
+/* 4.5 自动布线 */
+#p4 .p4-arstage{grid-template-columns:minmax(0,1fr) 340px}
+@media (max-width:900px){#p4 .p4-arstage{grid-template-columns:minmax(0,1fr)}}
+#p4 .p4-arstage .states > div{align-items:baseline}
+#p4 .p4-arstage .states > div > span:first-child{white-space:nowrap;color:var(--muted);font-family:var(--f-body)}
+#p4 .p4-arstage .states > div > span:last-child{font-family:var(--f-body);font-size:13.5px;text-align:right}
+#p4 .p4-arstage .states .net{font-family:var(--f-mono)}
+#p4 #p4-ar-steps .btn{font-size:13.5px;padding:5px 10px}
+#p4 .p4-chkh{font-size:14.5px;margin-top:4px}
+#p4 #p4-chk .btn{font-size:13.5px;padding:5px 10px}
+
+/* 4.6 USB 时间尺 */
+#p4 .p4-axis{stroke:var(--muted);stroke-width:1}
+#p4 .p4-edge{stroke:var(--sig);stroke-width:3;fill:none;stroke-linejoin:round}
+#p4 .p4-fly{fill:color-mix(in srgb,var(--hl) 45%,transparent);stroke:var(--hl);stroke-width:1}
+#p4 .p4-len{fill:var(--sig)}
+#p4 .p4-crit{stroke-width:2.5}
+#p4 .p4-crit.ok{stroke:var(--ok)}
+#p4 .p4-crit.bad{stroke:var(--pow)}
+#p4 .p4-ct.ok{fill:var(--ok)}
+#p4 .p4-ct.bad{fill:var(--pow)}
+
+/* 4.7 布线器模式 */
+#p4 .p4-halo{stroke:var(--muted);opacity:.18;fill:none;stroke-linecap:round;stroke-linejoin:round}
+#p4 .p4-oth{stroke:var(--c1);fill:none;stroke-linecap:round;stroke-linejoin:round}
+#p4 .p4-othp{fill:var(--c1)}
+#p4 .p4-new{stroke:var(--bv-fcu);fill:none;stroke-linecap:round;stroke-linejoin:round}
+#p4 .p4-newp{fill:var(--bv-fcu)}
+#p4 .p4-hit{fill:none;stroke:var(--pow);stroke-width:3}
+#p4 .p4-hitf{fill:color-mix(in srgb,var(--pow) 35%,transparent)}
+
+#p4 .p4-nextc{text-decoration:none;color:inherit}
+@media (max-width:560px){#p4 svg .p4-t{font-size:16px}#p4 svg .p4-t.mono{font-size:14.5px}#p4 svg .p4-t.big{font-size:16px}#p4 svg .p4-gt{font-size:15px}}
+@media (prefers-reduced-motion: reduce){#p4 .p4-cu,#p4 .p4-heat,#p4 .p4-merc{transition:none}}

@@ -1,0 +1,218 @@
+<section class="lesson" id="p5">
+  <div class="lhead"><span class="lnum">5</span><div><h2>过孔与铺铜</h2><p>学完能说清：过孔里面长什么样、焊环多宽才够；QB12 的 <span id="p5-nv0"></span> 个过孔分成哪五种、各干什么；电流怎么“回家”、地被切开会怎样；为什么两面都铺地、焊盘为什么实心连上去；哪几块地方不许有铜。</p></div></div>
+
+  <!-- ============ 5.1 过孔的构造 ============ -->
+  <div class="sec">
+    <h3><span class="k">5.1</span>过孔：在板上打一口“电梯井”</h3>
+    <div class="txt">
+      <p><a href="#p4">第 4 课</a>的线都画在同一层上。两层板上，一根线要从另一根线下面穿过去，就得换到另一面：在板上钻一个小孔，把孔壁镀上铜，顶层、底层各留一圈铜皮。这就是<strong>过孔</strong>（via）。电流从顶层的线进来，顺着孔壁那层铜下到底层，再接着走。</p>
+      <p>过孔有两个尺寸：<strong>外径</strong>（两面那圈铜皮的直径）和<strong>孔径</strong>（钻出来的孔）。两者差值的一半，就是孔外面那一圈铜有多宽，叫<strong>焊环</strong>（annular ring）。钻头会有一点偏差，焊环太窄，钻偏一点就把铜皮边钻破了。拖下面的滑块试试。</p>
+    </div>
+    <div class="widget p5-via">
+      <div class="ctrls" role="group" aria-label="过孔尺寸预设">
+        <span class="lab">试一试</span>
+        <span id="p5-vpre" class="ctrls"></span>
+      </div>
+      <div class="p5-viarow">
+        <figure class="p5-xsfig">
+          <svg id="p5-xs" viewBox="0 0 560 312" role="img" aria-label="过孔剖面示意图：钻孔、孔壁镀铜、两面焊环、阻焊"></svg>
+          <figcaption class="cap">剖面示意：横向按比例，厚度方向放大了（铜只有约 35 µm，阻焊 ≥10 µm）。小点是电流。</figcaption>
+        </figure>
+        <figure class="p5-tvfig">
+          <svg id="p5-tv" viewBox="0 0 240 240" role="img" aria-label="过孔俯视示意图：焊盘、孔，以及钻偏到公差极限时孔的位置"></svg>
+          <figcaption class="cap">从上往下看。虚线圈：钻头偏到孔位公差极限（±<span id="p5-tol"></span> mm）时孔的位置。</figcaption>
+        </figure>
+      </div>
+      <div class="p5-sliders">
+        <div class="slider"><label for="p5-sd">外径 <span id="p5-sdv"></span></label><input type="range" id="p5-sd" min="0.25" max="1.2" step="0.05" value="0.6"></div>
+        <div class="slider"><label for="p5-sh">孔径 <span id="p5-shv"></span></label><input type="range" id="p5-sh" min="0.15" max="0.6" step="0.05" value="0.3"></div>
+      </div>
+      <div class="ctrls">
+        <span class="lab">表面</span>
+        <button class="btn" id="p5-tent" aria-pressed="true">阻焊盖住过孔（盖油）</button>
+        <button class="btn" id="p5-open" aria-pressed="false">阻焊开窗</button>
+      </div>
+      <div class="readout" id="p5-vro"></div>
+      <div class="p5-checks" id="p5-vchk" aria-live="polite"></div>
+    </div>
+    <div class="txt">
+      <p id="p5-vtxt1"></p>
+      <p id="p5-vtxt2"></p>
+    </div>
+    <div class="tip"><b>孔壁那层铜够不够？</b><span id="p5-vtip"></span></div>
+    <div class="two">
+      <div class="howto"><b>KICAD 里自己做</b>
+        <span>过孔尺寸在三个地方设。<span class="menu">文件 → 电路板配置... → 设计规则 → 约束</span> 里是全板的底线（最小过孔外径、最小钻孔孔径、最小孔环宽度），按厂家能力填，DRC 用它来查。<span class="menu">网络类</span> 里每一类都有一个默认过孔，布线时按 <kbd>V</kbd> 放下的过孔默认用它。<span class="menu">预设尺寸</span> 里可以再列几种常用的过孔（直径 / 孔径），布线时从顶部的过孔下拉框里挑。</span>
+        <span>布线途中按 <kbd>'</kbd>（单引号）/ <kbd>\</kbd>（反斜杠）在预设过孔之间切大小，按 <kbd>Q</kbd> 临时自定义。KiCad 9 起，过孔盖油不在导出 Gerber 的对话框里了，改在 <span class="menu">电路板配置 → 电路板叠层 → 阻焊/锡膏 → 过孔盖油: 顶层 / 底层</span>（Tent vias，新板默认都勾）；单个过孔可以在 <span class="menu">走线与过孔属性 → 阻焊覆盖:</span> 里改（IPC-4761 分类，例如 来自规则 / 双面盖油 (Type I-b) / 双面塞孔 (Type III-b)）。</span>
+      </div>
+      <div class="p5-shots2">
+        <figure class="fig p5-shot"><img src="@@ASSET:kicad_predef_sizes.webp@@" alt="KiCad 电路板配置对话框的预设尺寸页（工作副本）：左边预设走线宽度 0.2 到 0.8 mm，中间两种预设过孔 0.6 / 0.3 和 0.8 / 0.4 mm，右边差分对是空的" loading="lazy"><figcaption>KiCad 10.0.6 截图：<span class="menu">电路板配置 → 设计规则 → 预设尺寸</span>。左边“走线”是预设线宽，中间“过孔”是预设过孔（直径 / 孔径），右边是差分对。注意：交付的 QB12 工程里这张表是<b>空的</b>（线宽和过孔全按网络类来，工具栏写着“走线: 使用网络类宽度”“过孔: 使用网络类尺寸”）；截图里的数是在一份工作副本里按 QB12 实际用到的尺寸填的：5 种网络类线宽 0.2 / 0.3 / 0.4 / 0.5 / 0.8 mm，两种过孔 0.6 / 0.3 和 0.8 / 0.4 mm。</figcaption></figure>
+        <figure class="fig p5-shot"><img src="@@ASSET:kicad_mask_paste.webp@@" alt="KiCad 电路板配置对话框的阻焊/锡膏页：阻焊扩展、阻焊桥最小宽度、阻焊层到铜的间距都是 0，过孔盖油的顶层和底层都勾上" loading="lazy"><figcaption>KiCad 10.0.6 截图：<span class="menu">电路板配置 → 电路板叠层 → 阻焊/锡膏</span>。QB12 的 <span class="menu">过孔盖油:</span> 顶层、底层两个都勾着；阻焊扩展、阻焊桥 (绿油桥) 最小宽度、阻焊层到铜的间距都是 0（页面顶上的提示：板厂没给规范，就把这些值设为零）。</figcaption></figure>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 5.2 五种过孔 ============ -->
+  <div class="sec">
+    <h3><span class="k">5.2</span><span id="p5-nv1"></span> 个过孔，五种用途</h3>
+    <div class="txt">
+      <p>QB12 上的过孔都是脚本和自动布线器打的（<a href="#p0">第 0 课</a>的“说实话”讲过）。按用途分成五种，只有一种是给信号换层的，其余全部接地。点一种，板上用黄圈标出来。</p>
+    </div>
+    <div class="widget">
+      <div class="ctrls" id="p5-roles" role="group" aria-label="按用途查看过孔"></div>
+      <div class="stage p5-stage">
+        <div class="p5-left"><div id="p5-bv1"></div></div>
+        <div class="card explain p5-card" aria-live="polite">
+          <h4 id="p5-r-title"></h4>
+          <p id="p5-r-what"></p>
+          <div class="states" id="p5-r-facts"></div>
+          <div class="ctrls" id="p5-r-sub"></div>
+        </div>
+      </div>
+      <div class="p5-whobar" id="p5-who"></div>
+    </div>
+    <div class="howto"><b>KICAD 里自己做</b>
+      <span>换层过孔：按 <kbd>X</kbd> 开始布线，走到要换层的地方按 <kbd>V</kbd>，KiCad 放下一个过孔并切到另一层，接着画。</span>
+      <span>接地孔、缝合孔这种“单独的孔”：<span class="menu">放置 → 放置过孔</span>（<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>X</kbd>），点在要放的地方，放下后按 <kbd>E</kbd> 看它的网络是不是 GND。放在覆铜区上时取覆铜区的网络，并且不跟着原理图更新改网络；放在走线或焊盘上时会打开“通过网自动更新”（Automatically update via nets，过孔属性里的选项），做缝合孔时关着。要一排一排地放，选中一个过孔按 <kbd>Ctrl</kbd>+<kbd>T</kbd>（<span class="menu">创建阵列...</span>）。KiCad 10 里也没有专门的“缝合过孔”命令；<span class="menu">扩展内容管理器</span> 里的 Via Stitching 插件 4.0.0 要 KiCad 10，是 IPC 插件，要先在 <span class="menu">偏好设置 → 插件</span> 里勾上 <span class="menu">启用 KiCad API</span>。装别的插件之前也先看它支持的版本。</span>
+    </div>
+  </div>
+
+  <!-- ============ 5.3 回路 ============ -->
+  <div class="sec">
+    <h3><span class="k">5.3</span>电流要“回家”：回路越小越好</h3>
+    <div class="txt">
+      <p>电流永远走一个圈：从芯片的脚出去，沿信号线到对面，再从地<strong>回来</strong>。电路课里地只是一个符号，到了板上，回来的那半圈也要有铜可走。</p>
+      <p>变化快的电流（信号的上升沿、PWM、电源上的尖峰）回来时，挑的是让整个圈<strong>围出来的面积最小</strong>的路，也就是紧贴在信号线正下方的那条。圈围得越大，它就越像一个线圈天线：往外发的干扰越多，也越容易收进别人的干扰。所以底层整片铺地，就是给每根线下面都铺好一条回家的路。</p>
+    </div>
+    <div class="widget">
+      <div class="slider"><label for="p5-slot">底层一根别的线把地切开了一条缝，缝长 <span id="p5-slotv"></span></label><input type="range" id="p5-slot" min="0" max="21" step="0.5" value="0"></div>
+      <div class="ctrls">
+        <button class="btn" id="p5-bridge" aria-pressed="false">缝两边打缝合孔，从顶层的地绕过去</button>
+        <button class="btn" id="p5-slotmax">把缝拉满</button>
+        <button class="btn" id="p5-slot0">没有缝</button>
+      </div>
+      <div class="p5-loopw"><svg id="p5-loop" viewBox="0 0 640 300" role="img" aria-label="信号线和它的回流电流：底层地被切开时，回流电流只能绕过缝，回路面积变大"></svg></div>
+      <div class="legendrow"><span><i style="background:var(--bv-fcu)"></i>顶层信号线（电流去）</span><span><i style="background:var(--sig)"></i>回流电流（回来）</span><span><i style="background:var(--bv-bcu)"></i>别的网络的底层走线（铺铜给它让出一条缝）</span><span><i style="background:color-mix(in srgb,var(--hl) 60%,transparent)"></i>回路多围出来的面积</span></div>
+      <div class="readout" id="p5-lro"></div>
+      <p class="status" id="p5-lst"></p>
+    </div>
+    <div class="tip"><b>示意模型</b>：一根 48 mm 的信号线，下面是 1.5 mm 厚的板子和一整片地。“回路面积”= 线长 × 板厚（电流从顶层去、底层回，竖着围出来的那一圈），再加上回流绕路在平面上多围出来的面积。绕路的形状是画出来的示意，真实电流会散开一些，但“缝越长，圈越大”这个趋势是一样的。</div>
+    <div class="txt">
+      <p id="p5-ltxt"></p>
+    </div>
+    <div class="two">
+      <div class="howto"><b>KICAD 里自己做</b>
+        <span>检查底层的地有没有被切成长缝：在右边 <span class="menu">外观</span> 面板的层列表里点 B.Cu 让它成为当前层，右键 → <span class="menu">隐藏除当前工作层的所有层</span>。看到一根线横着把一大片地切开，就想办法：改走顶层、把线缩短，或者在缝的两头打接地过孔，让顶层的地把回流接过去。</span>
+        <span>Espressif 对 USB 线的要求也是这个道理：线下面要有连续的地；能不换层就不换，必须换层时在每个换层点旁边加一对接地过孔，给回流电流也开一部“电梯”。</span>
+      </div>
+      <figure class="fig p5-shot"><img src="@@ASSET:kicad_bcu_view.webp@@" alt="KiCad 里只显示 B.Cu 底层铜的 QB12：整片蓝色的地，中间被几根底层走线切出细缝，右上角天线处留空" loading="lazy"><figcaption>KiCad 10.0.6 截图：只显示 B.Cu（当前层 B.Cu）。底层几乎是整片地，几根底层走线在里面切出细缝；右上角的斜线框是天线禁布区，里面没有铜。</figcaption></figure>
+    </div>
+  </div>
+
+  <!-- ============ 5.4 铺铜 ============ -->
+  <div class="sec">
+    <h3><span class="k">5.4</span>铺铜：把空地全变成地</h3>
+    <div class="txt">
+      <p><strong>铺铜</strong>（copper pour；KiCad 的菜单里叫“填充区”，属性对话框叫“覆铜区”，本课程统一说铺铜）就是画一个外框、指定一个网络，让 KiCad 把框里所有空着的地方都填满这个网络的铜，同时自动给别的网络的线、焊盘、过孔让出间距。</p>
+      <p>铺地的好处：地线阻抗变小、抗干扰更强、压降更小、回路面积更小（嘉立创的铺铜指南列的就是这几条）；还能把芯片的热散开：TP4056 的手册说板上的铜就是芯片的散热器，DRV8833 的手册说铜面积越大，能散的功率越多。工厂电镀时，整板铜分布越均匀，各处镀层也越一致。</p>
+    </div>
+    <div class="widget">
+      <div class="ctrls" id="p5-psteps" role="group" aria-label="铺铜步骤"></div>
+      <div class="stage p5-stage">
+        <div class="p5-left"><div id="p5-bv2"></div></div>
+        <div class="card explain p5-card" aria-live="polite">
+          <h4 id="p5-p-title"></h4>
+          <p id="p5-p-what"></p>
+          <div class="states" id="p5-p-facts"></div>
+        </div>
+      </div>
+      <div class="readout" id="p5-pro"></div>
+    </div>
+    <div class="two">
+      <div class="howto"><b>KICAD 里自己做</b>
+        <span><span class="menu">放置 → 绘制填充区</span>（<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd>，mac 上是 <kbd>⌥</kbd>+<kbd>Z</kbd>），在板角点下第一点，弹出 <span class="menu">覆铜区属性</span>：选层（B.Cu）、选网络（GND），在 <span class="menu">间距与焊盘连接</span> 选项卡里填电气间隙、最小宽度、焊盘连接，再选死铜移除（要网格铜就勾 <span class="menu">栅格填充</span>，不勾就是实心）；几块铺铜谁先谁后（优先级）点 <span class="menu">打开填充区管理器...</span> 去调；确定后沿板框内侧点一圈，双击结束。再画一个 F.Cu 的，或者在同一个对话框里两层都勾上。</span>
+        <span>填充：<kbd>B</kbd>（<span class="menu">编辑 → 填充所有填充区</span>）。KiCad 默认不自动重铺（开关在 <span class="menu">偏好设置 → PCB 编辑器 → 编辑选项 → 其他 → 自动重新对填充区填充</span>），每次改了线都要再按一次 <kbd>B</kbd>；嫌铜挡着看线，<kbd>Ctrl</kbd>+<kbd>B</kbd>（<span class="menu">取消填充所有填充区</span>）先收起来。出 Gerber 时勾上“绘制前检查填充区填充内容”，免得导出过期的铺铜。</span>
+        <span>KiCad 10 新建铺铜的默认值：电气间隙 0.5 mm、最小宽度 0.25 mm、死铜移除“总是启用”。QB12 把间隙改小到 <span id="p5-zclr"></span> mm，让铜能钻进元件之间的窄缝。</span>
+      </div>
+      <div class="p5-shots2">
+        <figure class="fig p5-shot"><img src="@@ASSET:kicad_zones_unfilled.webp@@" alt="KiCad 里取消填充后的整块 QB12：铺铜只剩靠板边的外框线，接地焊盘之间出现飞线，状态栏显示未布线 154" loading="lazy"><figcaption>KiCad 10.0.6 截图：取消填充（<kbd>Ctrl</kbd>+<kbd>B</kbd>）后的整块 QB12（标题栏多了个星号 *：板子改过了）。铺铜只剩板边那一圈带斜线的外框，走线和焊盘看得清清楚楚；左下角状态栏的“未布线”从 0 变成了 <span id="p5-unr1"></span>：这些接地连接本来全靠铺铜连着。</figcaption></figure>
+        <figure class="fig p5-shot"><img src="@@ASSET:kicad_zone_props.webp@@" alt="KiCad 覆铜区属性对话框：层、网络名称，间距与焊盘连接选项卡里的电气间隙、最小宽度、焊盘连接，下面的拐角平滑和死铜移除" loading="lazy"><figcaption>KiCad 10.0.6 截图：QB12 顶层那块铺铜的 <span class="menu">覆铜区属性</span>。左边层勾了 F.Cu，网络名称 GND；<span class="menu">间距与焊盘连接</span> 选项卡里电气间隙 0.3、最小宽度 0.25、焊盘连接“实心”；下面拐角平滑“无”、死铜移除“总是启用”。</figcaption></figure>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 5.5 实心 vs 花焊盘 ============ -->
+  <div class="sec">
+    <h3><span class="k">5.5</span>焊盘怎么接到铺铜上：实心还是花焊盘</h3>
+    <div class="txt">
+      <p>接地的焊盘泡在一大片地里，有两种接法。<strong>实心连接</strong>：焊盘和铺铜连成一整块。<strong>花焊盘</strong>（thermal relief，也叫十字焊盘）：焊盘周围先让出一圈空，只用几根细“辐条”接到铺铜。</p>
+      <p>区别在热上。铜导热非常快。用烙铁焊一个实心接地的焊盘，烙铁头的热马上被整片铜带走，焊盘迟迟热不起来，锡化不开；花焊盘只留几根辐条，热漏得慢，焊盘很快就热了。但进回流炉时，整块板一起被热风加热，铺铜自己也是热的，两种接法的差别比用烙铁小得多；只是差别没有消失：小阻容一头接整片铜、一头接细线时，两头化锡仍有先后，这就是<a href="#p2">第 2 课</a>讲的立碑。</p>
+    </div>
+    <div class="widget">
+      <div class="ctrls">
+        <button class="btn primary" id="p5-iron">▶ 用烙铁焊</button>
+        <button class="btn" id="p5-oven">▶ 进回流炉</button>
+        <span class="lab" id="p5-hlab" aria-live="polite"></span>
+      </div>
+      <div class="p5-heat">
+        <figure><canvas id="p5-hs" width="360" height="240" aria-label="实心连接的接地焊盘受热示意"></canvas><figcaption class="cap">实心连接</figcaption></figure>
+        <figure><canvas id="p5-hr" width="360" height="240" aria-label="花焊盘受热示意"></canvas><figcaption class="cap">花焊盘（4 根辐条）</figcaption></figure>
+        <figure class="p5-hchart"><svg id="p5-hc" viewBox="0 0 300 200" role="img" aria-label="两种接法焊盘温度随时间上升的示意曲线"></svg><figcaption class="cap">焊盘温度（示意，没有单位）</figcaption></figure>
+      </div>
+      <div class="legendrow"><span><i style="background:var(--p5-cucold)"></i>凉的铜（铺铜和焊盘）</span><span><i style="background:var(--p5-gap)"></i>没有铜的空隙</span><span><i style="background:linear-gradient(90deg,var(--p5-hot1),var(--p5-hot2))"></i>由红到黄：越来越热</span><span><i style="background:var(--hl)"></i>虚线：锡熔化</span></div>
+      <p class="status" id="p5-hst"></p>
+    </div>
+    <div class="tip"><b>示意模型</b>：一块 6 × 4 mm 的铺铜，中间一个 0.8 × 1.0 mm 的接地焊盘，四周外面连着整块板。烙铁 = 只给焊盘加热；回流炉 = 整块一起加热。只用来看趋势，数字没有单位。</div>
+    <div class="txt">
+      <p id="p5-htxt1"></p>
+      <p>代价也要知道：将来要拿烙铁返修这些接地脚（比如换一颗电容、补焊 U2），会比花焊盘难加热，要用功率大一点的烙铁、或者先用热风把那一块板预热。KiCad 还有个折中选项“在电镀孔上 (PTH) 使用缓释热焊盘 (花焊盘)”：插件孔用花焊盘，贴片焊盘实心。</p>
+    </div>
+    <div class="howto"><b>KICAD 里自己做</b>
+      <span>选中铺铜按 <kbd>E</kbd> 打开 <span class="menu">覆铜区属性</span>，<span class="menu">焊盘连接:</span> 有四个选项：<span class="menu">实心</span>、<span class="menu">缓释热焊盘 (花焊盘)</span>、<span class="menu">在电镀孔上 (PTH) 使用缓释热焊盘 (花焊盘)</span>、无。选花焊盘时下面两个数决定样子：<span class="menu">缓释热焊盘 (花焊盘) 间隙:</span> 和 <span class="menu">散热引线宽度:</span>，KiCad 10 新建默认都是 0.5 mm。辐条至少要连上 2 根（<span class="menu">约束</span> 里的“最小散热引线数量”），不够 DRC 会报“缓释热焊盘 (花焊盘) 与填充区的连接不完整”（Thermal relief connection to zone incomplete）。</span>
+      <span>只想让某几个焊盘例外，就在那个焊盘（或封装）的属性里单独改“连接到填充区的焊盘”这一项。</span>
+    </div>
+  </div>
+
+  <!-- ============ 5.6 禁布区 ============ -->
+  <div class="sec">
+    <h3><span class="k">5.6</span>禁布区：哪里不许有铜</h3>
+    <div class="txt">
+      <p>铺铜会钻进每一个空地，所以有些地方要明确告诉 KiCad“这里不行”。办法是画一个<strong>规则域</strong>（rule area，老版本叫 keepout，禁布区），勾上这里禁止什么：走线、过孔、铺铜、焊盘、封装，每一项单独勾。QB12 有 <span id="p5-kn"></span> 块，点一块看它禁了什么、为什么。</p>
+    </div>
+    <div class="widget">
+      <div class="ctrls" id="p5-keeps" role="group" aria-label="三块禁布区"></div>
+      <div class="stage p5-stage">
+        <div class="p5-left"><div id="p5-bv3"></div></div>
+        <div class="card explain p5-card" aria-live="polite">
+          <h4 id="p5-k-title"></h4>
+          <div class="p5-flags" id="p5-k-flags"></div>
+          <p id="p5-k-why"></p>
+          <div class="states" id="p5-k-facts"></div>
+        </div>
+      </div>
+    </div>
+    <div class="two">
+      <div class="howto"><b>KICAD 里自己做</b>
+        <span><span class="menu">放置 → 绘制规则域</span>（<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>K</kbd>），点下第一点后弹出 <span class="menu">规则域属性</span>：勾选层（天线这种两层都勾），再勾 <span class="menu">禁止放置走线</span>、<span class="menu">禁止放置过孔</span>、<span class="menu">禁止填充填充区</span> 等，然后像画铺铜一样点出形状。画完按 <kbd>B</kbd> 重新铺铜，铜会自动让开。</span>
+        <span>先画禁布区再布线：交互布线器和 DRC 都认它，碰到就拦住或报错。用 Freerouting 的话，<a href="#p4">第 4 课</a>说过，导回来以后一定再跑一遍 DRC。</span>
+      </div>
+      <figure class="fig p5-shot"><img src="@@ASSET:kicad_keepout_props.webp@@" alt="KiCad 规则域属性对话框：层选择，禁布规则选项卡里禁止放置走线、过孔、焊盘，禁止填充填充区，禁止放置封装的复选框" loading="lazy"><figcaption>KiCad 10.0.6 截图：天线禁布区的 <span class="menu">规则域属性</span>。左边勾了 F.Cu、B.Cu 两层；<span class="menu">禁布规则</span> 选项卡里勾了禁止放置走线、禁止放置过孔、禁止填充填充区，焊盘和封装没禁。</figcaption></figure>
+    </div>
+  </div>
+
+  <!-- ============ 5.7 自测 ============ -->
+  <div class="sec">
+    <h3><span class="k">5.7</span>自测三题</h3>
+    <div class="quiz">
+      <details><summary><span>QB12 的小过孔外径 <span id="p5-qd"></span> mm、孔径 <span id="p5-qh"></span> mm，焊环多宽？如果改成 0.4 / 0.3 会怎样？</span></summary>
+        <div class="ans"><p id="p5-q1"></p><button class="show" data-p5q="1">在滑块上试</button></div></details>
+      <details><summary>底层已经几乎整面是地了，为什么顶层还要铺地，还要打一百多个缝合孔？</summary>
+        <div class="ans"><p id="p5-q2"></p><button class="show" data-p5q="2">在板上标出缝合孔</button></div></details>
+      <details><summary>U2（DRV8833）肚子下面那块散热焊盘里一共有几个孔？为什么铺铜用实心连接，不用花焊盘？</summary>
+        <div class="ans"><p id="p5-q3"></p><button class="show" data-p5q="3">在板上标出来</button></div></details>
+    </div>
+    <div class="next">
+      <a class="card" href="#p6" style="text-decoration:none;color:inherit"><b>下一课 · 第 6 课</b><h4>检查：DRC 与 3D</h4><p>线、孔、铺铜都齐了，交给电脑逐条核对：规则怎么设、报告怎么看，再用 3D 看元件会不会撞、方向对不对。</p></a>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,183 @@
+<section class="lesson" id="p6">
+  <div class="lhead"><span class="lnum">6</span><div><h2>检查：DRC 与 3D</h2><p>学完能说清：DRC 拿什么规则查、查些什么；QB12 的检查报告里每一类警告是什么意思、哪些要管；哪些事 DRC 查不出来，要打开 3D 自己看；下单前最后一遍对哪些项。</p></div></div>
+
+  <!-- 6.1 规则从哪来 -->
+  <div class="sec">
+    <h3><span class="k">6.1</span>规则从哪来：工厂能做多细，规则就别比它细</h3>
+    <div class="txt">
+      <p><strong>DRC</strong>（Design Rule Check，设计规则检查）是 KiCad 自带的一项检查：把板上每一根线、每一个焊盘、每一个孔两两拿出来量，看有没有违反你定的规则。它只认规则，不认工厂。规则写松了，DRC 照样说“没问题”，到工厂才出事。</p>
+      <p>所以规则要从工厂的<strong>制造能力</strong>来，再留一点余量。为什么要留？嘉立创的线宽公差是 ±20%，0.1 mm 的线做出来可能只有 0.08 mm；板子外形是铣刀铣出来的，位置有 ±0.2 mm 的误差。规则比工厂极限宽一些，这些误差就吃得下。</p>
+    </div>
+    <div class="widget p6-mg">
+      <div class="ctrls">
+        <span class="p6-leg"><i class="p6-k-fac"></i>工厂极限（JLC / 嘉立创）</span>
+        <span class="p6-leg"><i class="p6-k-rule"></i>QB12 的规则</span>
+        <span class="p6-leg"><i class="p6-k-act"></i>QB12 板上实际最紧</span>
+        <span class="p6-leg p6-leg-kd"><i class="p6-k-kd"></i>KiCad 默认</span>
+        <span class="p6-sp"></span>
+        <button class="btn" id="p6-mg-kd" aria-pressed="false">叠上 KiCad 默认值</button>
+      </div>
+      <div class="p6-mg-grid">
+        <div class="p6-mg-chart">
+          <div class="p6-mg-axis" aria-hidden="true"><span></span><span class="p6-mg-scale" id="p6-mg-scale"></span><span></span></div>
+          <div id="p6-mg-rows" role="group" aria-label="八条规则，点一行看详情"></div>
+          <p class="cap">横轴是“工厂极限的几倍”：竖线处 = 1 倍，正好卡在工厂能做的极限上；越往右越保险。点一行看具体数字和板上最紧的地方。</p>
+        </div>
+        <div class="card p6-mg-card" aria-live="polite">
+          <h4 id="p6-mg-title"></h4>
+          <div class="states" id="p6-mg-facts"></div>
+          <p id="p6-mg-text"></p>
+          <div class="ctrls" id="p6-mg-btns"></div>
+          <div id="p6-mg-bv"></div>
+        </div>
+      </div>
+    </div>
+    <div class="howto"><b>KICAD 里自己做</b><span>打开 <span class="menu">文件 → 电路板配置...</span>，左边选 <span class="menu">设计规则 → 约束</span>。照工厂能力页填：最小间距、最小走线宽度、最小孔环宽度、最小过孔外径、铜箔到板边间距、最小钻孔孔径、孔到孔的间距、最小文本高度……这页是“底线”，网络类（<a href="#p4">第 4 课</a>）和手动改的尺寸都不能低于它。KiCad 新建工程的默认值大多比工厂极限宽，但丝印线条默认只有 0.1 mm，工厂要 ≥0.15 mm，在 <span class="menu">文本与图形 → 默认</span> 里改成 0.15。</span></div>
+  </div>
+
+  <!-- 6.2 DRC 在找什么 -->
+  <div class="sec">
+    <h3><span class="k">6.2</span>DRC 在找什么：自己拖一拖</h3>
+    <div class="txt">
+      <p>DRC 查的东西可以分成三类：<strong>铜和铜</strong>（线宽、间距、有没有短路）、<strong>孔</strong>（孔环、孔和孔、孔离板边）、<strong>连没连上</strong>（同一个网络的焊盘是不是都用铜连通了）。另外还查元件的占位框有没有叠在一起、丝印有没有压到焊盘上。</p>
+      <p>下面每一项都可以拖动图里的东西（或者拉滑块），越过规则那一刻，右边的 DRC 列表就会冒出一条，和 KiCad 里看到的一样。图是放大画的示意图，规则数字用的是 QB12 自己的规则。</p>
+    </div>
+    <div class="widget p6-toy">
+      <div class="ctrls" id="p6-toy-tabs" role="group" aria-label="选一种检查"></div>
+      <div class="p6-toy-grid">
+        <div class="p6-toy-stage">
+          <svg id="p6-toy-svg" viewBox="0 0 520 300" role="img" aria-label="DRC 检查示意图，可拖动"></svg>
+          <div class="slider"><label for="p6-toy-range"><b id="p6-toy-plab"></b><span id="p6-toy-pval"></span></label><input type="range" id="p6-toy-range"></div>
+        </div>
+        <div class="card p6-toy-card">
+          <h4 id="p6-toy-title"></h4>
+          <p id="p6-toy-why"></p>
+          <div class="p6-drc" aria-live="polite">
+            <div class="p6-drc-h"><b>DRC 结果</b><small id="p6-toy-rule"></small></div>
+            <div id="p6-toy-list"></div>
+          </div>
+          <p class="p6-toy-qb" id="p6-toy-qb"></p>
+        </div>
+      </div>
+      <p class="cap">示意图，不按比例；每一项只演示一种规则。</p>
+    </div>
+  </div>
+
+  <!-- 6.3 QB12 的真实报告 -->
+  <div class="sec">
+    <h3><span class="k">6.3</span>QB12 的真实报告</h3>
+    <div class="txt">
+      <p id="p6-rep-intro"></p>
+      <p>报告里每一条都带坐标。下面就是那份报告，按类型分好了。点任意一条，板子会跳到那个位置并圈出来。还可以像在 KiCad 里一样改某一类的<strong>严重级别</strong>（错误 / 警告 / 忽略），或者把某一条<strong>排除</strong>，看上面的总数怎么变。</p>
+    </div>
+    <pre class="code" id="p6-cli"></pre>
+    <div class="widget p6-rep">
+      <div class="readout p6-rep-sum" id="p6-rep-sum"></div>
+      <div class="p6-tabs" id="p6-rep-tabs" aria-hidden="true"></div>
+      <div class="p6-rep-grid">
+        <div class="p6-rep-left">
+          <div id="p6-types" role="group" aria-label="警告类型"></div>
+          <div class="p6-items" id="p6-items" role="list" aria-label="这一类的每一条"></div>
+        </div>
+        <div id="p6-rep-bv"></div>
+        <div class="card p6-rep-card" id="p6-rep-card" aria-live="polite"></div>
+      </div>
+    </div>
+    <div class="two">
+      <div class="howto"><b>KICAD 里自己做</b><span><span class="menu">检查 → 设计规则检查</span>（没有默认快捷键），打开“设计规则检查”窗口。上面的勾：<span class="menu">在执行 DRC 之前重新填充所有覆铜区</span>（一定勾，免得查的是旧铺铜）；工程里有原理图时还会多一个“检查 PCB 和原理图是否一致”。每根线的问题都要列出来，就在窗口右上角的齿轮菜单里勾 <span class="menu">为每条走线报告全部错误</span>。点右下角 <span class="menu">运行 DRC</span>，结果分四页：违规、未连接项目、原理图一致性、忽略的测试。点列表里的一条，板上会跳到那里并标出来；<span class="menu">保存...</span> 把报告存成文件。</span></div>
+      <figure class="fig p6-shot"><img src="@@ASSET:kicad_drc.webp@@" alt="KiCad 10 的设计规则检查窗口，列出交付的工程包的违规条目" loading="lazy"><figcaption>KiCad 10.0.6 截图：设计规则检查窗口，在交付的工程包上跑的：违规 95、未连接项目 0、忽略的测试 7。比上面报告里的 143 条少，6.4 讲为什么少了。上面一个勾“在执行 DRC 之前重新填充所有覆铜区”，右上角是齿轮菜单；中间四个标签，原理图一致性写着“不运行”，列表第一条是“被板边截断的丝印”；下面按错误、警告、排除筛选，右下角是“保存...”和“运行 DRC”。</figcaption></figure>
+    </div>
+  </div>
+
+  <!-- 6.4 逐类过一遍 -->
+  <div class="sec">
+    <h3><span class="k">6.4</span>逐类过一遍：哪些要紧，哪些只是外观</h3>
+    <div class="txt">
+      <p>“0 个错误”不等于看都不用看。警告要一类一类过：知道它为什么出现、为什么可以不管，才能放心。QB12 的警告分三种情况：外观问题、工程设置问题、还有一条值得多看一眼。</p>
+    </div>
+    <div class="widget p6-vd">
+      <div class="ctrls" role="group" aria-label="看哪一次检查">
+        <button class="btn" data-p6run="out" aria-pressed="true">交付前的板（10-20 检查）</button>
+        <button class="btn" data-p6run="pkg" aria-pressed="false">交付的工程包（10-20 重跑）</button>
+      </div>
+      <div class="p6-vbar" id="p6-vbar"></div>
+      <div class="legendrow" id="p6-vleg"></div>
+      <div class="p6-vcards" id="p6-vcards"></div>
+    </div>
+    <div class="card p6-nocheck">
+      <h4>没查的：原理图一致性</h4>
+      <p id="p6-parity"></p>
+    </div>
+    <div class="howto"><b>KICAD 里自己做</b><span>在设计规则检查窗口的列表里右键一条，可以选 <span class="menu">排除此违规</span>（只放过这一条，KiCad 会记住，下次不再报），或者 <span class="menu">忽略所有 '…' 违规</span>（整类都不查了，慎用）。整类改级别在 <span class="menu">文件 → 电路板配置...</span> 的 <span class="menu">设计规则 → 违规严重级别</span>，每一类都能设成错误、警告或忽略。“在库中找不到封装”这一类，去 <span class="menu">设置 → 管理封装库...</span> 把工程自己的封装库登记上就好。注意别随手点 <span class="menu">工具 → 从库中更新封装...</span>：板上故意改过的封装会被换回库里的样子。</span></div>
+  </div>
+
+  <!-- 6.5 DRC 不知道的事 -->
+  <div class="sec">
+    <h3><span class="k">6.5</span>DRC 不知道的事：打开 3D 看实物</h3>
+    <div class="txt">
+      <p>DRC 只认铜、孔和丝印的平面形状。插座朝哪边开口、插头插不插得进去、天线外面是不是金属、元件有多高、电池线哪根是正极，它统统不知道。这些要靠 <strong>3D 视图</strong>：KiCad 用每个封装附带的 3D 模型，把装好元件的板子画出来，像拿着实物转着看。</p>
+      <p>点下面每一项，图上会圈出要看的地方。图是用设计文件里的 3D 模型渲染的，不是照片。</p>
+    </div>
+    <div class="widget p6-3d">
+      <div class="ctrls p6-3d-checks" id="p6-3d-checks" role="group" aria-label="3D 检查项"></div>
+      <div class="p6-3d-grid">
+        <figure class="p6-3d-fig">
+          <div class="p6-3d-stage" id="p6-3d-stage">
+            <img id="p6-3d-top" src="@@ASSET:pcb3d_top.webp@@" alt="QB12 装好元件后的 3D 渲染，顶视图" width="1200" height="862" loading="lazy">
+            <img id="p6-3d-low" src="@@ASSET:p6-low.webp@@" alt="QB12 的 3D 渲染，从左下方低角度看，能看出元件高度和插座开口方向" width="1000" height="462" loading="lazy" hidden>
+            <svg id="p6-3d-ov" viewBox="0 0 1200 862" preserveAspectRatio="none" aria-hidden="true"></svg>
+          </div>
+          <div class="ctrls">
+            <span class="p6-seg" role="group" aria-label="视角"><button data-p6view="top" aria-pressed="true">顶视</button><button data-p6view="low" aria-pressed="false">低角度</button></span>
+            <span class="cap" id="p6-3d-cap">3D 渲染，黑色阻焊。</span>
+          </div>
+        </figure>
+        <div class="card p6-3d-card" aria-live="polite">
+          <h4 id="p6-3d-title"></h4>
+          <p id="p6-3d-text"></p>
+          <div class="states" id="p6-3d-facts"></div>
+        </div>
+      </div>
+    </div>
+    <div class="widget p6-ht">
+      <b class="p6-ht-h">从板子正面边上平视：每个元件有多高</b>
+      <div class="p6-ht-wrap"><svg id="p6-ht-svg" viewBox="0 0 640 228" role="img" aria-label="QB12 侧视剖面，元件高度"></svg></div>
+      <div class="slider"><label for="p6-ht-range">外壳里留给板子的高度（从板子上表面量）<span id="p6-ht-val"></span></label><input type="range" id="p6-ht-range" min="2" max="10" step="0.1" value="5"></div>
+      <div class="status" id="p6-ht-out" aria-live="polite"></div>
+      <p class="cap">高度从各元件的 3D 模型（立创 EasyEDA 库，工程包里的 QB12.3dshapes）读出来；宽度按占位框画，高度方向放大了 2 倍。先随便拖一个值，再换成你在船舱里实际量出来的高度。</p>
+    </div>
+    <div class="two">
+      <div class="howto"><b>KICAD 里自己做</b><span>PCB 编辑器里按 <kbd>Alt</kbd>+<kbd>3</kbd>（或 <span class="menu">视图 → 3D 查看器</span>）。鼠标左键拖动旋转、滚轮缩放；工具栏和 <span class="menu">视图</span> 菜单里有顶视图、底视图、正视图、左视图等现成角度，还能翻转电路板看背面。右边的“外观”面板可以分别开关通孔模型、贴片模型；打开“模型边框”，每个元件占多大一块一目了然。某个元件在 3D 里没出现，说明它的封装没挂 3D 模型：在 <span class="menu">封装属性</span> 的 <span class="menu">3D 模型</span> 页里加。看满意了可以把当前视图导出成 PNG。</span></div>
+      <div class="p6-shots2">
+        <figure class="fig p6-shot"><img src="@@ASSET:kicad_3d_top.webp@@" alt="KiCad 10 的 3D 查看器，QB12 顶视图" loading="lazy"><figcaption>KiCad 10.0.6 截图：3D 查看器，顶视图。3D 查看器默认用自己的配色（右边“使用电路板叠层颜色”“使用 PCB 编辑器铜箔颜色”都没勾），所以画成绿色；右边“外观”面板可以开关各层和各类模型。</figcaption></figure>
+        <figure class="fig p6-shot"><img src="@@ASSET:kicad_3d_angle.webp@@" alt="KiCad 10 的 3D 查看器，QB12 斜视" loading="lazy"><figcaption>KiCad 10.0.6 截图：3D 查看器，斜视（按住左键拖着转过来），能看出插座、USB-C 和模组的高度。</figcaption></figure>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6.6 下单前清单 -->
+  <div class="sec">
+    <h3><span class="k">6.6</span>下单前最后一遍：勾一勾</h3>
+    <div class="txt"><p>把前面几节变成一张清单。每一项后面写着 QB12 的情况；你自己的板子照着勾。勾选只存在你这台设备的浏览器里，刷新页面还在。</p></div>
+    <div class="widget p6-ck">
+      <div class="p6-ck-head"><b id="p6-ck-n"></b><div class="p6-ck-bar"><i id="p6-ck-fill"></i></div><button class="btn" id="p6-ck-reset">全部清空</button></div>
+      <ol class="p6-ck-list" id="p6-ck-list"></ol>
+    </div>
+  </div>
+
+  <!-- 6.7 自测 -->
+  <div class="sec">
+    <h3><span class="k">6.7</span>自测三题</h3>
+    <div class="quiz">
+      <details><summary>DRC 显示 0 个错误、0 处未连接，是不是就可以下单了？</summary>
+        <div class="ans"><p id="p6-q1"></p><button class="show" data-p6q="1">去看 3D 检查</button></div></details>
+      <details><summary>QB12 的报告里有 51 条“在库中找不到封装”。板子有问题吗？要怎么处理？</summary>
+        <div class="ans"><p id="p6-q2"></p><button class="show" data-p6q="2">在报告里看这一类</button></div></details>
+      <details><summary>USB-C 插座的焊盘挨得特别近，DRC 报了间距违规，但你确认这是元件本身的脚距。该怎么办？</summary>
+        <div class="ans"><p id="p6-q3"></p><button class="show" data-p6q="3">在板上标出 J1 最近的地方</button></div></details>
+    </div>
+    <div class="next">
+      <a class="card p6-nextc" href="#p7"><b>下一课 · 第 7 课</b><h4>出生产文件</h4><p>检查过了，把板子导成工厂认的格式：每层一张 Gerber、两个钻孔文件、BOM 和坐标文件，再用查看器看一遍。</p></a>
+    </div>
+  </div>
+</section>

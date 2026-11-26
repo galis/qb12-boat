@@ -1,0 +1,55 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>html,body{margin:0;background:#0D1719;overflow:hidden}canvas{display:block}</style>
+<script type="importmap">{"imports":{"three":"./node_modules/three/build/three.module.js","three/addons/":"./node_modules/three/examples/jsm/"}}</script>
+</head><body>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+const view = new URLSearchParams(location.search).get('view') || 'hero';
+const W = innerWidth, H = innerHeight;
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(1); renderer.setSize(W, H);
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene(); scene.background = new THREE.Color('#0D1719');
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environmentIntensity = 0.7;
+const key = new THREE.DirectionalLight('#ffffff', 2.2); key.castShadow = true; key.shadow.mapSize.set(2048, 2048);
+scene.add(key);
+const rim = new THREE.DirectionalLight('#4FD1D9', 1.0); scene.add(rim);
+scene.add(new THREE.HemisphereLight('#e8f4f5', '#0D1719', 0.6));
+new GLTFLoader().load('./QB12.glb', (gltf) => {
+  const root = gltf.scene;
+  scene.add(root); root.updateMatrixWorld(true);
+  let box = new THREE.Box3().setFromObject(root);
+  let size = box.getSize(new THREE.Vector3());
+  // 板子厚度方向 -> 竖直 (y)
+  const dims = [size.x, size.y, size.z]; const thin = dims.indexOf(Math.min(...dims));
+  if (thin === 2) root.rotation.x = -Math.PI / 2;
+  if (thin === 0) root.rotation.z = Math.PI / 2;
+  root.updateMatrixWorld(true);
+  box = new THREE.Box3().setFromObject(root); size = box.getSize(new THREE.Vector3());
+  const s = 1 / Math.max(size.x, size.z); root.scale.multiplyScalar(s); root.updateMatrixWorld(true);
+  box = new THREE.Box3().setFromObject(root); size = box.getSize(new THREE.Vector3());
+  const c = box.getCenter(new THREE.Vector3());
+  root.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true;
+    const m = o.material; if (m && m.color) { m.roughness = Math.min(m.roughness ?? 0.6, 0.65); } } });
+  key.position.set(c.x + 0.8, c.y + 1.6, c.z + 0.9); key.target.position.copy(c); scene.add(key.target);
+  key.shadow.camera.left = -1; key.shadow.camera.right = 1; key.shadow.camera.top = 1; key.shadow.camera.bottom = -1;
+  rim.position.set(c.x - 1.2, c.y + 0.6, c.z - 1.0);
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), new THREE.ShadowMaterial({ opacity: 0.4 }));
+  ground.rotation.x = -Math.PI / 2; ground.position.y = box.min.y - 0.001; ground.receiveShadow = true; scene.add(ground);
+  const dirs = { hero: [0.55, 0.95, 0.85, 1.55], top: [0.00001, 1, 0.00001, 2.15], low: [-0.9, 0.42, 0.8, 1.35] };
+  const [dx, dy, dz, dist] = dirs[view];
+  const cam = new THREE.PerspectiveCamera(view === 'top' ? 26 : 30, W / H, 0.001, 50);
+  cam.position.copy(c).addScaledVector(new THREE.Vector3(dx, dy, dz).normalize(), dist);
+  if (view === 'top') cam.up.set(0, 0, -1);
+  cam.lookAt(c);
+  renderer.render(scene, cam);
+  window.__done = true;
+}, undefined, (e) => { console.log('ERR ' + e); });
+</script></body></html>

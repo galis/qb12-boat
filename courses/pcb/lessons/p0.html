@@ -1,0 +1,109 @@
+<section class="lesson" id="p0">
+  <div class="lhead"><span class="lnum">0</span><div><h2>全景：从原理图到一块板</h2><p>学完能说清：一张原理图要经过哪九步才变成手里的板子；QB12 在每一步做了什么、留下了哪些数字；板子上每一块区域在干什么。</p></div></div>
+
+  <div class="sec">
+    <h3><span class="k">0.1</span>先看成品：这块板有多大、装了多少东西</h3>
+    <div class="p0-hero">
+      <figure class="fig">
+        <img id="p0-hero-img" src="@@ASSET:pcb3d_hero.webp@@" alt="QB12 主控板的 3D 渲染：左边三个白色插座，右上是银色的 ESP32 模组，下边是 USB-C 口和两个按键" width="1200" height="788" loading="lazy">
+        <figcaption>用设计文件里的 3D 模型渲染出来的效果图，不是实物照片。渲染用了黑色阻焊；阻焊颜色是下单时选的，绿、黑等都有。</figcaption>
+      </figure>
+      <div class="readout p0-nums" id="p0-nums"></div>
+    </div>
+    <div class="p0-row2">
+      <div class="widget p0-sizebox">
+        <svg id="p0-size" viewBox="0 0 300 104" role="img" aria-label="QB12 板子和一张银行卡按同一比例画在一起"></svg>
+        <p class="cap">按同一比例画：QB12 56 × 38 mm，银行卡 85.6 × 54 mm。</p>
+      </div>
+      <div class="txt">
+        <p>PCB（印刷电路板）就是一块绝缘板，正反两面贴着铜箔，铜箔被蚀刻成一条条“导线”，把元件的脚连起来。电路课里原理图上的每一根连线，在这里都变成了真的铜。</p>
+        <p>下面这一节先把整条路走一遍：从原理图开始，到板子寄到你手上为止。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">0.2</span>九步：一张原理图怎么变成手里的板子</h3>
+    <div class="txt"><p>点任意一步，板子会变成那一步的样子，旁边的卡片说明三件事：这一步的道理、QB12 实际做了什么、你自己在 KiCad 里怎么做。也可以点“从头播放”看它一步步长出来。</p></div>
+    <div class="widget p0-flowbox">
+      <div class="ctrls">
+        <button class="btn primary" id="p0-play">▶ 从头播放</button>
+        <button class="btn" id="p0-prev" aria-label="上一步">← 上一步</button>
+        <button class="btn" id="p0-next" aria-label="下一步">下一步 →</button>
+        <span class="lab" id="p0-steplab" aria-live="polite"></span>
+      </div>
+      <div class="p0-flowwrap"><svg id="p0-flow" role="group" aria-label="从原理图到成品的九个步骤，可点击"></svg></div>
+      <div class="stage p0-stage">
+        <div class="p0-left">
+          <div id="p0-bv"></div>
+          <figure class="fig p0-imgfig" id="p0-imgfig" hidden>
+            <img id="p0-img" alt="" width="1200" height="788">
+            <figcaption id="p0-imgcap"></figcaption>
+          </figure>
+        </div>
+        <div class="card explain p0-card" aria-live="polite">
+          <h4 id="p0-st-title"></h4>
+          <p id="p0-st-why"></p>
+          <div class="states" id="p0-st-facts"></div>
+          <div class="howto"><b>KICAD 里自己做</b><span id="p0-st-kicad"></span></div>
+          <a class="p0-more" id="p0-st-more" href="#p1"></a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">0.3</span>在真板子上走一圈</h3>
+    <div class="txt">
+      <p>下面这块板是直接用 QB12 的设计文件画出来的，和寄给工厂的是同一份数据。九站导览依次看每一块区域放了什么、为什么放在这。走到哪一站，相关的元件和线会亮起来。</p>
+      <p>随时可以自己动手：点元件看它每个脚接到哪个网络；点一根线看它属于哪个网络；<span class="menu">成品样子</span>看做出来是什么颜色；<span class="menu">底面</span>把板子翻过来。缩放：右上角 + −，或按住 <kbd>Ctrl</kbd>（Mac 按 <kbd>⌘</kbd>）滚轮，手机上双击。</p>
+    </div>
+    <div class="p0-tour">
+      <div class="ctrls p0-stops" id="p0-stops" role="group" aria-label="导览站点"></div>
+      <div class="card p0-stop" aria-live="polite">
+        <div class="p0-stophead"><b id="p0-stop-n"></b><h4 id="p0-stop-title"></h4></div>
+        <div id="p0-stop-text" class="p0-stoptext"></div>
+        <div class="ctrls"><button class="btn" id="p0-stop-prev">← 上一站</button><button class="btn primary" id="p0-stop-next">下一站 →</button></div>
+      </div>
+      <div id="p0-tourbv"></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">0.4</span>说实话：这块板是怎么画出来的</h3>
+    <div class="two">
+      <div class="txt">
+        <p>QB12 不是在 KiCad 里用鼠标一根根画出来的。整个过程是一串脚本：</p>
+        <p><strong>摆放</strong>：每个元件的坐标和角度写在 <span class="net">build_board.py</span> 的一张坐标表里，板框也由它画出。几段关键的线（比如 USB 两个 VBUS 焊盘的连接、电池大电流那一段）由脚本先画好并锁定。</p>
+        <p><strong>走线</strong>：其余信号线交给开源的自动布线器 <strong>Freerouting</strong> <span id="p0-frv"></span>。接地线不交给它，由脚本打过孔、两面整片铺地来连。</p>
+        <p><strong>检查</strong>：脚本摆好丝印以后，用 KiCad 自己的 DRC 把整块板逐条核对一遍，再导出生产文件。</p>
+        <p>这样做出来的板子一样能用，但你自己做的时候，多半会在 KiCad 里手动摆、手动布线。所以后面每一课都分两半讲：先看 QB12 实际怎么做、留下了什么数字，再讲在 KiCad 里自己动手做同样的事该点哪里、注意什么。</p>
+      </div>
+      <div class="widget">
+        <b class="p0-barh">391 段走线是谁画的</b>
+        <div class="p0-bar" id="p0-bar-t"></div>
+        <b class="p0-barh">177 个过孔是谁打的</b>
+        <div class="p0-bar" id="p0-bar-v"></div>
+        <div class="legendrow" id="p0-bar-leg"></div>
+        <ol class="p0-pipe" id="p0-pipe"></ol>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">0.5</span>后面八课讲什么</h3>
+    <div class="next" id="p0-next8"></div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">0.6</span>自测三题</h3>
+    <div class="quiz">
+      <details><summary>QB12 上最粗的走线是多少毫米？哪些网络用它？为什么要这么粗？</summary>
+        <div class="ans"><p id="p0-q1"></p><button class="show" data-p0q="1">在板上标出来</button></div></details>
+      <details><summary>板子右上角有一块地方，顶层、底层都没有铜。为什么？</summary>
+        <div class="ans"><p>那是 ESP32 模组的天线。天线要把 2.4 GHz 的电磁波发出去、收进来，天线附近有铜会让天线失谐、把电磁波挡回去，天线下面有铜，蓝牙（和 Wi‑Fi）的距离就会变短。所以从板子上边缘往下 7.4 mm、横向从 34 mm 到板边这一块设成了<strong>禁布区</strong>：两层都不许走线、不许打孔、不许铺铜。<a href="#p3">第 3 课</a>和<a href="#p5">第 5 课</a>还会讲到它。</p><button class="show" data-p0q="2">在板上标出来</button></div></details>
+      <details><summary>177 个过孔里有多少个接地？它们在干什么？</summary>
+        <div class="ans"><p id="p0-q3"></p><button class="show" data-p0q="3">在板上标出来</button></div></details>
+    </div>
+  </div>
+</section>

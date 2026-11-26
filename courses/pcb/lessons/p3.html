@@ -1,0 +1,274 @@
+<section class="lesson" id="p3">
+  <div class="lhead"><span class="lnum">3</span><div><h2>板框与布局</h2><p>学完能说清：QB12 为什么是 <span data-n="size"></span> mm；板框是一条什么样的线、铜为什么要离它 <span data-n="edgeClr"></span> mm；<span data-n="nfp"></span> 个元件按什么顺序、什么道理摆到现在的位置；在 KiCad 里怎么画板框、摆元件。</p></div></div>
+
+  <!-- ===================== 3.1 ===================== -->
+  <div class="sec">
+    <h3><span class="k">3.1</span><span>板子多大：<span data-n="size"></span> 是怎么来的</span></h3>
+    <div class="txt">
+      <p>板子越小，一张大料上能切出的板越多，越省钱；可太小了元件挤不下，线也没地方走。所以板子的大小不是先拍脑袋定的，是被两类东西“撑”出来的：<strong>必须贴着板边的</strong>（插座、USB 口、开关、天线），和<strong>必须塞进去的</strong>（最大的一块是 ESP32 模组）。</p>
+      <p>先说实话：<span class="net">build_board.py</span> 里只有一行 <span class="net">BW, BH = 56.0, 38.0</span>，没写为什么。下面三种看法是从元件的真实位置倒推出来的。</p>
+    </div>
+    <div class="widget p3-sizew">
+      <div class="ctrls" role="group" aria-label="三种看法">
+        <button class="btn" data-p3size="reg" aria-pressed="true">按区域看</button>
+        <button class="btn" data-p3size="h" aria-pressed="false">竖着量：为什么是 <span data-n="H"></span></button>
+        <button class="btn" data-p3size="w" aria-pressed="false">横着量：为什么是 <span data-n="W"></span></button>
+      </div>
+      <div id="p3-sizebv"></div>
+      <div class="status" id="p3-size-st" aria-live="polite"></div>
+      <div class="readout" id="p3-size-ro"></div>
+    </div>
+
+    <div class="txt"><p>再看外面的门槛。板厂和贴片厂对尺寸都有要求，QB12 这个大小正好落在经济型贴片最省事的那一档里。不过实际下单走的是标准型，因为经济型不贴 ESP32 模组 U1（第 8 课 8.3）。点下面的按钮，图会按同一比例画出来。</p></div>
+    <div class="two">
+      <div class="widget">
+        <div class="ctrls" role="group" aria-label="对比哪一项">
+          <button class="btn" data-p3tier="eco" aria-pressed="true">经济型贴片</button>
+          <button class="btn" data-p3tier="std" aria-pressed="false">标准型贴片</button>
+          <button class="btn" data-p3tier="proto" aria-pressed="false">打样常见一档</button>
+          <button class="btn" data-p3tier="boat" aria-pressed="false">放进船舱</button>
+        </div>
+        <svg id="p3-tier" viewBox="0 0 320 178" role="img" aria-label="QB12 板子和各种尺寸门槛按同一比例画在一起"></svg>
+      </div>
+      <div class="card explain" aria-live="polite">
+        <h4 id="p3-tier-t"></h4>
+        <p id="p3-tier-x"></p>
+      </div>
+    </div>
+    <div class="howto"><b>KICAD 里自己做</b><span>KiCad 里没有单独的“板子尺寸”设置：Edge.Cuts 层上画的外形就是板子，工厂按它切。常见做法是先画一个宽松的框，把接口、模组这些“定死”的元件摆上去，再把框收紧到刚好包住。怎么画见 3.2 和 3.5。</span></div>
+  </div>
+
+  <!-- ===================== 3.2 ===================== -->
+  <div class="sec">
+    <h3><span class="k">3.2</span>板框：Edge.Cuts 层上一条闭合的线</h3>
+    <div class="txt">
+      <p><strong>Edge.Cuts</strong>（板框层，中文界面也叫“板框”）上只画一样东西：板子的外形。工厂的 CNC 锣机（铣床）沿着这条线把板子从大料上铣下来。所以它必须<strong>首尾相接、围成一圈</strong>：缺一个口，就分不清哪边是板子、哪边是废料。</p>
+      <p>QB12 的外形是 <span data-n="size"></span> mm 的圆角矩形：4 段直线 + 4 段四分之一圆弧，圆角半径 <span data-n="r"></span> mm，线宽 <span data-n="ew"></span> mm。圆角只是为了拿在手里不扎手、角上不容易磕坏（这是常见做法，脚本里没写理由）。</p>
+    </div>
+    <div class="two">
+      <div class="widget">
+        <div class="ctrls">
+          <button class="btn primary" id="p3-ol-draw">▶ 按脚本画一遍</button>
+          <button class="btn" id="p3-ol-gap" aria-pressed="false">去掉一段会怎样</button>
+        </div>
+        <svg id="p3-ol" viewBox="-5 -5 66 52" role="img" aria-label="QB12 板框：四段直线和四段圆弧组成的圆角矩形"></svg>
+        <div class="legendrow"><span><i style="background:var(--bv-edge)"></i>直线（seg）</span><span><i style="background:var(--pow)"></i>90° 圆弧（arc）</span><span>①–⑧ 是脚本画的顺序</span></div>
+        <div class="status" id="p3-ol-st" aria-live="polite"></div>
+      </div>
+      <div class="p3-codebox">
+        <pre class="code p3-code" id="p3-ol-code"></pre>
+        <p class="cap">build_board.py 画板框的真实代码（节选）。<span class="net">seg</span> 画一段直线，<span class="net">arc</span> 画一段 90° 圆弧，都放在 Edge_Cuts 层、线宽 <span data-n="ew"></span> mm。</p>
+      </div>
+    </div>
+
+    <div class="txt">
+      <p><strong>铜要离板边远一点。</strong>锣机铣出来的外形有公差：JLC 写的是普通锣边 ±0.2 mm。铜离边太近，铣刀就可能蹭到铜：露铜、毛刺，甚至把线切断。拖动下面的滑块，看铜离板边多远才放心。</p>
+    </div>
+    <div class="two">
+      <div class="widget">
+        <div class="slider"><label for="p3-ec">铜离板边 <span id="p3-ec-v"></span></label><input type="range" id="p3-ec" min="0.05" max="0.8" step="0.05" value="0.3"></div>
+        <svg id="p3-ecsvg" viewBox="0 0 360 180" role="img" aria-label="板边附近放大示意：锣边公差带和一块离板边一定距离的铜"></svg>
+        <div class="status" id="p3-ec-st" aria-live="polite"></div>
+      </div>
+      <div class="card explain">
+        <h4>几家的数字</h4>
+        <div class="states" id="p3-ec-tbl"></div>
+        <p class="p3-small" id="p3-ec-real"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== 3.3 ===================== -->
+  <div class="sec">
+    <h3><span class="k">3.3</span>摆元件：从一堆到各就各位</h3>
+    <div class="txt">
+      <p>元件刚从原理图导进 PCB 时堆成一堆，每个焊盘拉着细线连到它该连的焊盘，这些线叫<strong>飞线</strong>（ratsnest，“这里还没连，但应该连”）。摆放的目标很朴素：<strong>飞线越短、越少交叉，后面越好走线</strong>；同时满足每个元件自己的要求：接口要贴边，天线下面不能有铜，去耦电容要贴着芯片的电源脚。</p>
+      <p>顺序也有讲究：先摆位置被外面定死的（接口、开关、模组），再按电流和信号的路一组组往里填。点“一组组摆上去”，看 QB12 的 <span data-n="nfp"></span> 个元件按这个顺序落位，右边的卡片说明每一组为什么放在那。</p>
+    </div>
+    <div class="widget p3-story">
+      <div class="ctrls">
+        <button class="btn primary" id="p3-play">▶ 一组组摆上去</button>
+        <button class="btn" id="p3-prev" aria-label="上一组">← 上一组</button>
+        <button class="btn" id="p3-next" aria-label="下一组">下一组 →</button>
+        <button class="btn" id="p3-gnd" aria-pressed="true">显示 GND 飞线</button>
+      </div>
+      <div class="ctrls p3-chips" id="p3-steps" role="group" aria-label="摆放的九个阶段"></div>
+      <div class="stage p3-stage">
+        <div class="p3-left">
+          <div id="p3-storybv"></div>
+          <div class="readout p3-ro" id="p3-ro"></div>
+        </div>
+        <div class="card explain p3-card" aria-live="polite">
+          <h4 id="p3-st-t"></h4>
+          <p id="p3-st-why"></p>
+          <div class="states" id="p3-st-f"></div>
+          <div id="p3-st-x"></div>
+          <p class="p3-src" id="p3-st-src"></p>
+        </div>
+      </div>
+      <p class="cap">飞线是示意：每个网络按当时的焊盘位置算一棵最小生成树（把所有焊盘连起来、总长最短的那组直线），和 KiCad 显示飞线的思路一样。没摆好的元件画淡一些，堆的样子也是示意。中间几步交叉数可能先变多：一部分元件还在堆里，连向它们的飞线会横穿整块板。</p>
+    </div>
+    <div class="two">
+      <div class="txt">
+        <p><strong>QB12 实际怎么摆的：</strong>没有拖鼠标。<span class="net">build_board.py</span> 里有一张坐标表 <span class="net">PLACE</span>，每个元件一行：中心点 x、y（mm，原点在板框左上角）和旋转角。脚本按网表把封装一个个放到这些坐标上，最后检查一遍：表里漏了谁，就打印“未摆放：”。</p>
+        <p>坐标表里的数都是 0.1 mm 的整数倍（只有 <span data-n="offgrid"></span>），角度只有 <span data-n="rots"></span> 几种。这和在 KiCad 里打开 0.1 mm 栅格、只按 90° 转是一样的效果：元件排得整齐，丝印也好对齐。</p>
+        <p>这张表改过：<span class="net">build_board_v1.py</span> 是留下来的旧版，上面“电源路径”那一组可以对比新旧两版。</p>
+      </div>
+      <pre class="code p3-code" id="p3-place-code"></pre>
+    </div>
+  </div>
+
+  <!-- ===================== 3.4 ===================== -->
+  <div class="sec">
+    <h3><span class="k">3.4</span>自己挪一颗：元件外框、距离和“只贴一面”</h3>
+    <div class="txt">
+      <p>每个封装外面都有一圈<strong>元件外框</strong>（courtyard，查看器里叫“占位框”）：元件本体再加一点余量。贴片机的吸嘴要落下去、焊锡要有地方润湿、返修时烙铁要伸得进去，这圈地方就是留给它们的。规则只有一条：<strong>两个元件外框不许重叠</strong>，重叠了 KiCad 的 DRC 会报“元件外框重叠”。</p>
+      <p>下面选一颗元件，用方向键（或在电脑上直接拖它）把它挪开，看三件事怎么变：它离该贴着的那只脚多远、全板飞线多长、外框有没有撞上别人。</p>
+    </div>
+    <div class="widget p3-try">
+      <div class="ctrls" role="group" aria-label="选一颗元件">
+        <span class="lab">选一颗：</span>
+        <button class="btn" data-p3pick="C6" aria-pressed="true">C6 去耦电容</button>
+        <button class="btn" data-p3pick="U5" aria-pressed="false">U5 USB 保护</button>
+        <button class="btn" data-p3pick="R3" aria-pressed="false">R3 充电电流电阻</button>
+      </div>
+      <div class="stage p3-stage">
+        <div class="p3-left"><div id="p3-trybv"></div></div>
+        <div class="card explain p3-trycard" aria-live="polite">
+          <h4 id="p3-try-t"></h4>
+          <p id="p3-try-why"></p>
+          <div class="readout p3-tryro" id="p3-try-ro"></div>
+          <div class="status" id="p3-try-st"></div>
+          <div class="p3-pad" role="group" aria-label="挪动元件">
+            <button class="btn" data-p3mv="0,-1" aria-label="向上挪">↑</button>
+            <button class="btn" data-p3mv="-1,0" aria-label="向左挪">←</button>
+            <button class="btn" data-p3mv="1,0" aria-label="向右挪">→</button>
+            <button class="btn" data-p3mv="0,1" aria-label="向下挪">↓</button>
+            <button class="btn" id="p3-try-home">放回原位</button>
+          </div>
+          <p class="cap" id="p3-try-hint"></p>
+        </div>
+      </div>
+    </div>
+    <div class="two">
+      <div class="txt">
+        <p><strong>QB12 怎么查的：</strong>坐标表改完，先跑 <span class="net">check_place.py</span>：它把每两个元件的外包框比一遍，重叠超过 0.15 mm 的打印“重叠”，超出 <span data-n="size"></span> 板框的打印“出板”。在最终的板子上跑，结果是右边这样：0 处重叠，出板的只有两个。</p>
+        <p>这两个是故意的：USB-C 插座 J1 的插口要伸到板外，插头才插得进去；拨动开关 SW1 的拨杆要伸出左边，手指才拨得到。脚本的框比查看器里的元件外框稍大（它把封装上所有图形都算进去了），用元件外框算，J1 伸出下边 <span data-n="j1over"></span> mm，SW1 伸出左边 <span data-n="sw1over"></span> mm。</p>
+        <p>元件摆得密，位号丝印也难放：<span class="net">finalize.py</span> 给每个位号找一个不压焊盘、不压别的元件的位置，“放不下就隐藏”。QB12 有 <span data-n="nhid"></span> 个位号因此没印出来：<span data-n="hid"></span>。</p>
+      </div>
+      <div class="p3-codebox">
+        <pre class="code p3-code" id="p3-chk-code"></pre>
+        <p class="cap">在交付的 out/QB12.kicad_pcb 上运行 check_place.py 的原样输出（坐标是板子本地 mm）。脚本要 import pcbnew，所以用 KiCad 自带的 Python 跑：<span class="net">$KPY</span> 的路径写在 tools/kicad_env.sh 里。</p>
+      </div>
+    </div>
+    <div class="two">
+      <div class="txt">
+        <p><strong>为什么全放在顶面？</strong>QB12 的 <span data-n="nfp"></span> 个元件全在顶面，底面只有铺铜、过孔和几行丝印字。原因在贴片厂：JLC 的<strong>经济型贴片只能贴一面</strong>；标准型可以贴两面，但工程费、钢网费都分单面和双面两档，双面贵（具体金额以下单页为准）。两面贴还要多一张钢网、多过一次回流焊。QB12 实际走标准型（经济型不贴 ESP32 模组 U1，见第 8 课），但只贴顶面，所以仍然只用一面的钢网、过一次回流焊。</p>
+        <p>乐鑫给双层板的建议也一样：底层不放元件、少走线，留一整面地。QB12 导出坐标文件时也只导了顶面。点右边的按钮把板子翻过来看。</p>
+      </div>
+      <div class="widget">
+        <div class="ctrls" role="group" aria-label="看哪一面">
+          <button class="btn" data-p3side="top" aria-pressed="true">顶面</button>
+          <button class="btn" data-p3side="bottom" aria-pressed="false">翻到底面</button>
+        </div>
+        <div id="p3-sidebv"></div>
+        <div class="status" id="p3-side-st" aria-live="polite"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== 3.5 ===================== -->
+  <div class="sec">
+    <h3><span class="k">3.5</span>KiCad 里自己做：导入、规则、画框、摆放</h3>
+    <div class="txt"><p>QB12 这一步是脚本做的（<a href="#p0">第 0 课</a>说过）。你自己在 KiCad 10 里做，通常按下面四步走。点数字切换。</p></div>
+    <div class="widget p3-kc">
+      <div class="ctrls" role="tablist" aria-label="KiCad 里的四步">
+        <button class="btn" role="tab" id="p3-kt1" data-p3k="1" aria-selected="true" aria-pressed="true" aria-controls="p3-kp1">① 导入元件</button>
+        <button class="btn" role="tab" id="p3-kt2" data-p3k="2" aria-selected="false" aria-pressed="false" aria-controls="p3-kp2">② 先设规则</button>
+        <button class="btn" role="tab" id="p3-kt3" data-p3k="3" aria-selected="false" aria-pressed="false" aria-controls="p3-kp3">③ 画板框</button>
+        <button class="btn" role="tab" id="p3-kt4" data-p3k="4" aria-selected="false" aria-pressed="false" aria-controls="p3-kp4">④ 摆元件</button>
+      </div>
+      <div class="p3-kp" id="p3-kp1" role="tabpanel" aria-labelledby="p3-kt1">
+        <div class="howto"><b>KICAD 里自己做</b>
+          <span>原理图和 PCB 要在同一个工程里，并且从 KiCad 项目管理器打开。原理图画好、每个符号都填好封装以后，点 <span class="menu">工具 → 从原理图更新 PCB...</span>（<kbd>F8</kbd>，原理图编辑器和 PCB 编辑器里都有）。对话框里点 <span class="menu">更新 PCB</span>，新封装会挤成一堆跟着鼠标走，在板框外面的空地上点一下放下，再一个个挪进去。</span>
+          <span>以后原理图改了，再按一次 <kbd>F8</kbd>：已经摆好的元件留在原地，只增删改变了的部分。</span>
+          <span>QB12 没有 KiCad 原理图，所以在它的 PCB 编辑器里这一项是灰的。<span class="net">build_board.py</span> 直接读 <span class="net">netlist.py</span>，把封装放到坐标表的位置上，效果相当于“导入 + 摆好”一步完成。</span>
+        </div>
+        <figure class="fig p3-shot"><img src="@@ASSET:kicad_update_pcb.webp@@" alt="KiCad 的“从原理图更新 PCB”对话框" loading="lazy"><figcaption>KiCad 10.0.6 截图：“从原理图更新 PCB”对话框，还没点执行。这是一个只有 R1、D1、J1 三个元件的演示工程（QB12 没有原理图）。上面是三组选项（选项 / 更新封装 / 更新字段），下面“要应用的变更”列出要添加的封装和警告、错误数，点右下角“更新 PCB”执行。</figcaption></figure>
+      </div>
+      <div class="p3-kp" id="p3-kp2" role="tabpanel" aria-labelledby="p3-kt2" hidden>
+        <div class="howto"><b>KICAD 里自己做</b>
+          <span><span class="menu">文件 → 电路板配置...</span>，左边选 <span class="menu">设计规则 → 约束</span>。“铜箔到板边间距”填 <span data-n="edgeClr"></span> mm：KiCad 新建工程默认是 0.5 mm，JLC 锣边最少要 0.2 mm。</span>
+          <span>规则先设好再摆、再走线：后面布线和铺铜都按它让开板边，DRC 也按它检查。线宽、过孔这些也在同一页，第 4、5 课再讲。</span>
+        </div>
+        <figure class="fig p3-shot"><img src="@@ASSET:kicad_constraints.webp@@" alt="KiCad 电路板配置的“约束”页" loading="lazy"><figcaption>KiCad 10.0.6 截图：电路板配置 → 设计规则 → 约束，打开的是 QB12 的工程。最小间距、最小走线宽度、最小过孔外径、“铜箔到板边间距”都在“铜层”那一组里。</figcaption></figure>
+      </div>
+      <div class="p3-kp" id="p3-kp3" role="tabpanel" aria-labelledby="p3-kt3" hidden>
+        <div class="howto"><b>KICAD 里自己做</b>
+          <span>在右边 <span class="menu">外观</span> 面板的 <span class="menu">层</span> 里点中 Edge.Cuts（板框）。<span class="menu">放置 → 绘制线条</span>（<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>；Windows / Linux 菜单里显示成 Shift+Ctrl+L，mac 显示 ⇧⌘L）一段段点，回到起点就闭合了；直角的板也可以用 <span class="menu">放置 → 绘制矩形</span> 一次拉出来。</span>
+          <span>要圆角：选中四条线，右键 <span class="menu">形状修改 → 圆角线...</span>，填半径（QB12 是 <span data-n="r"></span> mm）。</span>
+          <span>再用 <span class="menu">放置 → 栅格原点</span> 点在板框左上角，再到 <span class="menu">设置 → 偏好设置... → PCB 编辑器 → 原点和轴</span> 里把 <span class="menu">显示原点</span> 选成 <span class="menu">栅格原点</span>，屏幕上的坐标才从这个角开始算，和 QB12 的坐标表一样（只放栅格原点，挪的只是栅格）。交付的 QB12 文件里，finalize.py 最后把栅格原点挪到了左下角，和钻孔/定位原点放在一起（<a href="#p7">第 7 课</a>）。QB12 的板框在 KiCad 文件里放在 (100, 100) mm 处（脚本里 <span class="net">OX, OY = 100.0</span>），所以文件里 U1 的位置写的是 (<span data-n="u1k"></span>)。</span>
+        </div>
+        <figure class="fig p3-shot"><img src="@@ASSET:kicad_edge_only.webp@@" alt="KiCad 里只显示板框层的 QB12" loading="lazy"><figcaption>KiCad 10.0.6 截图：外观面板里只留 Edge.Cuts 和 F.Courtyard 两层看 QB12，过孔、焊盘也一起隐藏了，画面里只剩线框。白色的圆角矩形就是板框（<span data-n="size"></span> mm，四角 R<span data-n="r"></span>），洋红色的框是各元件的外框。能看到开关 SW1 的外框伸出左边、USB-C J1 的外框伸出下边，都是故意的。</figcaption></figure>
+      </div>
+      <div class="p3-kp" id="p3-kp4" role="tabpanel" aria-labelledby="p3-kt4" hidden>
+        <div class="howto"><b>KICAD 里自己做</b>
+          <span>鼠标指着元件按 <kbd>M</kbd> 移动（元件跟着鼠标走，点一下放下）；<kbd>R</kbd> 逆时针旋转、<kbd>Shift</kbd>+<kbd>R</kbd> 顺时针旋转；<kbd>F</kbd> 换面 / 翻转（翻到底面，QB12 用不到）；<kbd>Shift</kbd>+<kbd>M</kbd> 精确移动，直接输入要挪多少 mm。</span>
+          <span>栅格：<kbd>N</kbd> / <kbd>Shift</kbd>+<kbd>N</kbd> 切换到下一个 / 上一个栅格，<kbd>Alt</kbd>+<kbd>1</kbd> / <kbd>Alt</kbd>+<kbd>2</kbd> 切到两个快速栅格。粗摆用大栅格，细调用小栅格。</span>
+          <span>按 <kbd>Home</kbd>（<span class="menu">视图 → 自适应缩放</span>；mac 上是 <kbd>⌘</kbd>+<kbd>0</kbd>）随时回到看全板。边摆边看飞线：越摆越短、越少交叉就对了。摆完跑 <span class="menu">检查 → 设计规则检查</span>，看有没有“元件外框重叠”（<a href="#p6">第 6 课</a>细讲）。</span>
+        </div>
+        <figure class="fig p3-shot"><img src="@@ASSET:kicad_pcb_main.webp@@" alt="KiCad PCB 编辑器主界面打开 QB12" loading="lazy"><figcaption>KiCad 10.0.6 截图（mac）：PCB 编辑器主界面打开 QB12。上面是两排工具栏（栅格下拉框在第二排；mac 上菜单在屏幕顶上的菜单栏里，不在窗口里），左边是属性面板和显示开关，右边是外观面板（层、对象、网络三个标签）和选择筛选器，中间是板子；最下面是焊盘、过孔、走线段、网络、未布线的统计和光标坐标。</figcaption></figure>
+      </div>
+    </div>
+
+    <div class="txt"><p>没装 KiCad 也可以先练手：下面这颗是 QB12 的 Q2（SOT-23，<span data-n="q2pads"></span> 个焊盘），点按钮或者先点一下图、再直接按键盘上的同名键。</p></div>
+    <div class="widget p3-keys">
+      <div class="ctrls" role="group" aria-label="KiCad 快捷键练习">
+        <button class="btn" data-p3key="left" aria-label="向左挪一格">M ←</button>
+        <button class="btn" data-p3key="up" aria-label="向上挪一格">M ↑</button>
+        <button class="btn" data-p3key="down" aria-label="向下挪一格">M ↓</button>
+        <button class="btn" data-p3key="right" aria-label="向右挪一格">M →</button>
+        <button class="btn" data-p3key="r"><kbd>R</kbd> 逆时针</button>
+        <button class="btn" data-p3key="R"><kbd>Shift</kbd>+<kbd>R</kbd> 顺时针</button>
+        <button class="btn" data-p3key="f"><kbd>F</kbd> 换面</button>
+        <button class="btn" data-p3key="n"><kbd>N</kbd> 换栅格</button>
+        <button class="btn" data-p3key="M"><kbd>Shift</kbd>+<kbd>M</kbd> 精确移动</button>
+        <button class="btn" data-p3key="reset">复位</button>
+      </div>
+      <div class="p3-keyrow">
+        <div class="p3-keyfig" tabindex="0" id="p3-keyfig" aria-label="快捷键练习区：先点这里，再按 M 的方向键、R、F、N"><svg id="p3-keysvg" viewBox="0 0 360 200" role="img" aria-label="栅格上的一颗 SOT-23 元件"></svg></div>
+        <div class="p3-keyside">
+          <div class="readout" id="p3-key-ro"></div>
+          <form class="p3-exact" id="p3-exact" hidden>
+            <b>精确移动</b>
+            <label>X 偏移 <input type="number" id="p3-ex-x" step="0.05" value="1"> mm</label>
+            <label>Y 偏移 <input type="number" id="p3-ex-y" step="0.05" value="0"> mm</label>
+            <div class="ctrls"><button class="btn primary" type="submit">确定</button><button class="btn" type="button" id="p3-ex-cancel">取消</button></div>
+          </form>
+          <p class="status" id="p3-key-st" aria-live="polite"></p>
+        </div>
+      </div>
+      <p class="cap">示意：真实 KiCad 里按 M 后元件跟着鼠标走，这里每按一次方向键挪一格；栅格档位也是示意，真实的在顶部工具栏的栅格下拉框里选。</p>
+    </div>
+  </div>
+
+  <!-- ===================== 3.6 ===================== -->
+  <div class="sec">
+    <h3><span class="k">3.6</span>自测三题</h3>
+    <div class="quiz">
+      <details><summary>想把 QB12 缩到 50 × 30 mm，最先卡住的是哪里？</summary>
+        <div class="ans"><p id="p3-q1"></p><button class="show" data-p3q="1">在板上标出来</button></div></details>
+      <details><summary><span>C6 这颗 <span data-n="c6v"></span> 电容为什么紧贴着 ESP32 模组左上角？挪远一点会怎样？</span></summary>
+        <div class="ans"><p id="p3-q2"></p><button class="show" data-p3q="2">去 3.4 挪一下试试</button></div></details>
+      <details><summary>QB12 所有元件都在顶面。换成两面都放元件，下单时会多出什么？</summary>
+        <div class="ans"><p id="p3-q3"></p><button class="show" data-p3q="3">翻到底面看</button></div></details>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">3.7</span>下一课</h3>
+    <div class="next">
+      <a class="card" href="#p4" style="text-decoration:none;color:inherit"><b>下一课 · 第 4 课</b><h4>走线</h4><p>飞线怎么变成铜线：线宽按电流算，间距和网络类，Freerouting 自动布线和手工布线各自怎么做。</p></a>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,286 @@
+<title>QB12 PCB 课</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=JetBrains+Mono:wght@400;600&family=Noto+Sans+SC:wght@400;500;700;900&display=swap">
+<!-- 这是骨架。不要直接改 qb12-pcb-course.html：改这里或 lessons/pN.*，再跑 python3 build.py -->
+<style>
+/* ===== 外观与 QB12 电路课完全一致（以下几段原样复制自电路课）=====
+   单栏讲义，每课一节；配色：深青底、青色 = 信号、橙色 = 电源；先深色，浅色跟随系统或 data-theme */
+:root{
+  --bg:#0D1719; --panel:#132124; --panel2:#17282B; --line:#263A3F; --fg:#E9EFED; --body:#C9D6D6; --muted:#8FA5A8;
+  --sig:#4FD1D9; --pow:#FF8A4C; --ok:#7BD88F; --hl:#FFC94D; --paper:#F7F8F6; --ink:#1D2A2E;
+  --f-display:"Chakra Petch","Noto Sans SC",system-ui,sans-serif;
+  --f-body:"Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){
+  --bg:#EDF2F1; --panel:#FFFFFF; --panel2:#F5F8F7; --line:#D2DCDB; --fg:#10201F; --body:#2E3F41; --muted:#5D7073;
+  --sig:#0B7285; --pow:#C2410C; --ok:#2B8A3E; --hl:#E8A400; color-scheme:light}}
+:root[data-theme="light"]{
+  --bg:#EDF2F1; --panel:#FFFFFF; --panel2:#F5F8F7; --line:#D2DCDB; --fg:#10201F; --body:#2E3F41; --muted:#5D7073;
+  --sig:#0B7285; --pow:#C2410C; --ok:#2B8A3E; --hl:#E8A400; color-scheme:light}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.75;
+  background-image:linear-gradient(color-mix(in srgb,var(--sig) 5%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--sig) 5%,transparent) 1px,transparent 1px);
+  background-size:40px 40px}
+.wrap{max-width:1100px;margin:0 auto;padding-block:40px 80px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:56px}
+h1,h2,h3{margin:0;text-wrap:balance;line-height:1.3}
+p{margin:0}
+.mono{font-family:var(--f-mono)}
+a{color:var(--sig)}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--hl);outline-offset:2px}
+
+/* 头部 */
+.top{display:flex;flex-direction:column;gap:18px}
+.eyebrow{font-family:var(--f-mono);font-size:13px;letter-spacing:.14em;color:var(--sig)}
+.top h1{font-size:clamp(34px,6vw,56px);font-weight:900;letter-spacing:.01em}
+.top .lede{max-width:66ch;color:var(--body);font-size:17px}
+.course{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.lsn{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--panel);text-decoration:none;color:var(--fg);min-width:0}
+.lsn b{font-family:var(--f-display);font-size:22px;line-height:1.1;color:var(--muted);min-width:1.4em}
+.lsn span{display:flex;flex-direction:column;font-size:14px;line-height:1.45;min-width:0}
+.lsn small{color:var(--muted);font-size:12.5px}
+.lsn.ready{border-color:color-mix(in srgb,var(--sig) 55%,var(--line))}
+.lsn.ready b{color:var(--sig)}
+.lsn.todo{opacity:.62}
+
+/* 每一课 */
+.lesson{display:flex;flex-direction:column;gap:28px;scroll-margin-top:16px}
+.lhead{display:flex;gap:22px;align-items:flex-end;border-bottom:1px solid var(--line);padding-bottom:18px}
+.lnum{font-family:var(--f-display);font-weight:700;font-size:clamp(64px,10vw,96px);line-height:.8;color:var(--sig)}
+.lhead h2{font-size:clamp(26px,4vw,36px);font-weight:900}
+.lhead p{color:var(--muted);font-size:15px}
+.sec{display:flex;flex-direction:column;gap:14px}
+.sec h3{font-size:20px;font-weight:700;display:flex;gap:10px;align-items:baseline}
+.sec h3 .k{font-family:var(--f-mono);font-size:13px;color:var(--sig);font-weight:600}
+.txt{max-width:68ch;color:var(--body);display:flex;flex-direction:column;gap:12px}
+.txt strong{color:var(--fg)}
+.pow{color:var(--pow);font-weight:600}
+.sig{color:var(--sig);font-weight:600}
+.net{font-family:var(--f-mono);font-size:.88em;padding:1px 6px;border-radius:5px;border:1px solid var(--line);background:var(--panel2);white-space:nowrap}
+.net.p{color:var(--pow);border-color:color-mix(in srgb,var(--pow) 45%,var(--line))}
+.net.s{color:var(--sig);border-color:color-mix(in srgb,var(--sig) 45%,var(--line))}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px}
+.tip{border-left:3px solid var(--sig);padding:10px 16px;background:color-mix(in srgb,var(--sig) 8%,transparent);border-radius:0 10px 10px 0;max-width:68ch;color:var(--body)}
+.tip b{color:var(--fg)}
+
+/* 舞台：左边图、右边说明（电路课第 0 课同款） */
+.stage{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:18px;align-items:start}
+@media (max-width:900px){.stage{grid-template-columns:minmax(0,1fr)}}
+.diagram{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;min-width:0}
+.dscroll{overflow-x:auto}
+.diagram svg{width:100%;min-width:720px;height:auto;display:block}
+.modes{display:flex;flex-wrap:wrap;gap:8px;padding:4px 4px 12px}
+.mode{border:1px solid var(--line);background:var(--panel2);border-radius:999px;padding:7px 14px;font-size:14px;cursor:pointer}
+.mode[aria-pressed="true"]{border-color:var(--sig);color:var(--bg);background:var(--sig);font-weight:700}
+.legend{display:flex;flex-wrap:wrap;gap:16px;font-size:13px;color:var(--muted);padding:8px 6px 2px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+.explain{display:flex;flex-direction:column;gap:12px}
+.explain h4{margin:0;font-size:18px}
+.explain p{color:var(--body);font-size:15px}
+.states{display:flex;flex-direction:column;gap:6px;font-size:14px}
+.states div{display:flex;justify-content:space-between;gap:12px;border-bottom:1px dashed var(--line);padding-bottom:5px}
+.states span:last-child{font-family:var(--f-mono);font-size:13px}
+.on-t{color:var(--ok)} .off-t{color:var(--muted)}
+
+/* 对照表 */
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:14.5px}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:13px;color:var(--muted);font-weight:500;letter-spacing:.04em}
+tr:last-child td{border-bottom:none}
+td:first-child{color:var(--fg);font-weight:500}
+td{color:var(--body)}
+
+/* 自测 */
+.quiz{display:flex;flex-direction:column;gap:10px}
+details{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+details summary::-webkit-details-marker{display:none}
+details summary{cursor:pointer;font-weight:600;list-style:none;display:flex;justify-content:space-between;gap:12px}
+details summary::after{content:"看答案";font-size:13px;color:var(--sig);font-weight:500;white-space:nowrap}
+details[open] summary::after{content:"收起"}
+details .ans{margin-top:10px;color:var(--body);display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.show{border:1px solid var(--sig);color:var(--sig);background:none;border-radius:8px;padding:4px 12px;font-size:13px;cursor:pointer}
+
+.next{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.next .card{display:flex;flex-direction:column;gap:6px;padding:16px}
+.next a.card{text-decoration:none;color:inherit}
+.next .card b{font-family:var(--f-display);color:var(--muted);font-size:14px}
+.next .card h4{margin:0;font-size:16px}
+.next .card p{color:var(--muted);font-size:14px;line-height:1.6}
+.foot{color:var(--muted);font-size:13.5px;border-top:1px solid var(--line);padding-top:16px}
+
+@media (prefers-reduced-motion: reduce){
+  .dg .spin .prop,.dg .ble.live,.ghost,.schview .nl.hl{animation:none}
+}
+
+/* 交互小部件（电路课同款） */
+.widget{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.widget svg{width:100%;height:auto;display:block}
+.wscroll{overflow-x:auto}
+.wscroll svg{min-width:640px}
+.wscroll.sm svg{min-width:480px}
+.ctrls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ctrls .lab{font-size:13px;color:var(--muted);margin-right:2px}
+.btn{border:1px solid var(--line);background:var(--panel2);border-radius:8px;padding:6px 12px;font-size:14px;cursor:pointer}
+.btn[aria-pressed="true"]{border-color:var(--sig);color:var(--sig);font-weight:600}
+.btn.primary{background:var(--sig);border-color:var(--sig);color:var(--bg);font-weight:700}
+.readout{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.ro{border:1px solid var(--line);border-radius:10px;padding:8px 12px;background:var(--panel2);display:flex;flex-direction:column;gap:2px;min-width:0}
+.ro small{font-size:12px;color:var(--muted)}
+.ro b{font-family:var(--f-mono);font-size:16px;font-variant-numeric:tabular-nums;font-weight:600}
+.ro b.good{color:var(--ok)} .ro b.warn{color:var(--hl)} .ro b.bad{color:var(--pow)}
+.status{font-size:14.5px;color:var(--body);border-left:3px solid var(--line);padding:4px 12px}
+.status.good{border-color:var(--ok)} .status.bad{border-color:var(--pow)} .status.warn{border-color:var(--hl)}
+input[type="range"]{width:100%;accent-color:var(--sig)}
+.slider{display:flex;flex-direction:column;gap:4px}
+.slider label{font-size:14px;display:flex;justify-content:space-between;gap:12px}
+.slider label span{font-family:var(--f-mono);color:var(--sig)}
+
+.legendrow{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.legendrow i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:6px;vertical-align:4px}
+.ptable td:first-child{font-family:var(--f-mono)}
+.two{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:14px;align-items:start}
+@media (max-width:860px){.two{grid-template-columns:minmax(0,1fr)}}
+
+/* 辅助色、代码块、悬停读数（电路课同款） */
+:root{--c1:#56B4E9;--c2:#E69F00;--c3:#CC79A7}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){--c1:#0072B2;--c2:#B86E00;--c3:#A8508A}}
+:root[data-theme="light"]{--c1:#0072B2;--c2:#B86E00;--c3:#A8508A}
+.code{margin:0;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:14px 16px;font-family:var(--f-mono);font-size:13px;line-height:1.65;overflow-x:auto;white-space:pre;color:var(--fg);tab-size:2;max-height:70vh}
+.code .cm{color:var(--muted)} .code .kw{color:var(--sig)} .code .n{color:var(--pow)}
+.hov{font-size:13.5px;color:var(--muted);font-variant-numeric:tabular-nums;min-height:1.5em}
+
+/* ===== PCB 课新增的通用件 ===== */
+.lsn.todo b{color:var(--muted)}
+.fig{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px;display:flex;flex-direction:column;gap:8px;min-width:0;margin:0}
+.fig img{width:100%;height:auto;display:block;border-radius:9px}
+.fig figcaption,.cap{font-size:13.5px;color:var(--muted);padding:2px 4px}
+.kbd,kbd{font-family:var(--f-mono);font-size:.84em;padding:1px 6px;border-radius:5px;border:1px solid var(--line);border-bottom-width:2px;background:var(--panel2);color:var(--fg);white-space:nowrap}
+.menu{font-family:var(--f-body);font-size:.92em;color:var(--fg);background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:1px 7px;white-space:nowrap}
+@media (max-width:560px){.menu{white-space:normal;overflow-wrap:anywhere}}
+.howto{border:1px dashed color-mix(in srgb,var(--sig) 50%,var(--line));border-radius:12px;padding:12px 16px;background:color-mix(in srgb,var(--sig) 5%,transparent);color:var(--body);max-width:68ch;display:flex;flex-direction:column;gap:6px}
+.howto > b:first-child{color:var(--sig);font-size:13px;font-family:var(--f-mono);letter-spacing:.06em}
+.todo-note{color:var(--muted);border:1px dashed var(--line);border-radius:12px;padding:16px 18px;max-width:68ch}
+@media (prefers-reduced-motion: reduce){*{scroll-behavior:auto}}
+
+/* ===== 板子查看器 viewer/boardviewer.css ===== */
+/*@@VIEWER_CSS@@*/
+/* ===== 各课样式 lessons/pN.css（只允许 #pN 或 .pN- 开头的选择器） ===== */
+/*@@LESSON_CSS@@*/
+</style>
+
+<div class="wrap">
+
+<header class="top">
+  <span class="eyebrow">BOAT QB12 · 主控板 PCB</span>
+  <h1>QB12 PCB 课</h1>
+  <p class="lede">电路课讲的是每个元件为什么在那、值为什么这么选。这门课讲下一步：这些元件怎么变成一块能下单、能贴片的板子。每一步先从道理讲起，再看 QB12 实际是怎么做的，最后告诉你自己在 KiCad 里做同样的事该点哪里。</p>
+  <nav class="course" aria-label="课程目录">
+<!--@@NAV@@-->
+  </nav>
+</header>
+
+<!--@@LESSON:0@@-->
+<!--@@LESSON:1@@-->
+<!--@@LESSON:2@@-->
+<!--@@LESSON:3@@-->
+<!--@@LESSON:4@@-->
+<!--@@LESSON:5@@-->
+<!--@@LESSON:6@@-->
+<!--@@LESSON:7@@-->
+<!--@@LESSON:8@@-->
+
+<section class="sec done-foot" aria-label="课程信息">
+  <p class="foot">板子版本 Rev A（2026-10）。课里所有数字都从下单用的同一份设计文件里读出来：QB12.kicad_pcb（KiCad 10.0.6）、DRC 报告、Gerber 与钻孔文件、BOM、坐标文件。</p>
+</section>
+
+</div>
+
+<script>
+window.QB = /*@@DATA@@*/;
+/* ===== 通用小工具 C（和电路课同一套写法） =====
+   C.el(tag, attrs, parent, text)   建 SVG 元素
+   C.flow(parent, d, cls, speed, gap, r)   沿路径流动的小点（返回 {remove()}）
+   C.tickers.add((t, dt) => {})     每帧回调（减少动画时不跑）
+   C.pressOne(sel, attr, val)       一组按钮里只按下一个
+   C.RM                             用户是否要求减少动画
+   C.countUp(el, to, {dur, dec})    数字从 0 滚到 to（减少动画时直接显示）
+   C.onVisible(el, fn, margin)      元素第一次进入视野时调用 fn
+   C.h(tag, attrs, parent, html)    建 HTML 元素 */
+(function () {
+const NS = 'http://www.w3.org/2000/svg';
+const RM = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const el = (tag, attrs, parent, text) => {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (text != null) e.textContent = text;
+  if (parent) parent.appendChild(e);
+  return e;
+};
+const h = (tag, attrs, parent, html) => {
+  const e = document.createElement(tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (html != null) e.innerHTML = html;
+  if (parent) parent.appendChild(e);
+  return e;
+};
+const flows = new Set();
+function flow(parent, d, cls, speed, gap, r) {
+  const p = el('path', { d, fill: 'none', stroke: 'none' }, parent);
+  const len = p.getTotalLength();
+  const n = Math.max(1, Math.round(len / gap));
+  const dots = Array.from({ length: n }, () => el('circle', { r: r || 3.5, class: 'dot ' + (cls || '') }, parent));
+  const f = { p, len, n, dots, speed, remove() { p.remove(); dots.forEach(x => x.remove()); flows.delete(f); } };
+  flows.add(f); placeFlow(f, performance.now());
+  return f;
+}
+function placeFlow(f, t) {
+  for (let i = 0; i < f.n; i++) {
+    const d = ((t / 1000) * f.speed + (i * f.len) / f.n) % f.len;
+    const pt = f.p.getPointAtLength(d);
+    f.dots[i].setAttribute('cx', pt.x.toFixed(1)); f.dots[i].setAttribute('cy', pt.y.toFixed(1));
+  }
+}
+const tickers = new Set();
+let last = performance.now();
+function frame(t) {
+  const dt = Math.min(0.1, (t - last) / 1000); last = t;
+  flows.forEach(f => placeFlow(f, t));
+  tickers.forEach(fn => fn(t, dt));
+  requestAnimationFrame(frame);
+}
+if (!RM) requestAnimationFrame(frame);
+const pressOne = (sel, attr, val) => document.querySelectorAll(sel).forEach(b => b.setAttribute('aria-pressed', String(b.dataset[attr] === String(val))));
+function onVisible(target, fn, margin) {
+  if (!('IntersectionObserver' in window)) { fn(); return; }
+  const io = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) { io.disconnect(); fn(); } }, { rootMargin: margin || '0px' });
+  io.observe(target);
+}
+function countUp(node, to, o) {
+  o = Object.assign({ dur: 1.1, dec: 0 }, o || {});
+  const fmt = v => v.toLocaleString('zh-CN', { minimumFractionDigits: o.dec, maximumFractionDigits: o.dec });
+  if (RM) { node.textContent = fmt(to); return; }
+  const t0 = performance.now();
+  const step = now => {
+    const q = Math.min(1, (now - t0) / (o.dur * 1000)), e = 1 - Math.pow(1 - q, 3);
+    node.textContent = fmt(to * e);
+    if (q < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+window.C = { el, h, flow, tickers, pressOne, RM, onVisible, countUp };
+window.RM = RM;
+})();
+
+/* ===== 板子查看器 viewer/boardviewer.js ===== */
+/*@@VIEWER_JS@@*/
+BoardViewer.autoInit();
+
+/* ===== 各课脚本 lessons/pN.js（build.py 给每课包一层 IIFE + try/catch） ===== */
+/*@@LESSON_JS@@*/
+</script>

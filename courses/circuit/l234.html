@@ -1,0 +1,362 @@
+
+<!-- ============ 第 2 课 ============ -->
+<section class="lesson" id="l2">
+  <div class="lhead"><span class="lnum">2</span><div><h2>USB-C 接口：5V 是怎么进来的</h2><p>学完能说清：USB-C 每个脚管什么、为什么必须有两颗 5.1kΩ、ESD 芯片怎么保护 ESP32。对应原理图 A 区左半边：J1、R1、R2、U5。</p></div></div>
+
+  <div class="sec">
+    <h3><span class="k">2.1</span>接口里有两排脚，上下是镜像的</h3>
+    <div class="txt">
+      <p>USB-C 能正着插也能反着插。做法是把接口里的脚排成上下两排：上排叫 A1–A12，下排叫 B1–B12，而且下排是倒着排的，B1 在 A12 正下方。插头翻个面，原来碰 A 排的触点就碰到 B 排。只要上下对应位置的功能一样，正反插效果就一样。</p>
+      <p>我们用的 TYPE-C-31-M-12 是 16 脚版本，只有 USB 2.0 的脚。完整的 24 脚接口多出来的 8 个脚是高速线，给 USB 3 和视频输出用，这块板用不上。</p>
+    </div>
+    <div class="widget w">
+      <div class="ctrls" role="group" aria-label="插头方向">
+        <span class="lab">插头方向</span>
+        <button class="btn" data-orient="0" aria-pressed="true">正插</button>
+        <button class="btn" data-orient="1" aria-pressed="false">反插</button>
+      </div>
+      <div class="wscroll"><svg id="pinmap" viewBox="0 0 760 270" role="img" aria-label="USB-C 母座 A、B 两排引脚，高亮的是插头碰到的脚"></svg></div>
+      <p class="status" id="pinText"></p>
+    </div>
+    <div class="txt">
+      <p>所以原理图里 J1 的引脚写成了组合：<span class="net">A4,A9,B4,B9</span> 都是 VBUS，<span class="net">A6,B6</span> 都是 D+，<span class="net">A7,B7</span> 都是 D−。正插时插头碰到 A6、A7，反插时碰到 B6、B7，两组都接到同一根线，ESP32 就不用管你怎么插的。</p>
+      <p>CC 脚不一样：插头上只有一个 CC 触点，正插碰 A5（CC1），反插碰 B5（CC2）。两边都要接电阻，这就是下一节的 R1 和 R2。</p>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">2.2</span>两颗 5.1kΩ：告诉充电器“我要电”</h3>
+    <div class="txt">
+      <p>老式 USB-A 口插上就有 5V。USB-C 的规矩不同：C 对 C 的线两头长得一样，充电器不知道对面是手机、是另一个充电器，还是根本没插东西，所以<strong>默认不出电</strong>。</p>
+      <p>它的判断办法是看 CC 线的电压。充电器在 CC 上挂一个上拉电阻 Rp 到 5V；用电的一方在 CC 上挂一个 5.1kΩ 下拉电阻 Rd 到地。两颗电阻一分压，CC 电压就被拉到 0.4V 左右。充电器看到这个电压，就知道“对面接了个要电的设备”，这才打开 VBUS 的 5V。</p>
+    </div>
+    <div class="widget w">
+      <div class="ctrls">
+        <button class="btn primary" id="ccPlug">插上线</button>
+        <span class="lab" style="margin-left:8px">板子上的 R1</span>
+        <button class="btn" data-rd="1" aria-pressed="true">焊上 5.1kΩ</button>
+        <button class="btn" data-rd="0" aria-pressed="false">漏焊</button>
+        <span class="lab" style="margin-left:8px">充电器档位</span>
+        <button class="btn" data-rp="56" aria-pressed="true">普通 56kΩ</button>
+        <button class="btn" data-rp="22" aria-pressed="false">1.5A 22kΩ</button>
+        <button class="btn" data-rp="10" aria-pressed="false">3A 10kΩ</button>
+      </div>
+      <div class="wscroll"><svg id="ccsvg" viewBox="0 0 760 250" role="img" aria-label="充电器和板子之间的 CC 分压电路">
+        <rect class="box" x="20" y="20" width="230" height="210" rx="12"/>
+        <text x="36" y="46" font-weight="700">充电器</text>
+        <text class="m mu" x="36" y="66">5V 电源</text>
+        <path class="ln fg" d="M80 80 V100"/>
+        <rect x="68" y="100" width="24" height="54" rx="2" fill="var(--panel)" stroke="var(--fg)" stroke-width="2"/>
+        <text class="m" x="100" y="124" id="ccRpTxt">Rp 56kΩ</text>
+        <text class="m mu" x="100" y="142">上拉</text>
+        <path class="ln fg" d="M80 154 V176 H250"/>
+        <circle cx="80" cy="80" r="4" fill="var(--pow)"/>
+        <rect x="140" y="56" width="96" height="34" rx="8" class="box" id="ccSw"/>
+        <text class="m" x="188" y="78" text-anchor="middle" id="ccSwTxt">VBUS 关</text>
+        <path class="ln off" id="ccVbusLine" d="M236 73 H520"/>
+        <path class="ln off" id="ccLine" d="M250 176 H520"/>
+        <text class="m mu" x="385" y="62" text-anchor="middle">VBUS</text>
+        <text class="m mu" x="385" y="200" text-anchor="middle">CC 线</text>
+        <rect x="340" y="120" width="92" height="36" rx="8" fill="var(--bg)" stroke="var(--line)"/>
+        <text class="m" x="386" y="143" text-anchor="middle" id="ccMeter">— V</text>
+        <path class="ln mu" d="M386 156 V176" stroke-dasharray="3 3"/>
+        <rect class="box" x="520" y="20" width="220" height="210" rx="12"/>
+        <text x="536" y="46" font-weight="700">QB12 板子</text>
+        <text class="m sg" x="536" y="166">CC1</text>
+        <path class="ln fg" d="M520 176 H620 V188"/>
+        <g id="ccRd">
+          <rect x="608" y="188" width="24" height="0" fill="none"/>
+          <path class="ln fg" d="M620 176 V188"/>
+          <rect x="608" y="188" width="24" height="26" rx="2" fill="var(--panel)" stroke="var(--fg)" stroke-width="2"/>
+          <text class="m" x="640" y="205">R1 5.1kΩ</text>
+          <path class="ln fg" d="M620 214 V222 M608 222 H632"/>
+        </g>
+        <text class="m mu" x="536" y="96">VBUS → 全板</text>
+        <circle id="ccBoardLed" cx="700" cy="91" r="8" fill="var(--line)"/>
+        <g id="ccDots"></g>
+      </svg></div>
+      <p class="status" id="ccText"></p>
+    </div>
+    <div class="txt">
+      <p>算一下普通档：CC = 5V × 5.1 ÷ (56 + 5.1) ≈ <strong>0.42V</strong>。充电器只要看到 CC 落在 0.2–1.6V 之间，就认定接了用电设备。漏焊 R1 时，CC 被 Rp 一直拉在 5V，充电器以为没插东西。</p>
+      <p>Rp 的大小还顺便告诉用电方“我最多能给多少电流”：56kΩ 是普通 USB，22kΩ 是 1.5A，10kΩ 是 3A。QB12 不去读这个档位，只拿默认的 5V。快充那种 9V、12V 要另外的 PD 协议芯片去谈，这块板不需要。</p>
+    </div>
+    <div class="tip"><b>常见的坑</b>：网上很多 USB-C 小板用 A 转 C 的线能充电，换成 C 对 C 线就没反应，原因就是漏了这两颗电阻。A 转 C 的线里自带 56kΩ 上拉，A 口又是一直有电的，所以不挑设备。</div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">2.3</span>D+ / D−：数据线和静电保护</h3>
+    <div class="txt">
+      <p>D+、D− 是一对<strong>差分线</strong>：两根线同时传一正一反的信号，接收端只看两根之差。外面的干扰会同时加到两根线上，一相减就抵消了，所以 USB 线很长也不怕干扰。ESP32-S3 自带 USB 2.0 全速（12 Mbps）控制器，两根线直接接到它的 IO20、IO19。</p>
+      <p>危险来自静电。冬天手指碰一下接口，可能带着几千伏电压，虽然只持续几十纳秒，也足够把 ESP32 的引脚击穿。U5（USBLC6-2SC6）就是挡在中间的保镖：里面是几颗二极管和一个稳压管，信号在 0–5V 之间时它什么都不做；一旦电压冲出这个范围，二极管立刻导通，把电流引到地。</p>
+    </div>
+    <div class="widget w">
+      <div class="ctrls">
+        <button class="btn primary" id="esdGo">手指碰一下接口</button>
+        <span class="lab" style="margin-left:8px">U5</span>
+        <button class="btn" data-esd="1" aria-pressed="true">焊上</button>
+        <button class="btn" data-esd="0" aria-pressed="false">拿掉</button>
+      </div>
+      <div class="two">
+        <div class="wscroll"><svg id="esdsvg" viewBox="0 0 560 250" role="img" aria-label="静电从 USB 接口沿 D+ 线传到 ESP32，中间经过 U5 保护">
+          <rect class="box" x="16" y="70" width="96" height="70" rx="10"/>
+          <text x="64" y="100" text-anchor="middle" font-weight="700">USB-C</text>
+          <text class="m mu" x="64" y="120" text-anchor="middle">D+</text>
+          <path class="ln sg" d="M112 105 H430"/>
+          <g id="esdU5">
+            <rect class="box" x="210" y="40" width="120" height="180" rx="10" stroke-dasharray="0"/>
+            <text x="270" y="62" text-anchor="middle" font-weight="700">U5</text>
+            <text class="m mu" x="270" y="80" text-anchor="middle">USBLC6</text>
+            <path class="ln fg" d="M270 105 V140"/>
+            <path d="M258 140 H282 L270 160 Z" fill="var(--fg)"/>
+            <path class="ln fg" d="M258 140 H282 M270 160 V196 M256 196 H284 M262 203 H278 M267 210 H273"/>
+            <text class="m mu" x="290" y="190">到地</text>
+          </g>
+          <rect class="box" x="430" y="60" width="116" height="90" rx="12" id="esdChip"/>
+          <text x="488" y="98" text-anchor="middle" font-weight="700">ESP32</text>
+          <text class="m mu" x="488" y="118" text-anchor="middle">IO20</text>
+          <text class="flash pw" id="esdBad" x="488" y="176" text-anchor="middle" font-weight="700">引脚被击穿</text>
+          <text class="flash" id="esdOk" x="488" y="176" text-anchor="middle" font-weight="700" style="fill:var(--ok)">没事</text>
+          <circle id="esdPulse" cx="112" cy="105" r="0" fill="var(--hl)"/>
+          <circle id="esdPulse2" cx="270" cy="105" r="0" fill="var(--hl)"/>
+        </svg></div>
+        <div class="card" style="padding:12px">
+          <svg id="scope" viewBox="0 0 320 220" role="img" aria-label="示波器：ESP32 引脚上的电压随时间变化"></svg>
+          <p class="cap" style="font-size:13px;color:var(--muted);margin-top:6px">示波器：ESP32 这个脚上的电压。横轴是纳秒，红虚线 3.6V 是它长期能承受的上限。</p>
+        </div>
+      </div>
+      <p class="status" id="esdText">点“手指碰一下接口”，看静电走到哪里。</p>
+    </div>
+    <div class="txt">
+      <p>J1 的金属外壳（原理图里的 SHELL）也接了地。静电多数先打在外壳上，直接走地线泄掉，进到 D+、D− 的那一部分再由 U5 处理。</p>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">2.4</span>剩下的两件小事</h3>
+    <div class="txt">
+      <p><strong>SBU1、SBU2 不接。</strong>这两个脚是给视频输出这类“附加功能”用的，原理图里画了叉号。</p>
+      <p><strong>R17、R18 检测 USB 有没有插。</strong>两颗 100kΩ 把 VBUS 一分为二：5V 进来，<span class="net s">USB_DET</span> 就是 2.5V，低于 ESP32 能承受的 3.3V。ESP32 的 IO9 读到 2.5V 就知道插着 USB，程序可以据此决定充电时不让电机转。两颗电阻加起来 200kΩ，只吃 25µA，可以一直挂着。</p>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">2.5</span>自测</h3>
+    <div class="quiz">
+      <details><summary>R1、R2 都漏焊了，用 C 对 C 线插手机充电头会怎样？换成 A 转 C 的线呢？</summary><div class="ans"><p>C 对 C：充电头一直看到 CC 是 5V，认为没插东西，不出电，板子完全没反应。A 转 C：线里自带 56kΩ，A 口本来就一直有 5V，所以照样能用。</p><button class="show" data-nets="CC1,CC2">在原理图上标出 CC1、CC2</button></div></details>
+      <details><summary>原理图里 D+ 为什么写着“A6,B6”两个脚？</summary><div class="ans"><p>插头只有一组 D+ / D−。正插时它碰到 A6、A7，反插时碰到 B6、B7。把 A6、B6 连在一起，正反插 ESP32 都能收到数据。</p><button class="show" data-nets="USB_DP,USB_DN">在原理图上标出 USB_DP、USB_DN</button></div></details>
+      <details><summary>插着 USB 时，USB_DET 是多少伏？为什么不直接把 VBUS 接到 IO9？</summary><div class="ans"><p>5V × 100k ÷ (100k + 100k) = 2.5V。VBUS 是 5V，超过 ESP32 引脚最高 3.3V，直接接会烧引脚，所以先分压。</p><button class="show" data-nets="USB_DET">在原理图上标出 USB_DET</button></div></details>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 第 3 课 ============ -->
+<section class="lesson" id="l3">
+  <div class="lhead"><span class="lnum">3</span><div><h2>锂电池充电：先恒流，再恒压</h2><p>学完能说清：锂电池为什么要分两段充、2kΩ 怎么定下充电电流、两颗灯什么时候亮。对应原理图 A 区右半边：U4、R3、C1、C2、LED1、LED2。</p></div></div>
+
+  <div class="sec">
+    <h3><span class="k">3.1</span>锂电池的脾气</h3>
+    <div class="basics">
+      <div class="card"><b>电压就是电量</b><p>单节锂电池充满是 4.2V，用到一半约 3.7V，到 3.0V 就该充了。程序看电池电压，就能估计还剩多少电。</p></div>
+      <div class="card"><b>绝不能超过 4.2V</b><p>超过 4.2V 继续充，电池会发热、鼓包，严重时起火。所以充电芯片要把电压精确卡在 4.2V，TP4056 的误差在 1% 以内。</p></div>
+      <div class="card"><b>也不能放得太空</b><p>放到 2.5V 以下会伤电池。这件事交给电池自带的保护板去管，所以要买“带保护板”的 1S 电池。</p></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">3.2</span>看一次完整的充电过程</h3>
+    <div class="txt">
+      <p>TP4056 把充电分成几段，自己自动切换：</p>
+      <p><strong>恒流</strong>：电池还没满时，用固定的电流（这块板是约 0.55A）往里灌。电压随着电量慢慢升高。</p>
+      <p><strong>恒压</strong>：电压一到 4.2V，芯片改成死守 4.2V。电池越来越满，能灌进去的电流就越来越小。</p>
+      <p><strong>结束</strong>：电流降到设定值的十分之一左右，芯片判定充满，停止充电。之后电池电压掉到约 4.05V，它会自动再补一次。电池特别空（低于 2.9V）时，开头还会先用小电流“涓流”预充一会儿。</p>
+    </div>
+    <div class="widget w">
+      <div class="ctrls">
+        <button class="btn primary" id="chgPlay">播放</button>
+        <span class="lab">也可以在图上拖动或悬停，看任意时刻</span>
+      </div>
+      <div class="two">
+        <div><svg id="chgsvg" viewBox="0 0 520 330" role="img" aria-label="充电过程：上图电池电压，下图充电电流，横轴是时间（分钟）" style="touch-action:none"></svg></div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="readout">
+            <div class="ro"><small>时间</small><b id="cT">0 分钟</b></div>
+            <div class="ro"><small>阶段</small><b id="cPh">恒流</b></div>
+            <div class="ro"><small>电池电压</small><b id="cV">3.35 V</b></div>
+            <div class="ro"><small>充电电流</small><b id="cI">0.55 A</b></div>
+            <div class="ro"><small>已充入</small><b id="cQ">0 mAh</b></div>
+          </div>
+          <svg id="odsvg" viewBox="0 0 300 250" role="img" aria-label="CHRG 和 STDBY 开漏输出点亮两颗 LED"></svg>
+        </div>
+      </div>
+      <p class="status" id="chgText"></p>
+    </div>
+    <div class="txt"><p>图里按 QB12 的 1200mAh 电池、从 3.35V 开始充来算：恒流约 95 分钟，恒压约 50 分钟，一共两个半小时左右。</p></div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">3.3</span>TP4056 的八个脚，逐个看</h3>
+    <div class="tbl"><table class="ptable">
+      <thead><tr><th>脚</th><th>名字</th><th>在 QB12 上接到</th><th>为什么这样接</th></tr></thead>
+      <tbody>
+        <tr><td>4</td><td>VCC</td><td>VBUS</td><td>芯片的电源，从 USB 取 5V。C1（10µF）贴在旁边稳住电压。</td></tr>
+        <tr><td>8</td><td>CE</td><td>VBUS</td><td>充电使能，高电平允许充电。直接接 VBUS 等于“插上 USB 就充”。</td></tr>
+        <tr><td>5</td><td>BAT</td><td>BAT+</td><td>往电池里送电流，同时测电池电压。C2（10µF）让电池断开时电压不乱跳。</td></tr>
+        <tr><td>2</td><td>PROG</td><td>R3 2kΩ 到地</td><td>决定充电电流，下一节的计算器专门讲。</td></tr>
+        <tr><td>1</td><td>TEMP</td><td>GND</td><td>本来接电池里的温度传感器。我们的电池没有这根线，接地等于关掉温度检测。</td></tr>
+        <tr><td>7</td><td>CHRG</td><td>LED1 阴极</td><td>“正在充”指示，开漏输出，充电时拉低，红灯亮。</td></tr>
+        <tr><td>6</td><td>STDBY</td><td>LED2 阴极</td><td>“充满了”指示，开漏输出，充满时拉低，绿灯亮。</td></tr>
+        <tr><td>3 + 底部焊盘</td><td>GND</td><td>GND</td><td>地。底部大焊盘还负责散热，PCB 上打了 6 个过孔把热传到背面。</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">3.4</span>一颗电阻定下充电电流</h3>
+    <div class="txt">
+      <p>PROG 脚内部稳在 1V。电阻 R3 接在 PROG 和地之间，流过它的电流就是 1V ÷ R3，芯片再把这个小电流放大 1100 倍，作为充电电流。所以：</p>
+      <p style="font-family:var(--f-mono);color:var(--fg)">充电电流 ≈ 1100 ÷ R3（Ω）A  →  1100 ÷ 2000 = 0.55A</p>
+      <p>不同厂家的 TP4056 这个倍数在 1100 到 1200 之间，所以 2kΩ 实际在 0.55–0.6A。拖一下看看换电阻会怎样：</p>
+    </div>
+    <div class="widget w">
+      <div class="slider">
+        <label for="rprog">R3 阻值 <span id="rprogV">2.0 kΩ</span></label>
+        <input type="range" id="rprog" min="1.1" max="10" step="0.1" value="2">
+      </div>
+      <div class="ctrls"><span class="lab">常用值</span><button class="btn" data-r="1.2">1.2kΩ</button><button class="btn" data-r="2">2kΩ（本板）</button><button class="btn" data-r="3.9">3.9kΩ</button><button class="btn" data-r="10">10kΩ</button></div>
+      <div class="readout">
+        <div class="ro"><small>充电电流</small><b id="rI">0.55 A</b></div>
+        <div class="ro"><small>1200mAh 充满约</small><b id="rT">2.6 小时</b></div>
+        <div class="ro"><small>芯片发热（电池 3.6V 时）</small><b id="rP">0.77 W</b></div>
+        <div class="ro"><small>芯片发热（电池 3.0V 时）</small><b id="rP2">1.1 W</b></div>
+      </div>
+      <p class="status" id="rText"></p>
+    </div>
+    <div class="txt">
+      <p>发热怎么算：TP4056 是“线性”充电芯片，5V 和电池电压之间的差，全部在芯片里变成热。电池 3.0V、电流 0.55A 时，就是 (5 − 3.0) × 0.55 ≈ 1.1W，摸上去会烫手。芯片过热时会自己降电流保护，充得慢一点但不会坏。这也是 PCB 上给它的散热焊盘打了过孔的原因。</p>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">3.5</span>两颗灯：开漏输出</h3>
+    <div class="txt">
+      <p>CHRG 和 STDBY 叫<strong>开漏输出</strong>。芯片里面各有一个只能“接到地”的开关（一颗 N-MOS 管）：开关合上，引脚被拉到 0V；开关断开，引脚就悬空，既不输出高电平也不输出低电平。</p>
+      <p>所以 LED 的电不是芯片给的，是外面的 VBUS 经 1kΩ 电阻供的。开关一合上，电流走 VBUS → R4 → LED1 → CHRG 脚 → 芯片里的开关 → 地，灯就亮了。电流约 (5 − 2.0 − 0.3) ÷ 1kΩ ≈ 3mA，够亮又不费电。上面的充电动画里，右侧小图就是这两个开关随充电阶段开合。</p>
+      <p>STM32 的 GPIO 设成“开漏输出”就是这个结构。好处是外面接的电源可以和芯片自己的电压不一样，比如这里芯片可以用 5V 点灯，也可以接 3.3V 的单片机去读。</p>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">3.6</span>一边充电一边开船，行不行？</h3>
+    <div class="txt">
+      <p>TP4056 是靠“流进电池的电流降到十分之一”来判断充满的。如果充电时电机也从电池取电，芯片送出去的电流一部分被电机拿走，电池那边永远满不了，芯片就永远不停，电池会被长时间挂在 4.2V 上，对寿命不好。</p>
+      <p>QB12 的做法是：插着 USB 时，全板改用 USB 经 D1 供电，Q1 同时把电池和负载隔开，电池只跟 TP4056 打交道。这个“自动切换”就是第 5 课的内容。</p>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">3.7</span>自测</h3>
+    <div class="quiz">
+      <details><summary>想把充电电流降到 0.3A，R3 换成多大？</summary><div class="ans"><p>1100 ÷ 0.3 ≈ 3.7kΩ。选最接近的标准值 3.6kΩ 或 3.9kΩ，分别约 0.31A、0.28A。</p><button class="show" data-nets="PROG">在原理图上标出 PROG</button></div></details>
+      <details><summary>充到一半时，哪颗灯亮？CHRG 脚是什么电平？</summary><div class="ans"><p>红灯 LED1 亮。这时 CHRG 内部开关合上，脚被拉到接近 0V；STDBY 内部开关断开，绿灯不亮。</p><button class="show" data-nets="CHRG,STDBY">在原理图上标出 CHRG、STDBY</button></div></details>
+      <details><summary>没插 USB 时，两颗灯为什么都不亮，也不耗电池？</summary><div class="ans"><p>两颗灯的电来自 VBUS，没插 USB 时 VBUS 是 0V，回路里没有电源，自然不亮。TP4056 在没有 VCC 时会把 BAT 脚断开，从电池吸走的电流只有几微安。</p><button class="show" data-nets="VBUS">在原理图上标出 VBUS</button></div></details>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 第 4 课 ============ -->
+<section class="lesson" id="l4">
+  <div class="lhead"><span class="lnum">4</span><div><h2>MOS 管当开关：小拨动开关管住大电流</h2><p>学完能说清：P-MOS 什么时候导通、为什么 SW1 只碰 Q2 的栅极、Q2 断开后电池为什么一点都不漏。对应原理图 B 区上面一行：SW1、R14、Q2。</p></div></div>
+
+  <div class="sec">
+    <h3><span class="k">4.1</span>为什么不让开关直接断电池</h3>
+    <div class="txt">
+      <p>最简单的电源开关，是把拨动开关直接串在电池正极上。可我们用的 SW1（MSK12C02）是个指甲盖大小的拨动开关，数据手册写着<strong>额定 12V、50mA</strong>。两个电机起步要 2A，是它额定值的 40 倍，触点很快会烧蚀、粘死。</p>
+      <p>换一个大开关当然可以，但又大又贵，放不进船舱。更好的办法是让小开关只去“发号施令”，真正的大电流交给一个电子开关去通断。这个电子开关就是 MOS 管。</p>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">4.2</span>MOS 管的原理：用电压开关一扇门</h3>
+    <div class="txt">
+      <p>MOS 管有三个脚：<strong>源极 S</strong>、<strong>漏极 D</strong>、<strong>栅极 G</strong>。S 和 D 之间是一条可以打开或关上的通道，大电流从这里过；G 是控制端。</p>
+      <p>关键在于栅极和通道之间隔着一层极薄的绝缘层，<strong>栅极本身几乎不吃电流</strong>，它靠的是电压：栅极和源极之间的电压差（叫 Vgs）把通道“吸”开。这一点和 STM32 的引脚驱动三极管不一样，三极管要持续往基极灌电流，MOS 管只要电压就够了。</p>
+      <p>MOS 管分 N 型和 P 型，方向相反：N-MOS 要栅极<strong>比源极高</strong>才导通；P-MOS 要栅极<strong>比源极低</strong>才导通，所以它的 Vgs 是负的。QB12 的 Q1、Q2 都是 P-MOS（AO3401A），它的数据手册说：Vgs 低于约 −0.9V 开始导通，到 −2.5V 时导通电阻已经小于 85mΩ，基本就是一根导线了。</p>
+    </div>
+    <div class="widget w">
+      <div class="two">
+        <div class="wscroll"><svg id="mossvg" viewBox="0 0 520 330" role="img" aria-label="P-MOS 管：拖动栅极电压，看电流能不能从源极流到漏极"></svg></div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div class="slider">
+            <label for="vg">栅极电压 Vg <span id="vgV">4.00 V</span></label>
+            <input type="range" id="vg" min="0" max="4" step="0.05" value="4">
+          </div>
+          <div class="ctrls"><button class="btn" data-vg="4">栅极接电池（4V）</button><button class="btn" data-vg="0">栅极接地（0V）</button></div>
+          <div>
+            <div class="gauge" aria-hidden="true">
+              <div class="z1" style="width:37.5%">完全导通</div>
+              <div class="z3" style="width:30%">半开，发烫</div>
+              <div class="z2" style="width:20%">刚开门</div>
+              <div class="z4" style="width:12.5%">关断</div>
+              <span class="mark" id="vgsMark"></span>
+            </div>
+            <div class="gscale"><span>Vgs −4V</span><span>−2.5</span><span>−1.3</span><span>−0.5</span><span>0V</span></div>
+          </div>
+          <div class="readout">
+            <div class="ro"><small>Vgs = Vg − Vs</small><b id="mVgs">0.00 V</b></div>
+            <div class="ro"><small>导通电阻</small><b id="mR">断开</b></div>
+            <div class="ro"><small>电机电流</small><b id="mI">0 A</b></div>
+            <div class="ro"><small>MOS 管发热</small><b id="mP">0 W</b></div>
+          </div>
+        </div>
+      </div>
+      <p class="status" id="mText"></p>
+    </div>
+    <div class="txt">
+      <p>注意中间那一段“半开”：导通电阻有几欧，电机电流又不小，热量 = 电流² × 电阻，一颗小管子要发一两瓦的热，很快就烫坏。所以 MOS 管当开关用时，<strong>要么彻底关、要么彻底开</strong>，不能停在中间。</p>
+      <p>图里竖着画在旁边的那颗二极管叫<strong>体二极管</strong>，是 MOS 管制造时天生带的，P-MOS 的方向是从 D 指向 S。管子关断时，电流仍然可以顺着它从 D 流到 S，但反过来不行。这个细节在 4.4 和第 5 课会用到。</p>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">4.3</span>QB12 的电源开关：拨一下试试</h3>
+    <div class="txt">
+      <p>Q2 的 S 接电池正极 <span class="net p">BAT+</span>，D 接 <span class="net p">BAT_SW</span>（通往 Q1 和全板），G 接 <span class="net s">PWR_EN_N</span>。PWR_EN_N 这根线上挂着两样东西：R14（100kΩ）把它往上拉到电池电压，SW1 的公共脚可以把它接到地。</p>
+    </div>
+    <div class="widget w">
+      <div class="ctrls"><button class="btn primary" id="swTog">拨到 ON</button><span class="lab">也可以直接点图里的开关</span></div>
+      <div class="wscroll"><svg id="swsvg" viewBox="0 0 760 290" role="img" aria-label="QB12 电源开关电路：SW1、R14 控制 Q2"></svg></div>
+      <div class="readout">
+        <div class="ro"><small>PWR_EN_N 电压</small><b id="sEn">4.00 V</b></div>
+        <div class="ro"><small>Q2 的 Vgs</small><b id="sVgs">0.00 V</b></div>
+        <div class="ro"><small>Q2</small><b id="sQ">关断</b></div>
+        <div class="ro"><small>流过 SW1 的电流</small><b id="sSw">0 µA</b></div>
+        <div class="ro"><small>流到全板的电流</small><b id="sLoad">0 A</b></div>
+      </div>
+      <p class="status" id="sText"></p>
+    </div>
+    <div class="txt">
+      <p>两种状态对照着看：</p>
+      <p><strong>OFF</strong>：SW1 的公共脚悬空，R14 把栅极拉到和源极一样的电压，Vgs = 0，Q2 关断。R14 两端电压相同，没有电流，所以关机时连这颗电阻都不耗电。</p>
+      <p><strong>ON</strong>：SW1 把栅极接到地，Vgs = 0 − 4.0 = −4.0V，远低于 −2.5V，Q2 完全导通。这时 R14 两端有 4V，流过 4V ÷ 100kΩ = 40µA，这就是 SW1 承担的全部电流，离它 50mA 的额定值差了一千多倍。</p>
+      <p>电池快没电时（3.0V），Vgs 只有 −3.0V，仍然低于 −2.5V，Q2 照样完全导通。选 AO3401A 就是看中它在这么低的栅压下也能开透。2A 电流流过 60mΩ 左右的导通电阻，发热 2² × 0.06 ≈ 0.24W，小小的 SOT-23 封装扛得住。</p>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">4.4</span>关机后电池为什么一点不漏</h3>
+    <div class="txt">
+      <p>回想 4.2 的体二极管：它从 D 指向 S。Q2 的 S 接电池、D 接负载，所以体二极管的方向是<strong>从负载指向电池</strong>。电池想往外放电，得从 S 流到 D，正好是二极管挡住的方向。关断的 Q2 加上它的体二极管，把电池的出路堵死了。</p>
+      <p>那反方向呢？插着 USB 时 VSYS 有 4.6V，会不会顺着体二极管倒灌进电池？这一路还要先经过 Q1，而 Q1 是“倒着装”的，它的体二极管方向正好相反。两颗管子背靠背，一颗挡一个方向。第 5 课专门讲 Q1。</p>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">4.5</span>自测</h3>
+    <div class="quiz">
+      <details><summary>把 SW1 直接串到电池正极上当总开关，会出什么问题？</summary><div class="ans"><p>SW1 额定 50mA，电机起步电流约 2A，是额定值的 40 倍。触点会发热、拉弧，用不了多久就烧坏或粘死。</p><button class="show" data-nets="PWR_EN_N">在原理图上标出 PWR_EN_N</button></div></details>
+      <details><summary>开机状态下，SW1 上流过多少电流？电池 4.2V 满电时呢？</summary><div class="ans"><p>电流只经过 R14：4.0V ÷ 100kΩ = 40µA；满电 4.2V 时 42µA。</p></div></details>
+      <details><summary>如果把 R14 拿掉，SW1 拨到 OFF 时会怎样？</summary><div class="ans"><p>栅极就悬空了，电压不确定，Q2 可能半开半关，既关不干净，又可能发热。上拉电阻的作用就是让“没人管”的时候栅极有一个确定的电压。STM32 的输入脚要配上拉或下拉，也是同一个道理。</p><button class="show" data-nets="PWR_EN_N,BAT+">在原理图上标出 R14 两端</button></div></details>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,69 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>html,body{margin:0;background:#0D1719;overflow:hidden}canvas{display:block}</style>
+<script type="importmap">{"imports":{"three":"./node_modules/three/build/three.module.js","three/addons/":"./node_modules/three/examples/jsm/"}}</script>
+</head><body>
+<script type="module">
+import * as THREE from 'three';
+import { VRMLLoader } from 'three/addons/loaders/VRMLLoader.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+const view = new URLSearchParams(location.search).get('view') || 'hero';
+const W = innerWidth, H = innerHeight;
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(1); renderer.setSize(W, H);
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.0;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene(); scene.background = new THREE.Color('#0D1719');
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture; scene.environmentIntensity = 0.6;
+const BW = 56, BH = 38, T = 1.6;
+const root = new THREE.Group(); scene.add(root);
+// 板子
+const sh = new THREE.Shape(); const r = 2;
+sh.moveTo(r, 0); sh.lineTo(BW - r, 0); sh.quadraticCurveTo(BW, 0, BW, r); sh.lineTo(BW, BH - r); sh.quadraticCurveTo(BW, BH, BW - r, BH);
+sh.lineTo(r, BH); sh.quadraticCurveTo(0, BH, 0, BH - r); sh.lineTo(0, r); sh.quadraticCurveTo(0, 0, r, 0);
+const body = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: T, bevelEnabled: false, curveSegments: 12 }),
+  new THREE.MeshStandardMaterial({ color: '#1a1d1f', roughness: 0.5 }));
+body.rotation.x = Math.PI / 2; body.position.y = T; body.castShadow = true; body.receiveShadow = true; root.add(body);
+const tex = new THREE.TextureLoader().load('./top_tex.png', () => go());
+tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
+const top = new THREE.Mesh(new THREE.PlaneGeometry(BW, BH), new THREE.MeshPhysicalMaterial({ map: tex, transparent: true, roughness: 0.38, clearcoat: 0.25, clearcoatRoughness: 0.4 }));
+top.rotation.x = -Math.PI / 2; top.position.set(BW / 2, T + 0.012, BH / 2); top.receiveShadow = true; root.add(top);
+// 器件
+async function go() {
+  if (view === 'top') { top.material.clearcoat = 0; top.material.roughness = 0.85; scene.environmentIntensity = 0.3; }
+  const parts = await (await fetch('./parts.json')).json();
+  const loader = new VRMLLoader(); const cache = {};
+  for (const p of parts) {
+    if (!cache[p.model]) cache[p.model] = await new Promise((res) => loader.load('./models/' + p.model, res, undefined, () => res(null)));
+    const src = cache[p.model]; if (!src) continue;
+    const g = new THREE.Group(); g.position.set(p.x, T, p.y); g.rotation.y = p.rot * Math.PI / 180;
+    const k = new THREE.Group(); k.rotation.x = -Math.PI / 2; g.add(k);
+    const m = src.clone(true); m.position.set(p.off[0], p.off[1], p.off[2]);
+    m.rotation.set(-p.mrot[0] * Math.PI / 180, -p.mrot[1] * Math.PI / 180, -p.mrot[2] * Math.PI / 180, 'ZYX');
+    m.scale.setScalar(2.54); k.add(m);
+    m.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true;
+      const mat = o.material; if (mat) { mat.side = THREE.DoubleSide; } } });
+    root.add(g);
+  }
+  root.scale.setScalar(1 / BW); root.position.set(-0.5, 0, -BH / BW / 2); root.updateMatrixWorld(true);
+  const box = new THREE.Box3().setFromObject(root); const c = box.getCenter(new THREE.Vector3());
+  const key = new THREE.DirectionalLight('#ffffff', view === 'top' ? 1.6 : 2.4); key.position.set(0.7, 1.5, 0.9); key.castShadow = true;
+  key.shadow.mapSize.set(4096, 4096); key.shadow.bias = -0.0004;
+  Object.assign(key.shadow.camera, { left: -0.8, right: 0.8, top: 0.8, bottom: -0.8, near: 0.1, far: 5 }); scene.add(key);
+  const rim = new THREE.DirectionalLight('#4FD1D9', 0.9); rim.position.set(-1.2, 0.6, -1.0); scene.add(rim);
+  scene.add(new THREE.HemisphereLight('#e8f4f5', '#0D1719', 0.5));
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), new THREE.ShadowMaterial({ opacity: 0.4 }));
+  ground.rotation.x = -Math.PI / 2; ground.position.y = -0.0005; ground.receiveShadow = true; scene.add(ground);
+  const dirs = { hero: [0.55, 0.95, 0.9, 1.95], top: [0.00001, 1, 0.00001, 1.95], low: [-0.85, 0.5, 0.9, 1.55] };
+  const [dx, dy, dz, dist] = dirs[view];
+  const cam = new THREE.PerspectiveCamera(view === 'top' ? 26 : 30, W / H, 0.001, 50);
+  cam.position.copy(c).addScaledVector(new THREE.Vector3(dx, dy, dz).normalize(), dist);
+  if (view === 'top') cam.up.set(0, 0, -1);
+  cam.lookAt(c);
+  renderer.render(scene, cam);
+  window.__done = true;
+}
+</script></body></html>

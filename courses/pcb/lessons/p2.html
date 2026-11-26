@@ -1,0 +1,196 @@
+<section class="lesson" id="p2">
+  <div class="lhead"><span class="lnum">2</span><div><h2>封装：从符号到焊盘</h2><p>学完能说清：原理图符号和 PCB 封装各管什么、靠什么对上；一个封装里叠着哪几层；焊盘尺寸和脚距为什么必须照实物；QB12 的 17 种封装各长什么样；每个元件的立创编号该从哪来。</p></div></div>
+
+  <!-- ============ 2.1 ============ -->
+  <div class="sec">
+    <h3><span class="k">2.1</span>同一个元件的两张图：符号和封装</h3>
+    <div class="txt">
+      <p>电路课里看的是<strong>原理图符号</strong>：一个方框或一段锯齿，伸出几根线，标着 1、2、3。它只回答一件事：每个脚接到哪个网络。画多大、朝哪边，都无所谓。</p>
+      <p>做板子要的是<strong>封装</strong>（footprint，“脚印”）：元件焊到板上时，铜焊盘在哪、多大、要不要打孔。一句话：<strong>符号说谁和谁连，封装说金属在哪</strong>。两边靠<strong>编号</strong>对上：符号的 1 脚，就是封装的 1 号焊盘。</p>
+    </div>
+    <div class="widget p2-mapw">
+      <div class="ctrls" id="p2-map-parts" role="group" aria-label="选一个元件"></div>
+      <div class="p2-mapbox"><svg id="p2-map" role="group" aria-label="左边是原理图符号，右边是同一个元件的封装，连线表示哪个脚对哪个焊盘"></svg></div>
+      <p class="status" id="p2-map-status" aria-live="polite"></p>
+      <div class="p2-mapcard" id="p2-map-card"></div>
+    </div>
+    <div class="two">
+      <div class="txt">
+        <p><strong>平常在 KiCad 里</strong>：原理图里每个符号有一个“封装”字段，填上库里某个封装的名字。可以一个个填，也可以用<span class="menu">工具 → 分配封装...</span>一次给所有符号挑好。然后<span class="menu">工具 → 从原理图更新 PCB...</span>（<kbd>F8</kbd>），KiCad 按“引脚号 = 焊盘号”把网络写到每个焊盘上。</p>
+        <p><strong>QB12 实际</strong>：没有 KiCad 原理图（<a href="#p0">第 0 课</a>说过）。<span class="net">netlist.py</span> 给每个元件写了值、立创编号和一个简短的封装名（如 <span class="net">0603</span>、<span class="net">SOT-23-5</span>）；<span class="net">build_board.py</span> 用一张表把它换成库里的封装全名，再按引脚号给焊盘填网络。号码对不上的几处（上面的 D1、SW2，还有 USB-C 的 J1、模组 U1 的接地脚、U2/U4 的散热焊盘）专门写了一张对照表 <span class="net">pad_map</span>。</p>
+      </div>
+      <figure class="fig p2-shot"><img src="@@ASSET:kicad_assign_fp.webp@@" alt="演示工程的分配封装窗口：左栏是封装库列表，中栏是 R1、D1、J1 三个符号和分到的封装，右栏是筛选出来的候选封装" loading="lazy"><figcaption>KiCad 10.0.6 截图，演示工程：一个只有 R1、D1、J1 三个元件的小工程（QB12 没有 KiCad 原理图，没法拿它拍）。原理图编辑器 <span class="menu">工具 → 分配封装...</span> 打开的“分配封装”窗口：左栏是封装库，中栏是每个符号分到的封装（J1 还空着），右栏是筛选出来的候选封装。底部状态栏：“筛选 关键字 (Connector*:*_1x??_*), 搜索文本 (JST_PH): 30 个匹配的封装”。</figcaption></figure>
+    </div>
+  </div>
+
+  <!-- ============ 2.2 ============ -->
+  <div class="sec">
+    <h3><span class="k">2.2</span>一个封装里叠着几层</h3>
+    <div class="txt">
+      <p>封装不只是几块铜。KiCad 的封装里同时画着好几层，每一层最后都变成工厂里的一道工序（这些材料是什么，<a href="#p1">第 1 课</a>讲过）。选一个元件，一层层打开看。</p>
+    </div>
+    <div class="widget p2-anw">
+      <div class="ctrls" id="p2-an-parts" role="group" aria-label="选一个元件"></div>
+      <div class="ctrls" id="p2-an-steps" role="group" aria-label="选一层"></div>
+      <div class="stage p2-anstage">
+        <div id="p2-an-bv"></div>
+        <div class="card explain p2-ancard" aria-live="polite">
+          <h4 id="p2-an-t"></h4>
+          <p id="p2-an-p"></p>
+          <div class="states" id="p2-an-s"></div>
+        </div>
+      </div>
+    </div>
+    <div class="txt"><p><strong>QB12 实际</strong>：17 种封装都是用 easyeda2kicad 从立创 EasyEDA 转换来的（每个封装文件第一行都写着它）。转换出来以后，<span class="net">build_board.py</span> 又动了下面这几处。点一条，上面的查看器会切过去。</p></div>
+    <div class="p2-mods" id="p2-mods" role="group" aria-label="脚本对封装做的修改"></div>
+  </div>
+
+  <!-- ============ 2.3 ============ -->
+  <div class="sec">
+    <h3><span class="k">2.3</span>QB12 用到的 17 种封装</h3>
+    <div class="txt">
+      <p>51 个元件只用了 17 种封装：同一种电阻电容，封装共用。点一张卡片，查看器会放大到焊盘那一级（放大到 4 倍以上会显示焊盘号）；下面是从设计文件里量出来的数：焊盘多大、脚距多少、每个焊盘接哪个网络。</p>
+    </div>
+    <div class="widget p2-galw">
+      <div class="p2-galgrid" id="p2-gal-grid" role="group" aria-label="17 种封装"></div>
+      <div class="p2-galbody">
+        <div class="p2-galmain">
+          <div id="p2-gal-bv"></div>
+          <div class="ctrls">
+            <button class="btn" id="p2-gal-zoom">放大到 1 号焊盘</button>
+            <button class="btn" id="p2-gal-trk" aria-pressed="false">显示走线</button>
+            <span class="lab" id="p2-gal-zl"></span>
+          </div>
+        </div>
+        <div class="readout p2-galro" id="p2-gal-ro"></div>
+      </div>
+      <div class="p2-galpins" id="p2-gal-pins"></div>
+    </div>
+    <div class="tip">名字里藏着尺寸。立创的封装名大多是这样拼起来的：<span class="net">TSSOP-16_L5.0-W4.4-P0.65-LS6.4-BL-EP</span>。对照量出来的数能看出：<b>L5.0-W4.4</b> 是本体长宽，<b>P0.65</b> 是脚距，<b>LS6.4</b> 是两排引脚尖到尖的跨度，<b>BL</b> 是 0° 时 1 脚在左下（BR 右下、TL 左上），<b>EP</b> 是肚子底下有散热焊盘。上面每张卡片都把名字里的数和量出来的数对了一遍。</div>
+  </div>
+
+  <!-- ============ 2.4 ============ -->
+  <div class="sec">
+    <h3><span class="k">2.4</span>焊盘为什么必须照实物画</h3>
+    <div class="txt">
+      <p>焊盘是给实物的脚准备的“座位”。脚距差一点点，越往两边错得越多；焊盘画小了，焊锡没地方爬；中间的散热焊盘漏画了，芯片的热和地都没了去处。所以芯片数据手册里通常会给一张<strong>推荐焊盘图</strong>（land pattern），比如 ESP32-S3-WROOM-1 模组的手册里就标着 18 × 25.5 mm 的焊盘图 [S47]。</p>
+      <p>下面用 U2（DRV8833，HTSSOP-16）试一下：实物的脚距是 0.65 mm 不变，拖动滑块，把<strong>封装</strong>的脚距画错，看脚和焊盘还对不对得上。</p>
+    </div>
+    <div class="widget p2-pw">
+      <div class="p2-pgrid">
+        <div class="p2-psvgbox"><svg id="p2-p" viewBox="-4.3 -4.25 8.6 8.5" role="img" aria-label="U2 的 16 个焊盘和芯片引脚叠在一起的示意图"></svg>
+          <div class="legendrow p2-plg"><span><i class="cu"></i>焊盘（封装）</span><span><i class="ok"></i>引脚对正</span><span><i class="part"></i>偏到焊盘边外</span><span><i class="bad"></i>压到隔壁 / 落空</span></div></div>
+        <div class="p2-pside">
+          <div class="slider">
+            <label for="p2-p-range">封装里画的脚距<span id="p2-p-val"></span></label>
+            <input type="range" id="p2-p-range" min="0.5" max="0.8" step="0.005">
+          </div>
+          <div class="ctrls" id="p2-p-presets" role="group" aria-label="常见的脚距"></div>
+          <div class="ctrls"><button class="btn" id="p2-p-ep" aria-pressed="true">散热焊盘：画了</button></div>
+          <div class="readout p2-pro" id="p2-p-ro"></div>
+          <p class="status" id="p2-p-status" aria-live="polite"></p>
+        </div>
+      </div>
+      <p class="cap">示意：焊盘的位置和大小来自 QB12 的 U2 封装（0.35 × 1.3 mm，脚距 0.65 mm）；芯片本体、引脚的粗细是照名字里的 L5.0-W4.4、LS6.4 画的示意，不是数据手册的精确尺寸。</p>
+    </div>
+    <div class="p2-fails" id="p2-fails"></div>
+  </div>
+
+  <!-- ============ 2.5 ============ -->
+  <div class="sec">
+    <h3><span class="k">2.5</span>方向：封装的 0° 和 1 脚</h3>
+    <div class="txt">
+      <p>每个封装在库里都有一个“0°”的样子：画库的人决定 1 脚放在哪个角。放到板上可以转：KiCad 里选中元件按 <kbd>R</kbd> 逆时针转 90°，<kbd>Shift</kbd>+<kbd>R</kbd> 顺时针。转了多少度记在元件上，后面导出坐标文件时会写进“Rotation”一列。</p>
+      <p>芯片转错了 90°，每个脚都接错；二极管、LED 转了 180°，就接反了。所以封装的丝印上一定要有<strong>1 脚标记</strong>或<strong>极性标记</strong>，贴片和检查的人都靠它认方向。</p>
+    </div>
+    <div class="widget p2-rw">
+      <div class="ctrls" id="p2-r-parts" role="group" aria-label="选一个元件"></div>
+      <div class="p2-rgrid">
+        <div class="p2-rsvgbox"><svg id="p2-r" viewBox="-4.6 -4.6 9.2 9.2" role="img" aria-label="一个封装在不同旋转角下的样子，1 号焊盘高亮"></svg></div>
+        <div class="p2-rside">
+          <div class="ctrls" id="p2-r-angs" role="group" aria-label="旋转角"></div>
+          <div class="card explain p2-rcard" aria-live="polite"><h4 id="p2-r-t"></h4><p id="p2-r-p"></p><div class="states" id="p2-r-s"></div></div>
+        </div>
+      </div>
+      <p class="cap">焊盘和丝印线条取自 QB12 库里的封装文件；黄色是 1 号焊盘。</p>
+    </div>
+    <div class="tip"><b>封装的 0° 不一定是工厂的 0°。</b>JLC 说得很直白：你定义的 0° 可能和他们的不一样，以编带里元件的朝向为准，所以贴片预览里有些元件会转错，要改坐标文件里的角度 [S07]。这件事<a href="#p7">第 7 课</a>细讲，<a href="#p8">第 8 课</a>在下单页上核对。</div>
+  </div>
+
+  <!-- ============ 2.6 ============ -->
+  <div class="sec">
+    <h3><span class="k">2.6</span>立创编号：每个元件到底买哪一颗</h3>
+    <div class="txt">
+      <p>封装只说了形状。16 个电阻共用同一个 R0603 封装，阻值却有 5 种；光看封装，工厂不知道该贴哪一颗。所以每个元件还要一个<strong>立创编号</strong>（LCSC 料号，比如 <span class="net">C25803</span>）：它指向立创商城里一种具体的元件，嘉立创贴片就按这个编号从库里取料 [S08][S13]。</p>
+      <p>嘉立创的库分两类 [S06]：<strong>基础库</strong>的料一直装在贴片机上，不用换料；<strong>扩展库</strong>的料要人工上料，每用一种收一次换料费（金额以下单页为准）。另有一类“优选扩展库”，经济型贴片免换料费。哪颗料属于哪类会变，下单时以页面为准 [S53]。</p>
+    </div>
+    <div class="readout p2-lcro" id="p2-lc-ro"></div>
+    <div class="widget p2-lcw">
+      <div class="ctrls" id="p2-lc-filt" role="group" aria-label="筛选"></div>
+      <div class="p2-lcgrid">
+        <div class="tbl p2-lctbl"><table id="p2-lc-tbl"><thead><tr><th>立创编号</th><th>型号 / 值</th><th>封装</th><th>位号</th><th>库</th></tr></thead><tbody></tbody></table></div>
+        <div id="p2-lc-bv"></div>
+      </div>
+      <p class="cap">点表里的一行，板上会标出这几个元件。表就是交给嘉立创的 BOM（<span class="net">QB12_BOM_嘉立创SMT.csv</span>）按编号合并后的样子。</p>
+    </div>
+
+    <h4 class="p2-h4">一个元件两个编号字段：22 个阻容写错过</h4>
+    <div class="txt">
+      <p>QB12 的每个封装身上有两个编号字段：<span class="net">LCSC</span> 是脚本按 <span class="net">netlist.py</span> 写进去的，<span class="net">LCSC Part</span> 是从库里的封装带过来的。库里那个 0603 电容是照一颗 100 nF 转换的，0603 电阻是照一颗 5.1 kΩ 转换的，所以每个 0603 阻容都背着这两颗的编号。</p>
+    </div>
+    <div class="widget p2-stw">
+      <div class="ctrls" id="p2-st-when" role="group" aria-label="看哪个版本"></div>
+      <div class="p2-chips" id="p2-st-chips"></div>
+      <p class="status" id="p2-st-status" aria-live="polite"></p>
+      <div class="ctrls"><button class="show" id="p2-st-show">在板上标出这些元件 ↑</button></div>
+    </div>
+    <div class="txt">
+      <p>下单没受影响：交给嘉立创的 BOM 是 <span class="net">make_bom.py</span> 直接从 <span class="net">netlist.py</span> 生成的，从来没读过封装上的字段。可要是哪天有人用插件从 KiCad 里直接导 BOM，插件读到哪个字段就用哪个，22 颗阻容就可能全贴成 100 nF 和 5.1 kΩ。2026-10-19 已经把交付的 KiCad 工程改成两个字段一致。</p>
+      <p><strong>教训：编号只能有一个来源。</strong>QB12 的来源是 <span class="net">netlist.py</span>：原理图 PDF、BOM、板上的字段都从它生成。你自己画的时候，来源就是原理图里每个符号的 LCSC 字段，别在 PCB 里再手改一份。</p>
+    </div>
+
+    <h4 class="p2-h4">SW1：名字写着“通孔”，焊盘却是贴片</h4>
+    <div class="two">
+      <div class="txt" id="p2-sw-txt"></div>
+      <div class="widget p2-sww">
+        <div class="ctrls" id="p2-sw-opts" role="group" aria-label="导出坐标文件时的选项"></div>
+        <div class="p2-chips sm" id="p2-sw-chips"></div>
+        <p class="status" id="p2-sw-status" aria-live="polite"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 2.7 ============ -->
+  <div class="sec">
+    <h3><span class="k">2.7</span>在 KiCad 里看、改、画封装</h3>
+    <div class="txt"><p>四个窗口管着封装的一切。点上面的名字切换。</p></div>
+    <div class="widget p2-kw">
+      <div class="ctrls" id="p2-k-tabs" role="tablist" aria-label="KiCad 窗口"></div>
+      <div class="p2-kgrid">
+        <div class="p2-kfigs">
+          <figure class="fig p2-shot" data-k="0"><img src="@@ASSET:kicad_fp_editor.webp@@" alt="KiCad 封装编辑器打开了 U2 的封装 QB12:TSSOP-16_L5.0-W4.4-P0.65-LS6.4-BL-EP：上下两排 16 个椭圆焊盘、中间一块方形散热焊盘和 4 个小孔" loading="lazy"><figcaption>KiCad 10.0.6 截图：在 PCB 里选中 U2 按 Ctrl+E 打开的封装编辑器。标题栏“U2 [从 QB12.kicad_pcb] — 封装编辑器”，提示条“正在从电路板编辑 U2。保存只会更新电路板。”：改的是板上这一份，库里那一份不动。封装名（底部状态栏）是 TSSOP-16_L5.0-W4.4-P0.65-LS6.4-BL-EP；上下两排 16 个椭圆焊盘、中间 17 号散热焊盘和它上面 4 个小孔，左下角的黄色圆点是 1 脚标记。左边的“属性”面板列出这个封装的字段，LCSC 和 LCSC Part 都是 C50506。</figcaption></figure>
+          <figure class="fig p2-shot" data-k="1" hidden><img src="@@ASSET:kicad_fp_props.webp@@" alt="KiCad 封装属性对话框：字段表里有 Reference U2、Value DRV8833PWPR、LCSC Part 和 LCSC 两个立创编号，下面是坐标、方向 -90 和制造特性里的封装类型 贴片" loading="lazy"><figcaption>KiCad 10.0.6 截图：U2 的“封装属性”（通用 选项卡）。字段表里有 Reference（位号）、Value（数值），还有两个立创编号字段 LCSC Part 和 LCSC（都是 C50506）；左下“方向 -90”就是它转的角度；下面中间“制造特性”里是封装类型（贴片）和“不在原理图中”“从坐标文件中移除”“从物料清单中移除”“不作装配 (DNP)”四个勾选项。</figcaption></figure>
+          <figure class="fig p2-shot" data-k="2" hidden><img src="@@ASSET:kicad_pad_props.webp@@" alt="KiCad 焊盘属性对话框：U2 的 17 号焊盘，贴片、矩形 2.74 × 2.74 mm，网络 GND，技术层勾着 F.Paste 和 F.Mask" loading="lazy"><figcaption>KiCad 10.0.6 截图：U2 中间散热焊盘的“焊盘属性”，通用 选项卡（另外三页是 连接 / 间距重写 / 背钻）：焊盘类型 贴片、编号 17、网络 GND、位置 114.5 / 111、矩形 2.74 × 2.74 mm。右边“技术层”勾着 F.Paste 和 F.Mask：这块焊盘要开钢网、开阻焊窗。开口缩多少在“间距重写”一页。左下角写着“封装 U2 (DRV8833PWPR), 正面, 旋转 -90°”。</figcaption></figure>
+          <figure class="fig p2-shot" data-k="3" hidden><img src="@@ASSET:kicad_fp_lib_table.webp@@" alt="KiCad 的封装库对话框：全局库和工程专用库两个选项卡，工程专用库里一行 QB12，路径 ${KIPRJMOD}/QB12.pretty" loading="lazy"><figcaption>KiCad 10.0.6 截图：<span class="menu">设置 → 管理封装库...</span> 打开的“封装库”对话框，选项卡 全局库 / 工程专用库。“工程专用库”里只有一行：“启用”勾着，名称 QB12，库路径 ${KIPRJMOD}/QB12.pretty，库格式 KiCad；最右的“描述”一栏太宽，只露出开头 Boat QB12 footprints from LCS…。</figcaption></figure>
+        </div>
+        <div class="howto p2-khow"><b>KICAD 里自己做</b><span id="p2-k-how"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 2.8 ============ -->
+  <div class="sec">
+    <h3><span class="k">2.8</span>自测三题</h3>
+    <div class="quiz">
+      <details><summary>D1 的网表写着 1 脚 = 阳极，它的封装 1 号焊盘却是阴极。如果 build_board.py 里没有对调这一行，会怎样？</summary>
+        <div class="ans"><p id="p2-q1"></p><button class="show" data-p2q="1">在板上看 D1</button></div></details>
+      <details><summary>U2 肚子底下那块散热焊盘，钢网开口为什么故意开小？开了多少？</summary>
+        <div class="ans"><p id="p2-q2"></p><button class="show" data-p2q="2">在板上看钢网开口</button></div></details>
+      <details><summary>QB12 的 22 个阻容，封装上的 LCSC Part 字段写错了，板子为什么照样贴对了？以后怎么避免？</summary>
+        <div class="ans"><p id="p2-q3"></p><button class="show" data-p2q="3">在板上标出这 22 个</button></div></details>
+    </div>
+    <div class="next">
+      <a class="card" href="#p3" style="text-decoration:none;color:inherit"><b>下一课 · 第 3 课</b><h4>板框与布局</h4><p>封装都有了，接下来定板子多大、51 个元件各放哪：接口靠边、天线靠角、去耦电容贴着芯片。</p></a>
+    </div>
+  </div>
+</section>

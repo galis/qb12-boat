@@ -1,0 +1,120 @@
+
+<!-- ============ 第 9 课 ============ -->
+<section class="lesson" id="l9">
+  <div class="lhead"><span class="lnum">9</span><div><h2>串起来：从摇杆到螺旋桨</h2><p>把前八课连成一条线：手柄的摇杆位置怎么一步步变成两个螺旋桨的转速，船为什么能转弯；再给出能直接烧进去的程序，和 PCB 到手后第一次上电的检查清单。</p></div></div>
+
+  <div class="sec">
+    <h3><span class="k">9.1</span>一条链</h3>
+    <div class="txt"><p>推一下摇杆，信号依次经过下面七站。下一节的虚拟摇杆动起来时，这里每一站的数值会跟着变。</p></div>
+    <div class="widget w">
+      <div class="wscroll"><svg id="chainsvg" viewBox="0 0 820 200" role="img" aria-label="从手柄摇杆到螺旋桨的信号链"></svg></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">9.2</span>差速转向：没有舵，怎么拐弯</h3>
+    <div class="txt">
+      <p>QB12 是双体船，左右两个船体各有一个电机和螺旋桨，没有舵。转弯全靠<strong>两边转速不同</strong>：左边推得比右边猛，船头就往右偏，像坦克、扫地机器人一样。这叫<strong>差速转向</strong>。</p>
+      <p>把摇杆的前后（y）和左右（x）变成左右两个电机的转速，只要两行：</p>
+      <p style="font-family:var(--f-mono);color:var(--fg)">左 L = y + x　　右 R = y − x　　（超过 ±1 的截到 ±1）</p>
+      <p>摇杆往前推：x = 0，L = R = y，直线前进。往右前方推：L 变大、R 变小，右转。只往右推：L = +x、R = −x，一边正转一边反转，原地打转。摇杆回中时总会有一点点偏差，所以给 x、y 各留 8% 的<strong>死区</strong>，小于它就当 0。</p>
+    </div>
+    <div class="widget w">
+      <div class="simgrid">
+        <div class="simleft">
+          <svg id="joy" class="w" viewBox="0 0 240 240" tabindex="0" role="slider" aria-label="虚拟摇杆：拖动，或者聚焦后按方向键" aria-valuetext="回中"></svg>
+          <div class="ctrls dpad">
+            <span class="lab">十字键</span>
+            <button class="btn" data-dp="up">前进</button>
+            <button class="btn" data-dp="left">左转</button>
+            <button class="btn" data-dp="right">右转</button>
+            <button class="btn" data-dp="down">后退</button>
+            <button class="btn" data-dp="stop">松开</button>
+          </div>
+        </div>
+        <div class="simright">
+          <canvas id="pond" role="img" aria-label="水池俯视图：小船跟着摇杆运动"></canvas>
+          <div class="ctrls"><button class="btn" id="pondReset">放回中间</button><span class="lab">虚线：照现在的摇杆再开 3 秒会到哪</span></div>
+        </div>
+      </div>
+      <p class="hov">拖动摇杆（松手自动回中），或者点一下摇杆后用键盘方向键。十字键按钮相当于一直按住手柄的十字键，点“松开”停下。</p>
+      <div class="wscroll"><svg id="motbars" viewBox="0 0 640 116" role="img" aria-label="左右电机的转速"></svg></div>
+      <div class="readout">
+        <div class="ro"><small>摇杆 x / y</small><b id="simXY">0.00 / 0.00</b></div>
+        <div class="ro"><small>左电机 IO4 · IO5</small><b id="simPL">0 · 0</b></div>
+        <div class="ro"><small>右电机 IO6 · IO7</small><b id="simPR">0 · 0</b></div>
+      </div>
+      <p class="status" id="simText">摇杆在中间，两个电机都停（滑行）。</p>
+    </div>
+    <div class="tip"><b>引脚上的写法</b>：“1 · PWM 70%” 表示 IN1 常高、IN2 打 70% 的 PWM，就是第 8 课的慢衰减正转 30%。反转时反过来，“PWM 70% · 1”。两个都是 0 表示滑行。</div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">9.3</span>程序</h3>
+    <div class="txt">
+      <p>下面是一份完整、能直接用的程序，用 Arduino IDE 写。手柄通信交给开源库 <strong>Bluepad32</strong>，它把 Xbox 手柄的蓝牙协议都处理好了，我们只管读摇杆。实船用<strong>右摇杆</strong>：前后是油门，左右是转向，一只手就能开（程序里是 <span class="net">axisRX()</span> 和 <span class="net">axisRY()</span>）。准备工作：</p>
+      <p><strong>1.</strong> 在 Arduino IDE 的开发板管理器里装 <span class="net">esp32_bluepad32</span> 开发板包（添加方法见 <a href="https://bluepad32.readthedocs.io/" target="_blank" rel="noopener">Bluepad32 文档</a>），开发板选它下面的 <span class="net">ESP32S3 Dev Module</span>，USB CDC On Boot 选 Enabled。<strong>2.</strong> 手柄用 Xbox 无线手柄，固件更新到支持蓝牙低功耗（BLE）的版本（Series 款出厂就支持；老的 One 款用电脑上的 Xbox 配件 App 升级）。ESP32-S3 只有 BLE，没有经典蓝牙。<strong>3.</strong> 烧录后按住手柄顶部的配对键，直到 Xbox 键快闪，几秒内就会连上。</p>
+    </div>
+    <div class="widget">
+      <div class="ctrls"><button class="btn" id="codeCopy">复制代码</button><span class="lab" id="codeMsg"></span></div>
+      <pre class="code" id="fwCode"></pre>
+    </div>
+    <div class="txt">
+      <p>对照前面几课看这份程序：<span class="net">drive()</span> 就是 8.4 的慢衰减，那句 <span class="net">(1 − |s|) × 1023</span> 把“想要的速度”换成 IN2 的占空比；<span class="net">ledcSetup(通道, 20000, 10)</span> 设好 20kHz、10 位的 PWM，<span class="net">ledcAttachPin(引脚, 通道)</span> 再把引脚挂到通道上（这是板包 2.x 内核的写法，<span class="net">ledcWrite</span> 写的是通道号，不是引脚号）；<span class="net">digitalWrite(NSLEEP, HIGH)</span> 唤醒 DRV8833；读电池电压和第 7 课一样，再加了一个慢慢跟随的滤波，免得电机一加速电压一掉就误判低电量。电量分三档：低于 3.6V 限速到三成并让 LED3 快闪，低于 3.3V 直接停机保护电池，停机后要回升到 3.5V 才放开（电机一停电池电压会回弹一点，如果 3.3V 就放开，会反复启停）。</p>
+      <p>最重要的一条安全规则藏在 <span class="net">x = 0, y = 0</span> 那行：<strong>手柄断开时，摇杆值保持 0，船自己停下</strong>。遥控的东西都必须有这种“失控保护”，不然信号一断船就一直往前冲。</p>
+    </div>
+    <div class="tip"><b>实船固件还多了什么</b>：上面是能跑起来的最小版本。放在交付物里的实船固件（<span class="net">QB12_firmware</span>）在它的基础上又加了这些，下水前后都用得上：
+      <ul style="margin:8px 0 0 20px;padding:0;list-style:disc">
+        <li><b>插着 USB，电机禁用</b>：USB 口和走线扛不住电机电流，所以 VBUS 高于 4.2V 就算插着 USB，电机一律不转，低于 3.8V 才算拔掉。</li>
+        <li><b>转向量 0.6</b>：右摇杆左右的值先乘 0.6 再混控，转弯不会太猛。<b>缓加速</b>：油门每秒最多变 3.0（满油门 = 1），电池电压不会一下掉很多；松杆则立刻停。</li>
+        <li><b>电机方向开关</b>：右电机实测前进时转向是反的，程序里 <span class="net">REVERSE_RIGHT = true</span> 一行就改过来，不用拆线。</li>
+        <li><b>直线修正</b>：下水后船前进会往一边偏，按手柄 LB / RB 每次修 1%，两个一起按住 1 秒归零，数值存在 flash 里。</li>
+        <li><b>手机 Wi‑Fi 模式</b>：船自己开热点 <span class="net">QB12-XXXX</span>（XXXX 是板子地址的后 4 位），手机连上后浏览器打开 <span class="net">192.168.4.1</span>，屏幕上一个摇杆就能开。运行中长按 BOOT 键 1.5 秒在手柄和手机两种模式间切换。</li>
+        <li><b>信号弱就震动</b>：手柄信号低于 -85 dBm 时，手柄每 2 秒震一下，提醒往回开。下水实测不到 10 米就断过连，别开太远。</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">9.4</span>PCB 到手后：第一次上电</h3>
+    <div class="txt"><p>新板子不要一上来就插电池、装螺旋桨。按顺序一步步来，每一步只多加一样东西，出问题时立刻知道是哪一块。勾选的进度会记在这个浏览器里。</p></div>
+    <div class="widget">
+      <div class="ctrls"><span class="lab" id="bcProg">已完成 0 / 11</span><button class="btn" id="bcReset">清空勾选</button></div>
+      <div class="gauge" style="height:10px"><div id="bcBar" style="background:var(--ok);width:0;padding:0;transition:width .3s"></div></div>
+      <div class="tbl"><table id="bcTbl">
+        <thead><tr><th style="width:56px;white-space:nowrap">完成</th><th>步骤</th><th>怎么做</th><th>正常应该是</th><th>不对时先查</th></tr></thead>
+        <tbody>
+          <tr><td><input type="checkbox" aria-label="第 1 步完成"></td><td>1 看</td><td>放大镜看 U2、U4 底部焊盘周围、USB 口的细引脚有没有连锡；电池、电机插座方向对不对</td><td>引脚之间干干净净</td><td>连锡就用烙铁加助焊剂拖开</td></tr>
+          <tr><td><input type="checkbox" aria-label="第 2 步完成"></td><td>2 量短路</td><td>什么都不接，万用表蜂鸣档量 C9 两端（VSYS）、C4 两端（3V3）、C2 两端（BAT+）</td><td>不长响；电阻档读数从小慢慢变大（电容在充电）</td><td>长响 = 短路：先查 U2、U3、对应电容</td></tr>
+          <tr><td><input type="checkbox" aria-label="第 3 步完成"></td><td>3 只插 USB</td><td>不接电池，插 USB。量 C1 两端（VBUS）、C9 两端（VSYS）、C4 两端（3V3）</td><td>VBUS ≈ 5.0V，VSYS ≈ 4.6V，3V3 = 3.30V。没接电池时 LED1、LED2 乱闪是正常的</td><td>VSYS 是 0：D1 方向；3V3 不对：U3 焊接</td></tr>
+          <tr><td><input type="checkbox" aria-label="第 4 步完成"></td><td>4 电脑认板</td><td>看电脑上有没有多出一个串口（Windows 设备管理器 / Mac 的 /dev/cu.usbmodem…）</td><td>出现 USB 串口</td><td>换一根能传数据的线；还不行按住 BOOT 再按 RESET</td></tr>
+          <tr><td><input type="checkbox" aria-label="第 5 步完成"></td><td>5 闪灯</td><td>烧一个让 IO2 每秒闪一次的程序</td><td>LED3 闪</td><td>量 EN（C7 两端）应 ≈ 3.3V</td></tr>
+          <tr><td><input type="checkbox" aria-label="第 6 步完成"></td><td>6 接电池，开关 OFF</td><td>拔掉 USB，插电池，SW1 拨到 OFF。量 J2 两端和 C9 两端</td><td>电池 3.0–4.2V；VSYS ≈ 0V，什么灯都不亮</td><td>VSYS 有电：Q2、SW1、R14</td></tr>
+          <tr><td><input type="checkbox" aria-label="第 7 步完成"></td><td>7 开机</td><td>SW1 拨到 ON</td><td>VSYS 只比电池低几十 mV；3V3 = 3.30V；LED3 闪</td><td>VSYS 低很多：Q1、Q2 方向（第 4、5 课）</td></tr>
+          <tr><td><input type="checkbox" aria-label="第 8 步完成"></td><td>8 充电</td><td>插着电池再插 USB，最好串一个 USB 电流表</td><td>LED1 红灯亮，电流约 0.5–0.7A（含板子自己用的电）；充满后红灭绿亮</td><td>不亮：LED 方向、R3 焊接</td></tr>
+          <tr><td><input type="checkbox" aria-label="第 9 步完成"></td><td>9 电机（别装桨）</td><td>烧测试程序：IO15 拉高，左电机 30% 正转 2 秒、反转 2 秒，再换右电机。烧完<strong>先拔掉 USB，改用电池</strong>（SW1 拨到 ON）再看电机转：插着 USB 时 VBUS 走线和 USB 口扛不住电机电流</td><td>两个电机依次正反转；nFAULT（IO16）一直 ≈ 3.3V</td><td>不转：先确认 USB 拔了（实船固件插着 USB 电机不转）、再量 IO15 是否 3.3V；方向反了：对调电机线</td></tr>
+          <tr><td><input type="checkbox" aria-label="第 10 步完成"></td><td>10 连手柄</td><td>烧 9.3 的程序，手柄配对；要看电机转，烧完先拔 USB 改用电池，推右摇杆</td><td>LED3 由慢闪变常亮；推右摇杆两个电机跟着变</td><td>连不上：手柄固件是否支持 BLE</td></tr>
+          <tr><td><input type="checkbox" aria-label="第 11 步完成"></td><td>11 水盆试航</td><td>装桨，船放进水盆，油门推满再急停几次；最后关掉手柄</td><td>板子不重启；关掉手柄后电机立刻停</td><td>一加速就重启：电池电量、电机上的 0.1µF 电容</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <div class="tip"><b>万用表怎么夹</b>：量电压时黑表笔一直夹在地上最方便。板上任何一颗电容的一端都接地，USB 口的金属外壳也是地。表里写“C9 两端”就是红笔碰 C9 不接地的那一端。</div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">9.5</span>全课回顾</h3>
+    <div class="next" id="recap">
+      <a class="card" href="#l0" style="text-decoration:none;color:inherit"><b>第 0 课</b><h4>全景</h4><p>四根电源线：VBUS、BAT+、VSYS、3V3。每个元件都挂在其中一根上。</p></a>
+      <a class="card" href="#l1" style="text-decoration:none;color:inherit"><b>第 1 课</b><h4>读图规则</h4><p>名字相同的网络标号就是连在一起的，不用画线。</p></a>
+      <a class="card" href="#l2" style="text-decoration:none;color:inherit"><b>第 2 课</b><h4>USB-C</h4><p>CC 脚各接 5.1kΩ 到地，充电头看到了才肯给 5V。</p></a>
+      <a class="card" href="#l3" style="text-decoration:none;color:inherit"><b>第 3 课</b><h4>充电</h4><p>TP4056 先恒流约 0.55A，到 4.2V 改恒压，R3 定电流。</p></a>
+      <a class="card" href="#l4" style="text-decoration:none;color:inherit"><b>第 4 课</b><h4>MOS 管当开关</h4><p>小拨动开关只管 Q2 的栅极，大电流走 Q2。</p></a>
+      <a class="card" href="#l5" style="text-decoration:none;color:inherit"><b>第 5 课</b><h4>自动切换</h4><p>有 USB 走 D1，没 USB 走 Q1，中间不断电，电流不倒流。</p></a>
+      <a class="card" href="#l6" style="text-decoration:none;color:inherit"><b>第 6 课</b><h4>稳压与去耦</h4><p>LDO 把 VSYS 降到 3.3V，10µF + 100nF 就近补电流。</p></a>
+      <a class="card" href="#l7" style="text-decoration:none;color:inherit"><b>第 7 课</b><h4>最小系统</h4><p>EN 延时开机、IO0 选启动方式、分压后用 ADC 量电池。</p></a>
+      <a class="card" href="#l8" style="text-decoration:none;color:inherit"><b>第 8 课</b><h4>H 桥</h4><p>IN1、IN2 四种组合；PWM 慢衰减调速；0.2Ω 限流 1A。</p></a>
+      <a class="card" href="#l9" style="text-decoration:none;color:inherit"><b>第 9 课</b><h4>串起来</h4><p>摇杆 → 蓝牙 → 换算 → 混控 → PWM → H 桥 → 电机，断线自动停。</p></a>
+    </div>
+    <div class="txt"><p>到这里，原理图上的每一个元件你都认识了，知道它为什么在那、值为什么这么选。PCB 到手、按 9.4 的清单点亮之后，就可以下水了。</p></div>
+  </div>
+</section>

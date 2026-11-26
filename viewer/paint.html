@@ -1,0 +1,130 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<!-- QB12 涂装方案渲染：?s=方案号&view=hero|side|top，由 shoot_paint.py 截图。
+     11-11 分件后：船体（z<40）按区域上色：水线下 / 水线条 / 舷侧 / 装饰条；甲板（z≥40，含电机鼓包）整件一个颜色，分缝就是分色线。 -->
+<style>html,body{margin:0;background:#eef1f4;overflow:hidden}canvas{display:block}</style>
+<script type="importmap">
+{"imports":{"three":"./node_modules/three/build/three.module.js","three/addons/":"./node_modules/three/examples/jsm/"}}
+</script>
+</head>
+<body>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+// 方案：bottom 水线下，boot 水线条（null = 不要），top 舷侧，deck 甲板及围壁，
+// band 舷侧装饰条（null = 不要），covers 盖板，canopy 舱罩，glass 挡风面，prop 桨
+export const SCHEMES = [
+  { name: '原定方案', bottom: '#B8322E', boot: null, top: '#D5DADE', deck: '#3B434B', band: null,
+    covers: '#3B434B', canopy: '#F2F3F4', glass: '#3B434B', prop: '#C9A24A' },
+  { name: '经典游艇', bottom: '#8E2A2C', boot: '#F4F1EA', top: '#1D3354', deck: '#E6DCC6', band: '#C9A24A',
+    covers: '#E6DCC6', canopy: '#F4F1EA', glass: '#22303F', prop: '#C9A24A' },
+  { name: '竞速黑橙', bottom: '#22262A', boot: '#FF5A1F', top: '#F2F3F4', deck: '#22262A', band: '#FF5A1F',
+    covers: '#FF5A1F', canopy: '#22262A', glass: '#0E1114', prop: '#FF5A1F' },
+  { name: '救援橙', bottom: '#2D3237', boot: '#FFFFFF', top: '#F0661C', deck: '#ECEEEF', band: null,
+    covers: '#2D3237', canopy: '#FFFFFF', glass: '#26333F', prop: '#2D3237' },
+  { name: '复古薄荷', bottom: '#C4533C', boot: '#FFF6E6', top: '#9FD0BC', deck: '#FFF6E6', band: null,
+    covers: '#C4533C', canopy: '#FFF6E6', glass: '#2C4552', prop: '#C9A24A' },
+];
+
+const q = new URLSearchParams(location.search);
+const S = SCHEMES[+(q.get('s') || 0)];
+const view = q.get('view') || 'hero';
+const xr = q.get('xr') === '1';               // 细节图：甲板半透明，看里面的插舌、旋钮臂
+const W = innerWidth, H = innerHeight;
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(1); renderer.setSize(W, H);
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#eef1f4');
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environmentIntensity = 0.6;
+const key = new THREE.DirectionalLight('#ffffff', 2.2);
+key.position.set(300, -250, 500); key.target.position.set(120, 0, 0);
+key.castShadow = true; key.shadow.mapSize.set(2048, 2048);
+Object.assign(key.shadow.camera, { left: -250, right: 250, top: 250, bottom: -250, near: 10, far: 1500 });
+key.shadow.radius = 5; key.shadow.bias = -0.0005;
+scene.add(key, key.target);
+const fill = new THREE.DirectionalLight('#dfe9f5', 0.7); fill.position.set(-300, 300, 200); scene.add(fill);
+
+// 地面阴影
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(3000, 3000), new THREE.ShadowMaterial({ opacity: 0.18 }));
+ground.position.z = -19.5; ground.receiveShadow = true; scene.add(ground);
+
+const C = (h) => new THREE.Color(h);
+function bodyMaterial() {
+  const m = new THREE.MeshPhysicalMaterial({ roughness: 0.5, clearcoat: 0.15, clearcoatRoughness: 0.4 });
+  m.onBeforeCompile = (sh) => {
+    Object.assign(sh.uniforms, {
+      cBot: { value: C(S.bottom) }, cBoot: { value: C(S.boot || S.top) }, cTop: { value: C(S.top) },
+      cDeck: { value: C(S.deck) }, cBand: { value: C(S.band || S.top) },
+      hasBoot: { value: S.boot ? 1 : 0 }, hasBand: { value: S.band ? 1 : 0 },
+    });
+    sh.vertexShader = 'varying vec3 vP; varying vec3 vNo;\n' + sh.vertexShader.replace(
+      '#include <begin_vertex>', '#include <begin_vertex>\n vP = position; vNo = normal;');
+    sh.fragmentShader = `varying vec3 vP; varying vec3 vNo;
+uniform vec3 cBot, cBoot, cTop, cDeck, cBand; uniform float hasBoot, hasBand;\n` + sh.fragmentShader.replace(
+      'vec4 diffuseColor = vec4( diffuse, opacity );',
+      `vec3 col = cTop;
+       float z = vP.z;
+       vec3 n = normalize(vNo);
+       if (z < 26.0) col = cBot;                                   // 水线（24.5）上 1.5 mm 起分色
+       else if (hasBoot > 0.5 && z < 28.5) col = cBoot;            // 水线条
+       else if (hasBand > 0.5 && z > 36.0 && z < 37.6 && abs(n.z) < 0.6) col = cBand;  // 舷侧装饰条（分缝下面）
+       if (z > 40.0 && n.z > 0.7) col = cDeck;                      // 甲板（朝上的面）
+       if (z > 44.2) col = cDeck;                                   // 舱口围壁、导轨
+       vec4 diffuseColor = vec4( col, opacity );`);
+  };
+  return m;
+}
+
+const std = (c, r = 0.45, mt = 0, cc = 0.3) => new THREE.MeshPhysicalMaterial({ color: c, roughness: r, metalness: mt, clearcoat: cc });
+const mats = {
+  Hull: bodyMaterial(),
+  Deck: std(S.deck, 0.5, 0, 0.15),
+  Knobs: std(S.covers, 0.45, 0, 0.3),
+  Gasket: std('#F08A24', 0.9, 0, 0),
+  Canopy: std(S.canopy, 0.32, 0, 0.6),
+  Glass: new THREE.MeshPhysicalMaterial({ color: S.glass, roughness: 0.06, clearcoat: 1, metalness: 0.1 }),
+  Shafts: std('#B9BEC3', 0.25, 1, 0),
+  Props: std(S.prop, 0.3, S.prop === '#C9A24A' ? 0.9 : 0.1),
+};
+
+new GLTFLoader().load('../hardware/hull/out/QB12_render.glb', (g) => {
+  const root = g.scene;
+  root.traverse((o) => {
+    if (!o.isMesh) return;
+    const k = Object.keys(mats).find((k) => o.name.startsWith(k));
+    if (!k) { o.visible = false; return; }        // Stripes 是展示件，不画
+    o.material = mats[k];
+    if (k === 'Hull' || k === 'Deck' || k === 'Canopy') o.geometry = o.geometry.toNonIndexed(), o.geometry.computeVertexNormals();
+    if (xr && k === 'Deck') { o.material = o.material.clone(); o.material.transparent = true; o.material.opacity = 0.35; o.material.depthWrite = false; }
+    if (k === 'Gasket') o.visible = xr;
+    o.castShadow = !(xr && k === 'Deck'); o.receiveShadow = true;
+  });
+  scene.add(root);
+
+  const cam = new THREE.PerspectiveCamera(view === 'side' ? 10.5 : view.endsWith('d') ? 14 : 24, W / H, 1, 5000);
+  cam.up.set(0, 0, 1);
+  const tgt = new THREE.Vector3(118, 0, 14);
+  if (view === 'hero') cam.position.set(470, -400, 300);       // 船头左前上方
+  else if (view === 'rear') cam.position.set(-260, -380, 230);  // 船尾左后上方
+  else if (view === 'side') { cam.position.set(112, -1150, 30); tgt.set(112, 0, 22); }
+  else if (view === 'bowd') { cam.position.set(300, 150, 120); tgt.set(214, 55, 38); }      // 船头插舌（左浮体）
+  else if (view === 'sternd') { cam.position.set(-75, 150, 125); tgt.set(14, 72, 39); }     // 船尾旋钮（左浮体）
+  else cam.position.set(112, -60, 900);
+  cam.lookAt(tgt);
+  renderer.render(scene, cam);
+  requestAnimationFrame(() => { renderer.render(scene, cam); window.__done = true; });
+}, undefined, (e) => { console.error(e); window.__done = true; });
+</script>
+</body>
+</html>

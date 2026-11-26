@@ -1,0 +1,28 @@
+kicad_layers_panel	外观面板：层列表
+kicad_stackup	电路板配置 → 物理叠层
+kicad_mask_paste	电路板配置 → 阻焊/锡膏（过孔盖油）
+kicad_fp_editor	封装编辑器：U2 TSSOP-16-EP
+kicad_fp_props	封装属性（U2）
+kicad_pad_props	焊盘属性
+kicad_fp_lib_table	封装库（管理封装库）
+kicad_pcb_main	PCB 编辑器主界面
+kicad_edge_only	只看板框层
+kicad_constraints	设计规则 → 约束
+kicad_netclasses	设计规则 → 网络类
+kicad_net_highlight	高亮 VSYS 网络
+kicad_net_inspector	网络检查（面板）
+kicad_route_live	交互式布线进行中
+kicad_predef_sizes	预设尺寸（线宽 / 过孔）
+kicad_zone_props	填充区属性（覆铜区属性）
+kicad_bcu_view	只看 B.Cu
+kicad_zones_unfilled	填充区未填充
+kicad_keepout_props	规则域属性（禁布区）
+kicad_drc	设计规则检查
+kicad_3d_top	3D 查看器：顶视
+kicad_3d_angle	3D 查看器：斜视
+kicad_plot_gerber	制造输出 → Gerber（绘制）
+kicad_drill	生成钻孔文件
+kicad_pos	生成坐标文件
+kicad_gerbview	Gerber 查看器
+kicad_assign_fp	原理图：分配封装（演示工程）
+kicad_update_pcb	从原理图更新 PCB（演示工程）

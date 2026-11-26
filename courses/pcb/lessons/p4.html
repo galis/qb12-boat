@@ -1,0 +1,205 @@
+<section class="lesson" id="p4">
+  <div class="lhead"><span class="lnum">4</span><div><h2>走线：线宽、间距、自动布线</h2><p>学完能说清：一根线多宽能过多少电流、为什么电池线 0.8 mm 而信号线 0.2 mm；两根线之间为什么要留缝、留多宽；QB12 的 <span id="p4-h-n"></span> 段线里哪些是脚本画的、哪些是自动布线器画的，人还得检查什么；USB 的 D+ / D− 为什么没按差分对走也能用；在 KiCad 里自己布线该按哪些键。</p></div></div>
+
+  <!-- 4.1 -->
+  <div class="sec">
+    <h3><span class="k">4.1</span>一根线就是一个小电阻，也是一根发热丝</h3>
+    <div class="txt">
+      <p>铜导电很好，但电阻不是零。一根线的电阻 = 电阻率 × 长度 ÷ 截面积。PCB 上的铜箔很薄：常用的 1 oz 铜只有约 <strong>35 µm</strong>（0.035 mm）厚。厚度是下单时选定的，画图时能调的只剩线宽：宽一倍，电阻就小一半。</p>
+      <p>电流流过电阻会发热（P = I²R），也会掉电压（U = IR）。线太细，电机一起步，线先烫起来，电池送到电机驱动的电压也被吃掉一截；再细下去，铜箔会起泡、烧断。</p>
+      <p>最常用的估算是 <strong>IPC-2221</strong>（印制板设计的通用标准）里的曲线：铜厚、允许升温定了，线宽就对应一个电流。下面的计算器用的就是它的外层公式。拖动线宽，或者点一个 QB12 上真实的电流看看。</p>
+    </div>
+    <div class="widget p4-calc">
+      <div class="p4-calcsvg"><svg id="p4-wsvg" viewBox="0 0 480 252" role="img" aria-label="一段 10 毫米长的走线：俯视、截面和升温温度计，随线宽和电流变化"></svg></div>
+      <div class="slider"><label for="p4-w">线宽 <span id="p4-wv">0.80 mm</span></label><input type="range" id="p4-w" min="0.1" max="2" step="0.05" value="0.8"></div>
+      <div class="ctrls" id="p4-wmarks" role="group" aria-label="QB12 网络类的线宽"></div>
+      <div class="ctrls" id="p4-amps" role="group" aria-label="电流"></div>
+      <div class="readout" id="p4-ro" aria-live="polite"></div>
+      <p class="status" id="p4-st" aria-live="polite"></p>
+    </div>
+    <div class="tip"><b>这个公式能信几分</b>：IPC-2221 的公式是对一组老曲线的拟合，曲线只覆盖 35 A 以内、升温 10–100 °C、铜厚 0.5–3 oz，并假设板子放在常温空气里；有人认为它偏保守。后来的 IPC-2152 数据更多，还考虑了附近有没有铜平面等因素，两套标准各适合什么场合至今有争议。不同计算器差 10–15% 很正常。所以它只用来估个量级，再留余量；下单时线宽还有 ±20% 的公差，计算器里一并按“偏窄 20%”算了一遍。</div>
+  </div>
+
+  <!-- 4.2 -->
+  <div class="sec">
+    <h3><span class="k">4.2</span>网络类：先给每类网络定好规矩</h3>
+    <div class="txt">
+      <p>不用每画一根线都重新想宽度。先把网络分成几类，叫<strong>网络类</strong>（Net Class），每类定好线宽、间距、过孔尺寸。之后不管是你手画，还是交给自动布线器，都按类取值。QB12 定了 5 类，下表最后一列是电路课里算过的、这类网络要扛的电流：</p>
+    </div>
+    <div class="tbl"><table id="p4-cls"></table></div>
+    <div class="txt">
+      <p>按电流倒推，能得到差不多的宽度（脚本里没写线宽是怎么定的，这是推回去的）：两路电机一起起步，电池要送出约 2 A，而 1 oz 外层、升温 10 °C 时，2 A 约需 0.78 mm，取整就是电池那一路的 0.8 mm。电机每路被 R15、R16 限在约 1 A，0.4 mm 能过约 1.2 A。信号线只有毫安级电流，0.2 mm 绰绰有余；线细，占的地方少，芯片周围才排得开。</p>
+      <p>下面这块板就是 QB12 实际画出来的线。点一个线宽，看哪些线是这个宽度；点下面一排按钮，看电流从哪里出发、走了多远。</p>
+    </div>
+    <div class="widget p4-wbox">
+      <div class="ctrls" id="p4-wchips" role="group" aria-label="按线宽高亮"></div>
+      <div class="card p4-wcard" aria-live="polite"><h4 id="p4-wc-t"></h4><p id="p4-wc-x"></p></div>
+      <div class="ctrls" id="p4-routes" role="group" aria-label="看一条电流的路"></div>
+      <div id="p4-bv"></div>
+    </div>
+    <div class="howto"><b>KICAD 里自己做</b>
+      <span>① <span class="menu">文件 → 电路板配置...</span>，左边选 <span class="menu">设计规则 → 网络类</span>。上面的表里点 + 加一行，填名称、铜皮间距、走线宽度、过孔外径、过孔内孔。</span>
+      <span>② 同一页下面的“网络类分配”表里，每行写一个匹配规则（网络名）和它属于哪一类，把网络分进各类。</span>
+      <span>③ 布线前，把顶部工具栏的线宽下拉框选成 <span class="menu">走线: 使用网络类宽度</span>，过孔选 <span class="menu">过孔: 使用网络类尺寸</span>，按 <kbd>X</kbd> 画线时就自动用这一类的宽度。</span>
+      <span>注意：网络类的线宽只是<strong>默认值</strong>，不是下限。你手动把电池线改成 0.2 mm，DRC 也不会报错；真要限制，得写“自定义规则”。所以电源线画完要自己核一遍宽度和走法；“网络检查”面板（<span class="menu">视图 → 面板 → 网络检查</span>，是停靠面板；下图）能按网络列出走线长度和过孔数。</span>
+    </div>
+    <div class="two p4-shots">
+      <figure class="fig p4-shot"><img src="@@ASSET:kicad_netclasses.webp@@" alt="KiCad 10.0.6 的电路板配置 → 设计规则 → 网络类页面：上面列出 QB12 的五个网络类，下面是网络类分配表" loading="lazy"><figcaption>KiCad 10.0.6 截图：<span class="menu">电路板配置 → 设计规则 → 网络类</span>。上面是 QB12 的 5 个网络类和各自的铜皮间距、线宽、过孔尺寸，下面的“网络类分配”是哪些网络分到哪一类（截图里能看到 GND、VBUS 归 Power，ML+ 归 Motor，往下滚还有）。</figcaption></figure>
+      <figure class="fig p4-shot"><img src="@@ASSET:kicad_net_inspector.webp@@" alt="KiCad 10.0.6 PCB 编辑器底部停靠的“网络检查”面板：每行一个网络，列出网络类、总长度、过孔数量、过孔长度、走线长度，能看到 USB_DN 18.6008 mm、USB_DP 16.7461 mm" loading="lazy"><figcaption>KiCad 10.0.6 截图：网络检查（Net Inspector）是停靠在主窗口底部的面板（<span class="menu">视图 → 面板 → 网络检查</span>），每行一个网络，列出网络类、总长度、过孔数量、过孔长度、走线长度，横向滚动条往右还有更多列。比如 USB_DN 18.6008 mm、USB_DP 16.7461 mm，和本页从设计文件算出来的一样。</figcaption></figure>
+    </div>
+  </div>
+
+  <!-- 4.3 -->
+  <div class="sec">
+    <h3><span class="k">4.3</span>间距：两根线之间要留多宽的缝</h3>
+    <div class="txt">
+      <p>两根不同网络的铜靠得太近，工厂蚀刻时缝里的铜可能没蚀干净，两根线就连在了一起（短路）。这条缝叫<strong>间距</strong>（Clearance）。QB12 上有三层数字：嘉立创 1 oz 双层板能做到 <strong>0.10 mm</strong>；QB12 的“约束”里写的最小间距是 <strong id="p4-c-min"></strong>；网络类里实际用的是 <strong id="p4-c-cls"></strong>。</p>
+      <p>为什么不按工厂的极限画？因为做出来的线宽有 <strong>±20%</strong> 的公差：0.1 mm 的线做出来可能是 0.08–0.12 mm。线做宽了，缝就变窄。下面选一个设计间距，再让工厂把线“做宽 20%”试试。</p>
+    </div>
+    <div class="widget p4-gapw">
+      <div class="ctrls" id="p4-gaps" role="group" aria-label="设计间距"><span class="lab">设计间距</span></div>
+      <div class="ctrls" id="p4-etch" role="group" aria-label="做出来的线宽"><span class="lab">做出来的线</span></div>
+      <svg id="p4-gsvg" viewBox="0 0 480 236" role="img" aria-label="两根 0.2 毫米的走线和它们之间的缝，示意"></svg>
+      <div class="readout" id="p4-gro" aria-live="polite"></div>
+      <p class="status" id="p4-gst" aria-live="polite"></p>
+    </div>
+    <div class="txt">
+      <p>规则怎么定，线就怎么排。自动布线器会把线贴着规则排，所以规则本身就要带余量。在 QB12 上量一量：两根不同网络的线最近的地方只有 <strong id="p4-g-min"></strong>，就是网络类的 <span id="p4-g-cls"></span>，比工厂极限宽了 <strong id="p4-g-mar"></strong>（线和铺铜之间最窄的是 J1 焊盘到 GND 铺铜，0.15 mm，见<a href="#p6">第 6 课</a>）。点下面的按钮，在板上找到最窄的几处缝。</p>
+    </div>
+    <div class="widget p4-gapbox">
+      <div class="ctrls" id="p4-gpairs" role="group" aria-label="最窄的几处缝"></div>
+      <div id="p4-gapbv"></div>
+    </div>
+    <div class="howto"><b>KICAD 里自己做</b>
+      <span><span class="menu">文件 → 电路板配置...</span> → <span class="menu">设计规则 → 约束</span>：<span class="menu">最小间距</span>、<span class="menu">最小走线宽度</span> 是全板的底线。网络类里的“铜皮间距”是平时用的值。两者同时存在时，按大的那个检查；网络类写得再小，也不会低于约束里的底线。</span>
+      <span>新建工程时 KiCad 默认网络类的间距是 0.2 mm、线宽 0.2 mm，对嘉立创来说已经很宽裕。QB12 把间距设成 0.18 mm，比默认值稍紧，线能排得更密一点，离工厂的 0.10 mm 仍有不少余量。</span>
+    </div>
+  </div>
+
+  <!-- 4.4 -->
+  <div class="sec">
+    <h3><span class="k">4.4</span>两层板：大部分线走顶层，底层留给地</h3>
+    <div class="two">
+      <div class="txt">
+        <p>QB12 是双层板，线可以走顶层（F.Cu，红色）也可以走底层（B.Cu，蓝色）。但两层用得很不平均，右边一数就知道。</p>
+        <p>原因一：<span id="p4-l-smd"></span>。线要去底层，得先打一个过孔下去，到了再打一个上来，每次换层多两个孔、多两处可能出问题的地方。</p>
+        <p>原因二：底层要尽量留成一整片地。乐鑫（Espressif）对双层板的建议就是“底层不放元件、少走线，给芯片、射频和晶振下面留完整的地平面”。整片地让每根信号的回流路径又短又近，这件事<a href="#p5">第 5 课</a>细讲。</p>
+        <p id="p4-l-b"></p>
+      </div>
+      <div class="widget">
+        <b class="p4-barh">段数</b>
+        <div class="p4-bar" id="p4-bar-n"></div>
+        <b class="p4-barh">总长</b>
+        <div class="p4-bar" id="p4-bar-l"></div>
+        <div class="legendrow"><span><i class="p4-lgF"></i>顶层 F.Cu</span><span><i class="p4-lgB"></i>底层 B.Cu</span></div>
+        <div class="readout" id="p4-l-ro"></div>
+      </div>
+    </div>
+    <div class="widget">
+      <div class="ctrls" id="p4-lbtns" role="group" aria-label="看哪一层"></div>
+      <div id="p4-lbv"></div>
+    </div>
+    <div class="howto"><b>KICAD 里自己做</b>
+      <span>布线途中按 <kbd>V</kbd>：在当前位置放一个过孔，并切到另一层继续画（KiCad 10 文档的说法是切到当前“层对”里的另一层，双层板就是顶 ↔ 底）。想先看清楚一层，在右边的外观面板里把另一层关掉（<a href="#p1">第 1 课</a>）。</span>
+    </div>
+  </div>
+
+  <!-- 4.5 -->
+  <div class="sec">
+    <h3><span class="k">4.5</span>自动布线：QB12 的线是怎么来的</h3>
+    <div class="txt">
+      <p><a href="#p0">第 0 课</a>说过，QB12 是脚本加自动布线器做出来的，不是手画的。这里看细节：哪些线脚本先画好、交给自动布线器的是什么、它干得怎么样、导回来以后又改了什么。自动布线器用的是开源的 <strong>Freerouting</strong>：KiCad 先把板子导出成 Specctra DSN 格式（一种通用的“布线题目”文件），Freerouting 布完存成 SES 会话文件，再导回 KiCad。</p>
+    </div>
+    <div class="widget">
+      <div class="ctrls">
+        <button class="btn primary" id="p4-ar-play">▶ 从头播放</button>
+        <span class="ctrls" id="p4-ar-steps" role="group" aria-label="自动布线的步骤"></span>
+      </div>
+      <div class="stage p4-arstage">
+        <div id="p4-arbv"></div>
+        <div class="card explain" aria-live="polite">
+          <h4 id="p4-ar-t"></h4>
+          <p id="p4-ar-x"></p>
+          <div class="states" id="p4-ar-f"></div>
+        </div>
+      </div>
+      <b class="p4-chkh">导回来以后，人还要看什么（在上面的板上标出来）</b>
+      <div class="ctrls" id="p4-chk" role="group" aria-label="人工复查的例子"></div>
+      <p class="status" id="p4-chk-x" aria-live="polite"></p>
+    </div>
+    <div class="txt">
+      <p>Freerouting 擅长的是“连通”：QB12 交给它 <span id="p4-fr-n"></span> 个网络，它画了 <span id="p4-fr-t"></span> 段线，几秒钟就全部连上，线宽和间距都按 DSN 里写的来。它不懂电路：不知道哪根线走大电流、哪颗电容要贴着芯片、哪里是天线，也不会铺铜。所以导回来以后通常还要人看一遍：大电流线的宽度和走法；DRV8833 的 VM、VCP、VINT 电容回路够不够短；USB 两根线是不是并行、离天线远；天线下面有没有铜；有没有绕远、锐角、过孔太多的线；地有没有被切碎。</p>
+    </div>
+    <div class="howto"><b>KICAD 里自己做</b>
+      <span><strong>插件</strong>：在项目管理器的 <span class="menu">扩展内容管理器</span> 里搜 Freerouting 安装，打开 PCB 后点 <span class="menu">工具 → 外部插件 → Freerouting</span>，等它跑完，结果会自动导回来。插件需要 Java 运行环境，版本要求以插件说明为准。</span>
+      <span><strong>手动</strong>：<span class="menu">文件 → 导出 → Specctra DSN...</span> → 用 Freerouting 打开 .dsn，点魔棒图标开始布线，存成 .ses → <span class="menu">文件 → 导入 → Specctra 会话...</span>。命令行可以用 <span class="net">-inc</span> 参数让它忽略指定的网络类，比如把 GND 留给铺铜。</span>
+      <span>几条经验：导出前先 <span class="menu">取消填充所有填充区</span>（<kbd>Ctrl</kbd>+<kbd>B</kbd>），导回后按 <kbd>B</kbd> 重新填充；线宽、间距、过孔都写进<strong>网络类</strong>（有用户反映“约束”页里的规则传不过去）；导回后一定跑一次 DRC（<a href="#p6">第 6 课</a>）。</span>
+    </div>
+  </div>
+
+  <!-- 4.6 -->
+  <div class="sec">
+    <h3><span class="k">4.6</span>USB 的 D+ / D−：老实说，没按差分对走</h3>
+    <div class="txt">
+      <p>USB 用两根线 D+、D− 传数据，两根线上的信号一正一反，接收端只看两者的差，这叫<strong>差分信号</strong>。规范要求这一对线的差分阻抗是 <strong>90 Ω ±15%</strong>。阻抗由线宽、两根线的间距、线到地平面的距离和板材一起决定。乐鑫的布局指南也要求 USB 走成并行、等长的差分对，阻抗控制在 90 Ω。</p>
+      <p id="p4-u-real"></p>
+    </div>
+    <div class="widget">
+      <div class="ctrls" id="p4-ubtns" role="group" aria-label="USB 走线"></div>
+      <div id="p4-usbbv"></div>
+      <div class="readout" id="p4-u-ro"></div>
+    </div>
+    <div class="txt">
+      <p>为什么还能用？关键看信号的边沿有多快、线有多长。ESP32-S3 的 USB 是<strong>全速</strong>（12 Mbit/s），全速驱动器的上升 / 下降时间是 4–20 ns。线短到信号“一眨眼就跑完”，反射来回几趟也藏在边沿里，阻抗差一点就看不出来。按 Altium 的估算，全速信号在双层 FR-4 上的“临界长度”约 61 mm（按 4 ns 边沿、10% 判据）。切到高速（480 Mbit/s）对比一下：</p>
+    </div>
+    <div class="widget">
+      <div class="ctrls" id="p4-tbtns" role="group" aria-label="USB 速度"></div>
+      <svg id="p4-tsvg" viewBox="0 0 480 272" role="img" aria-label="信号边沿和走线传播时间对比，以及走线长度和临界长度对比"></svg>
+      <p class="status" id="p4-tst" aria-live="polite"></p>
+    </div>
+    <div class="tip"><b>两个前提</b>：嘉立创只给 4 层及以上的板做阻抗控制，双层板只按线宽线距 ±20% 管，阻抗不保证；所以在双层板上“精确 90 Ω”本来也做不到。对 QB12 这样的全速 USB，更要紧的是：两根线并行、等长、短，下面有完整的地，两侧包地，远离天线。临界长度这条经验法则也常被误用，能按 90 Ω 设计时最好还是照做。</div>
+    <div class="howto"><b>KICAD 里自己做</b>
+      <span>KiCad 靠网络名的后缀认出差分对：<span class="net">+</span> / <span class="net">-</span> 或 <span class="net">P</span> / <span class="net">N</span>。QB12 的 <span class="net s">USB_DP</span> / <span class="net s">USB_DN</span> 正好符合（顺带一提，电机的 <span class="net">ML+</span> / <span class="net">ML-</span> 也会被认成一对，只是命名巧合，无害）。</span>
+      <span>在网络类里填好“差分对宽度”和“差分对间隙”，然后按 <kbd>6</kbd>（<span class="menu">布线 → 布线(差分)</span>），点 D+ 或 D− 任意一个焊盘，两根线会一起走；途中按 <kbd>V</kbd> 会放一对过孔。宽度和间隙用嘉立创的阻抗计算器按实际叠层算；网上常见的双层板参考值是按别的板材算的，只能参考。</span>
+    </div>
+  </div>
+
+  <!-- 4.7 -->
+  <div class="sec">
+    <h3><span class="k">4.7</span>KiCad 里手动布线：X、W、V</h3>
+    <div class="txt">
+      <p>自己做板子，多半是手动布线，最多把一部分信号线交给自动布线器。KiCad 的交互式布线器很聪明：画到别的线跟前时，它可以用三种方式处理。点一下看看区别（示意图）：</p>
+    </div>
+    <div class="widget">
+      <div class="ctrls" id="p4-modes" role="group" aria-label="布线器模式"></div>
+      <svg id="p4-msvg" viewBox="0 0 480 200" role="img" aria-label="布线器三种模式的示意动画"></svg>
+      <p class="status" id="p4-mst" aria-live="polite"></p>
+    </div>
+    <div class="two p4-shots">
+      <figure class="fig p4-shot"><img src="@@ASSET:kicad_route_live.webp@@" alt="KiCad 10.0.6 交互式布线进行中：从 U5 往模组 14 号脚画 USB_DP，底部状态栏显示网络类、模式、线宽和最小间距" loading="lazy"><figcaption>KiCad 10.0.6 截图：按 <kbd>X</kbd> 布线进行中，正从 U5 往模组的 14 号脚（USB_DP，右上角）画，红色粗线是正在画的那一段。底部状态栏写着：布线 USB_DP、网络类 Default、45 度、模式“绕走”、走线宽度 0.2 mm（来自现存线路，即沿用已有的线）、最小间距 0.18 mm（和 Default 网络类的铜皮间距一样）。</figcaption></figure>
+      <figure class="fig p4-shot"><img src="@@ASSET:kicad_net_highlight.webp@@" alt="KiCad 10.0.6 PCB 编辑器里高亮 VSYS 网络：VSYS 的走线、焊盘和过孔亮起，其余的铜变暗" loading="lazy"><figcaption>KiCad 10.0.6 截图：高亮 VSYS 网络，这个网络的线、焊盘、过孔亮起来，其余的铜变暗。左下角状态栏这时显示的是整块板的统计（焊盘 217、过孔 177、网络 36），VSYS 自己的长度去 4.2 节的网络检查面板里看。顶部工具栏最左边两个下拉框就是“走线: 使用网络类宽度”和“过孔: 使用网络类尺寸”。</figcaption></figure>
+    </div>
+    <div class="howto"><b>KICAD 里自己做</b>
+      <span>① <kbd>X</kbd>（<span class="menu">布线 → 布线(单端)</span>）：点起点焊盘开始，移动鼠标，单击放拐点，点到目标焊盘结束。一次只画一种线宽。</span>
+      <span>② 布线途中：<kbd>W</kbd> / <kbd>Shift</kbd>+<kbd>W</kbd> 在“预设尺寸”里的线宽之间切换（预设尺寸的设置见<a href="#p5">第 5 课</a>）；<kbd>Q</kbd> 临时自定义线宽 / 过孔；<kbd>V</kbd> 放过孔换层。</span>
+      <span>③ 模式：<span class="menu">布线 → 交互布线设置...</span>（<kbd>Ctrl</kbd>+<kbd>&lt;</kbd>）里选 <span class="menu">高亮碰撞</span>、<span class="menu">推挤</span> 或 <span class="menu">绕走</span>。</span>
+      <span>④ 线宽的来源有先后：从一根已有线的端点接着画，会沿用那根线的宽度（要打开对应的按钮）；下拉框选了“使用网络类宽度”就用网络类的；选了预设尺寸就用预设值。无论哪种，都不会低于约束里的最小线宽。</span>
+    </div>
+  </div>
+
+  <!-- 4.8 -->
+  <div class="sec">
+    <h3><span class="k">4.8</span>自测三题</h3>
+    <div class="quiz">
+      <details><summary>信号线 0.2 mm、电池线 0.8 mm。按 IPC-2221（1 oz 外层，升温 10 °C），两者各大约能过多少电流？如果两个电机起步的 2 A 走在 0.2 mm 线上会怎样？</summary>
+        <div class="ans"><p id="p4-q1"></p><button class="show" data-p4q="1">在板上标出 0.8 mm 的线</button></div></details>
+      <details><summary>QB12 约束里的最小间距是 0.15 mm，嘉立创能做 0.10 mm。为什么不干脆按 0.10 mm 画？</summary>
+        <div class="ans"><p id="p4-q2"></p><button class="show" data-p4q="2">在板上标出最窄的缝</button></div></details>
+      <details><summary>USB 的 D+ / D− 在 QB12 上没按 90 Ω 差分对走，为什么还能用？什么情况下必须按差分对走？</summary>
+        <div class="ans"><p id="p4-q3"></p><button class="show" data-p4q="3">在板上标出 D+ / D−</button></div></details>
+    </div>
+    <div class="next">
+      <a class="card p4-nextc" href="#p5"><b>下一课 · 第 5 课</b><h4>过孔与铺铜</h4><p>这一课留下的几件事：信号线换层用的过孔、没交给自动布线的 GND 怎么靠过孔和两面整片铺铜连起来、散热过孔和天线下的禁布区。</p></a>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,265 @@
+<section class="lesson" id="p7">
+  <div class="lhead"><span class="lnum">7</span><div><h2>出生产文件</h2><p>学完能说清：工厂为什么要一叠文件而不是 .kicad_pcb；QB12 的 9 张 Gerber、2 个钻孔文件、BOM、坐标文件各画了什么、交给哪台机器；坐标原点和旋转角怎么换算；导出时哪些选项要改，上传前怎么检查。</p></div></div>
+
+  <div class="sec">
+    <h3><span class="k">7.1</span>工厂要的不是 .kicad_pcb，是一叠“图”和“表”</h3>
+    <div class="two">
+      <div class="txt">
+        <p>.kicad_pcb 是 KiCad 自己的设计文件：里面有规则、网络类、没填充的铺铜，还有只有 KiCad 才认识的写法。工厂那边是一条流水线，每台机器只关心一件事：钻机只要知道在哪打多大的孔，曝光机只要一层铜的图形，贴片机只要每个元件的坐标和角度。</p>
+        <p>所以出生产文件，就是把设计拆成<strong>每台机器各要的那一份</strong>：一层一张“图”（<strong>Gerber</strong>，光绘文件），再加三张“表”：<strong>钻孔文件</strong>（哪打孔、多大）、<strong>BOM</strong>（物料清单：要哪些元件）、<strong>坐标文件</strong>（CPL：每个元件贴在哪、转多少度）。</p>
+        <p>这些都是通用格式，哪家 EDA 画的都一样。工厂收到的就是这几份文件，你在查看器里看到什么，工厂就做出什么。</p>
+      </div>
+      <div class="readout p7-nums" id="p7-nums"></div>
+    </div>
+    <div class="widget p7-flowbox">
+      <div class="ctrls">
+        <button class="btn primary" id="p7-fl-play">▶ 按工序走一遍</button>
+        <span class="lab" id="p7-fl-lab" aria-live="polite">点一个文件，看它交给哪几道工序；或者点一道工序，看它用哪些文件。</span>
+      </div>
+      <div class="p7-files" id="p7-fl-files" role="group" aria-label="QB12 的生产文件"></div>
+      <div class="p7-flowwrap">
+        <ol class="p7-stations" id="p7-fl-st" aria-label="工厂里的工序"></ol>
+        <div class="card explain p7-flcard" aria-live="polite">
+          <h4 id="p7-fl-title"></h4>
+          <p id="p7-fl-what"></p>
+          <div class="states" id="p7-fl-facts"></div>
+        </div>
+      </div>
+      <p class="cap">工序按 JLC / 嘉立创的双层板流程整理，省略了开料、表面处理、电测、终检等几步。回流焊不需要你给文件。</p>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">7.2</span>Gerber：一层一张胶片</h3>
+    <div class="txt">
+      <p>Gerber 文件描述一层的平面图形，写法像用印章作画：先定义几种“光圈”（一个 0.8 × 0.9 mm 的矩形、一个 0.3 mm 的圆……），再写“在 (x, y) 盖一下”“从这里画到那里”“把这一圈填满”。以前工厂把它照成一张黑白胶片去曝光，所以至今还叫“光绘”；现在 JLC 用激光直接成像（LDI），图形还是这一张。</p>
+      <p>一层一个文件，每个文件只有黑和白两种意思，但“黑”在不同层上意思不一样。点下面的文件名，查看器只显示这一张胶片；条的长短是文件大小。</p>
+    </div>
+    <div class="widget p7-gbbox">
+      <div class="p7-gblist" id="p7-gb-list" role="group" aria-label="QB12_Gerber.zip 里的 11 个文件"></div>
+      <div class="stage p7-stage">
+        <div class="p7-left">
+          <div id="p7-gbv"></div>
+          <div class="legendrow p7-filmleg"><span><i class="p7-sw ink"></i>胶片上的黑</span><span><i class="p7-sw paper"></i>空白</span><span><i class="p7-sw ghost"></i>虚线：板框位置，只是参考，不在这张胶片里</span></div>
+        </div>
+        <div class="card explain p7-gbcard">
+          <div aria-live="polite" class="p7-gbinfo">
+            <h4 id="p7-gb-title"></h4>
+            <div class="states" id="p7-gb-facts"></div>
+            <p id="p7-gb-note"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="two">
+      <div class="txt">
+        <p>打开 <span class="net">QB12-F_Cu.gtl</span>，它就是一个纯文本文件。旁边摘了几段原文：先说明这是哪一层，再定格式和单位，定义光圈，然后一行一个动作。坐标 <span class="net">X31850000Y9800000</span> 按 4.6 格式读，就是 (31.85, 9.8) mm，那里是 R17 的 1 号焊盘。</p>
+        <p>注意 y 只有 9.8：Gerber 的 y 从板子<strong>下边</strong>往上量，KiCad 里 R17 却在 y = 28.2。这个换算 7.5 节细讲。</p>
+        <p>QB12 的 Gerber 导出过三次。10-13 的第一版带着 <strong>X2 扩展属性</strong>（黄色那几行）：文件开头的 <span class="net">%TF…</span> 说明这是哪一层，焊盘前面的 <span class="net">%TO…</span> 写着它属于哪个元件、哪个网络。嘉立创不收 X2，所以 10-19 关掉 X2 重新导出了一版（7.6 节）；10-20 换成 KiCad 10.0.6、参数不变又导出一次，就是现在交付的这一版。点摘录上面的两个按钮对比：X2 属性变成了注释或删掉了；KiCad 10 还给光圈重新编了号，但光圈的形状尺寸、焊盘和走线的每一笔坐标都没变。</p>
+      </div>
+      <div class="p7-gtlbox">
+        <div class="ctrls" role="group" aria-label="选文件版本"><button class="btn" id="p7-gtl-v1" aria-pressed="false">10-13 第一版（带 X2）</button><button class="btn" id="p7-gtl-v2" aria-pressed="true">10-20 交付版（KiCad 10，无 X2）</button></div>
+        <pre class="code p7-code" id="p7-gtl" aria-label="QB12-F_Cu.gtl 原文摘录"></pre>
+      </div>
+    </div>
+    <div class="two">
+      <div class="howto"><b>KICAD 里自己做</b>
+        <span>导出前先再跑一遍 <span class="menu">检查 → 设计规则检查</span>，再到 <span class="menu">文件 → 电路板配置... → 电路板叠层 → 阻焊/锡膏</span> 确认 <span class="menu">过孔盖油: 顶层 / 底层</span> 都勾了（新板默认都勾，QB12 也是两面盖油）。然后 <span class="menu">文件 → 制造输出 → Gerbers (.gbr)...</span>，打开“绘制”对话框，绘制格式选 Gerber。</span>
+        <span><b>包含层</b>勾这 9 层：F.Cu、B.Cu、F.Paste、B.Paste、F.Silkscreen、B.Silkscreen、F.Mask、B.Mask、Edge.Cuts（4 层板再加 In1.Cu、In2.Cu）。</span>
+        <span><b>通用选项</b>勾 <span class="menu">绘制前检查填充区填充内容</span> <span class="menu">剔除阻焊开窗中的丝印</span>。KiCad 9 起这里没有 <span class="menu">过孔盖油</span> 了（改到上面的电路板配置），<span class="menu">绘制封装值</span>、<span class="menu">绘制位号</span>、<span class="menu">绘制封装文本</span> 几个勾也去掉了，不用找。</span>
+        <span><b>Gerber 选项</b>勾 <span class="menu">使用 Protel Gerber 文件扩展名</span>；<strong>不勾</strong> <span class="menu">使用 Gerber X2 格式 (推荐)</span> <span class="menu">包含网表特性</span> <span class="menu">生成 Gerber 作业文件</span>。坐标格式 4.6, 单位 mm。</span>
+        <span>选好输出目录，点 <span class="menu">绘制</span>。钻孔文件用同一个对话框右下角的 <span class="menu">生成钻孔文件...</span>（7.3 节）。最后把这些文件打成一个 zip。</span>
+      </div>
+      <figure class="fig p7-shot"><img src="@@ASSET:kicad_plot_gerber.webp@@" alt="KiCad 10.0.6 的“绘制”对话框：左边勾了 9 个要输出的层，右边是通用选项和 Gerber 选项，按 JLC 教程设置，输出目录 gerber/" loading="lazy"><figcaption>KiCad 10.0.6 截图：<span class="menu">文件 → 制造输出 → Gerbers (.gbr)...</span> 打开的“绘制”对话框，已经按 JLC 教程设好，输出目录 gerber/：左边勾 9 层；右边 <span class="menu">剔除阻焊开窗中的丝印</span>、<span class="menu">绘制前检查填充区填充内容</span>、Protel 扩展名都勾上，X2、网表特性、作业文件都不勾，<span class="menu">使用 钻孔/定位 文件原点</span> 也不勾（绝对原点）。对话框里已经没有 <span class="menu">过孔盖油</span>，见下图。</figcaption></figure>
+    </div>
+    <figure class="fig p7-shot p7-shot1"><img src="@@ASSET:kicad_mask_paste.webp@@" alt="KiCad 10.0.6 电路板配置对话框的阻焊/锡膏页：过孔盖油的顶层和底层都勾上" loading="lazy"><figcaption>KiCad 10.0.6 截图：<span class="menu">文件 → 电路板配置... → 电路板叠层 → 阻焊/锡膏</span>。<span class="menu">过孔盖油:</span> <span class="menu">顶层</span>、<span class="menu">底层</span> 两个都勾着，绘制 Gerber 时阻焊层就按它来：过孔上不开窗。</figcaption></figure>
+    <div class="tip"><b>截图和 QB12 用的原点不一样，两种都对。</b>这一课的三张对话框截图（绘制、钻孔、定位文件）都按 JLC 教程设成<strong>绝对原点</strong>：坐标从 KiCad 图纸左上角量起。QB12 交付的文件不是在对话框里点的，而是 <span class="net">export_jlc.sh</span> 用 kicad-cli 导出的，Gerber、钻孔、坐标三份<strong>都用板子左下角的辅助原点</strong>。只要三份文件用同一个原点，工厂就能把它们对齐；混用才会出错，比如 Gerber 用绝对原点、钻孔用辅助原点，孔就会整体偏开（7.5 节）。</div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">7.3</span>钻孔文件：两张孔表</h3>
+    <div class="txt">
+      <p>钻孔不是一张图，是一张表：先列出用到的钻头（几号钻头、直径多少），再列每个孔的坐标。这种格式叫 <strong>Excellon</strong>，大多数工厂都要它。椭圆形的孔叫<strong>槽孔</strong>，写成“从这一点铣到那一点”。</p>
+      <p>孔分两种。<strong>PTH</strong>（金属化孔）钻完要在孔壁镀铜，过孔和插件脚都靠它连通两层；<strong>NPTH</strong>（非金属化孔）只钻不镀，比如塑料定位柱插的孔。嘉立创用干膜把 NPTH 封住，孔周 0.2 mm 的铜会被掏掉。分成两个文件，工厂一看就知道哪些孔要镀铜。</p>
+    </div>
+    <div class="widget">
+      <div class="ctrls">
+        <span class="lab">查看器：</span>
+        <button class="btn" id="p7-dr-film" aria-pressed="true">只看钻孔胶片</button>
+        <button class="btn" id="p7-dr-cu" aria-pressed="false">叠上铜层</button>
+        <span class="lab" id="p7-dr-sum"></span>
+      </div>
+      <div class="stage p7-stage">
+        <div class="p7-left"><div id="p7-drv"></div></div>
+        <div class="card explain">
+          <div class="tbl p7-tbl p7-drt"><table id="p7-dr-tbl"><thead><tr><th>文件</th><th>钻头</th><th>孔径</th><th>孔数</th><th>是谁的</th></tr></thead><tbody></tbody></table></div>
+          <p id="p7-dr-note" aria-live="polite"></p>
+        </div>
+      </div>
+    </div>
+    <div class="two">
+      <div class="txt">
+        <p>旁边是 <span class="net">QB12-NPTH.drl</span> 的全文，一共只有 22 行。<span class="net">T1C0.600</span> 定义 1 号钻头 0.6 mm，<span class="net">T1</span> 换上它，下面每行一个孔。点带下划线的坐标行，上面的查看器会标出那个孔，这里换算成本课坐标。</p>
+        <p id="p7-npth-read" class="p7-readline" aria-live="polite">点带下划线的坐标行。</p>
+      </div>
+      <pre class="code p7-code" id="p7-npth" aria-label="QB12-NPTH.drl 全文"></pre>
+    </div>
+    <div class="two">
+      <div class="howto"><b>KICAD 里自己做</b>
+        <span><span class="menu">文件 → 制造输出 → 钻孔文件 (.drl)...</span>，或者在“绘制”对话框里点 <span class="menu">生成钻孔文件...</span>。</span>
+        <span>钻孔文件格式选 Excellon；<strong>不勾</strong> <span class="menu">Y 轴镜像</span>、<span class="menu">最少钻头种类</span>、<span class="menu">将电镀孔 (PTH) 和非电镀孔 (NPTH) 到合并单个文件中</span>（KiCad 10.0.6 的译文原样如此；不合并 = PTH、NPTH 两个文件）。</span>
+        <span><strong>勾</strong> <span class="menu">对椭圆孔使用备选钻孔模式</span>；<span class="menu">单位:</span> 选 <span class="menu">毫米 (mm)</span>；<span class="menu">零点:</span> 选 <span class="menu">十进制格式 (推荐)</span>。</span>
+        <span><span class="menu">原点:</span> 要和 Gerber 一致：Gerber 没勾 <span class="menu">使用 钻孔/定位 文件原点</span> 就选 <span class="menu">绝对</span>，勾了就选 <span class="menu">钻孔/定位 文件原点</span>（7.5 节）。JLC 强烈建议顺手生成钻孔图：勾 <span class="menu">生成映射:</span>，格式选 Gerber X2，它标明哪些孔金属化、有几个槽孔。最后点 <span class="menu">生成</span>。</span>
+      </div>
+      <figure class="fig p7-shot"><img src="@@ASSET:kicad_drill.webp@@" alt="KiCad 10.0.6 的生成钻孔文件对话框，按 JLC 教程设置：Excellon、不合并 PTH 和 NPTH、对椭圆孔使用备选钻孔模式、生成映射 Gerber X2、原点绝对、毫米、十进制" loading="lazy"><figcaption>KiCad 10.0.6 截图：生成钻孔文件对话框（同样按 JLC 教程设置，输出文件夹 gerber/）。左栏 <span class="menu">格式</span>：Excellon 和它下面的四个勾，只勾了 <span class="menu">对椭圆孔使用备选钻孔模式</span>；再下面 <span class="menu">生成映射:</span> 勾上，格式 Gerber X2。右栏 <span class="menu">选项</span>：<span class="menu">原点:</span> 绝对、<span class="menu">单位:</span> 毫米 (mm)、<span class="menu">零点:</span> 十进制格式 (推荐)。</figcaption></figure>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">7.4</span>BOM 和坐标文件：买什么、贴在哪</h3>
+    <div class="txt">
+      <p>只做光板，有 Gerber 和钻孔就够了。要工厂顺便把元件贴上（SMT 贴片），还要两张表。<strong>BOM</strong> 一种料一行：型号、位号、封装、立创编号，工厂按它备料。<strong>CPL</strong> 一个元件一行：位号、中心坐标、哪一面、转多少度，贴片机按它放料。两张表靠<strong>位号</strong>对上。</p>
+      <p>下面是交付给嘉立创的原文件，一个字没改。点 BOM 的一行，板上亮出这几颗元件，切到 CPL 表就只剩它们的坐标行；点 CPL 的一行，板上标出那一颗。</p>
+    </div>
+    <div class="widget">
+      <div class="ctrls" role="group" aria-label="切换表格">
+        <button class="btn" id="p7-tb-bom" aria-pressed="true"></button>
+        <button class="btn" id="p7-tb-cpl" aria-pressed="false"></button>
+        <button class="btn" id="p7-tb-all">显示全部</button>
+        <span class="lab" id="p7-tb-lab" aria-live="polite"></span>
+      </div>
+      <div class="stage p7-stage p7-bomstage">
+        <div class="p7-left">
+          <div class="tbl p7-tbl p7-scroll"><table id="p7-tb-t"><thead></thead><tbody></tbody></table></div>
+          <div class="states p7-cols" id="p7-tb-cols"></div>
+        </div>
+        <div class="p7-right p7-sticky">
+          <div id="p7-bmv"></div>
+        </div>
+      </div>
+      <div class="readout p7-checks" id="p7-tb-chk"></div>
+    </div>
+    <div class="howto"><b>KICAD 里自己做</b>
+      <span>BOM 从原理图出：<span class="menu">工具 → 生成物料清单...</span>，打开的是符号字段表的导出页。先在表里 <span class="menu">添加字段</span>，名字叫 <span class="net">LCSC Part #</span>，把每种料的立创编号填进去；导出成 CSV。</span>
+      <span>KiCad 导出的列名和 JLC 的样例不一样，要改成 Comment（型号）、Designator（位号）、Footprint（封装）、LCSC Part #。位号别靠大小写区分，生产时会全转成大写。</span>
+      <span>QB12 没有 KiCad 原理图（<a href="#p0">第 0 课</a>说过），BOM 是 <span class="net">make_bom.py</span> 从 <span class="net">netlist.py</span> 直接生成的：同一个值、同一个编号、同一个封装合成一行。CPL 是从板子导出来的，下一节讲。</span>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">7.5</span>坐标：原点在左下，Y 朝上</h3>
+    <div class="txt">
+      <p>KiCad 内部的坐标原点在图纸左上角，y 向下；QB12 的板子左上角放在图纸的 (100, 100) mm。这门课为了好读，把它减掉，用板子左上角当原点（y 仍然向下）。</p>
+      <p>贴片机习惯的是数学课上的坐标：原点在板子<strong>左下角</strong>，Y <strong>向上</strong>。QB12 的 <span class="net">finalize.py</span> 把“钻孔 / 定位文件原点”（辅助原点）设在板子左下角，导出时用它当零点，KiCad 再把 Y 取反。所以换算只有一句：<strong>Mid X = x，Mid Y = 38 − y</strong>（38 是板子高度）。</p>
+    </div>
+    <div class="widget">
+      <div class="ctrls">
+        <span class="lab">原点：</span>
+        <button class="btn" id="p7-co-aux" aria-pressed="true">左下角辅助原点（QB12）</button>
+        <button class="btn" id="p7-co-abs" aria-pressed="false">绝对原点（JLC 教程）</button>
+        <span class="lab">快速选：</span><span class="p7-picks" id="p7-co-picks"></span>
+      </div>
+      <div class="stage p7-stage">
+        <div class="p7-left"><div id="p7-cov"></div></div>
+        <div class="card explain" aria-live="polite">
+          <h4 id="p7-co-title">点板上任意一个元件</h4>
+          <div class="p7-math" id="p7-co-math"></div>
+          <p id="p7-co-note"></p>
+        </div>
+      </div>
+    </div>
+    <div class="txt">
+      <p><strong>角度</strong>是另一件事。KiCad 的角度是“从封装库里的 0° 逆时针转了多少度”（从顶面看）。KiCad 导出 −90，脚本取 360 的余数写成 270，是同一个方向。问题在于：你的库的 0° 和 JLC 库的 0° 不一定是同一个方向。JLC 唯一的规定是：库里封装的 0° 要和元件在编带里的方向一致。</p>
+    </div>
+    <div class="widget p7-rotbox">
+      <div class="ctrls">
+        <span class="lab">选一个元件：</span><span class="p7-picks" id="p7-rot-picks"></span>
+      </div>
+      <div class="ctrls">
+        <button class="btn primary" id="p7-rot-play">▶ 从库里的 0° 转到板上</button>
+        <button class="btn" id="p7-rot-jlc" aria-pressed="false">假设 JLC 的 0° 差 90°（示意）</button>
+      </div>
+      <svg id="p7-rot" viewBox="0 0 640 250" role="img" aria-label="所选元件在封装库里的 0° 样子和贴在板上的样子"></svg>
+      <p class="status" id="p7-rot-st" aria-live="polite"></p>
+    </div>
+    <div class="two">
+      <div class="txt">
+        <p>QB12 的导出脚本<strong>没有做任何旋转修正</strong>：CPL 里的角度就是 KiCad 里的角度。这些封装来自立创 EasyEDA 库（<a href="#p2">第 2 课</a>），但是不是每一颗都和 JLC 的 0° 对得上，只有下单页的贴片预览说了算。所以下单时要做的是：</p>
+        <p id="p7-rot-check"></p>
+        <p>预览里方向不对，可以改 CPL 里那一行的 Rotation（±90 或 180）；不改的话工厂怎么处理，见 <a href="#p8">8.5</a>。还有一条：预览里没点确认的元件<strong>不会贴</strong>，哪怕 BOM 里有。下单页怎么走，<a href="#p8">第 8 课</a>一步步讲。</p>
+      </div>
+      <div class="howto"><b>KICAD 里自己做</b>
+        <span>先设原点：<span class="menu">放置 → 钻孔/定位 文件原点</span>，点板框外包矩形的左下角。QB12 四角是圆角，这一点其实在圆角外面一点，就是本课坐标的 (0, 38)（QB12 的 finalize.py 顺手把栅格原点也放在了这一点，只是让屏幕上的栅格对齐；导出只认钻孔/定位原点，<span class="menu">放置 → 栅格原点</span> 不影响生产文件）。不设也行，那就三份文件都用绝对原点。</span>
+        <span>再导出：<span class="menu">文件 → 制造输出 → 元件定位文件 (.pos, .gbr)...</span>，打开“生成布置文件”对话框。格式 CSV，单位 <span class="menu">毫米 (mm)</span>，勾 <span class="menu">生成包含正面和背面定位的单个文件</span>；Gerber 用了辅助原点就勾 <span class="menu">使用 钻孔/定位 文件原点</span>。点 <span class="menu">生成坐标文件</span>。</span>
+        <span id="p7-pos-trap"></span>
+        <span>最后把列名 Ref、PosX、PosY、Rot、Side 改成 Designator、Mid X、Mid Y、Rotation、Layer。</span>
+      </div>
+    </div>
+    <figure class="fig p7-shot p7-shot1"><img src="@@ASSET:kicad_pos.webp@@" alt="KiCad 10.0.6 的“生成布置文件”对话框：格式 CSV、单位毫米、勾了生成包含正面和背面定位的单个文件" loading="lazy"><figcaption>KiCad 10.0.6 截图：<span class="menu">文件 → 制造输出 → 元件定位文件 (.pos, .gbr)...</span> 打开的对话框，标题还叫“生成布置文件”，按钮叫 <span class="menu">生成坐标文件</span>。这里设成 JLC 的建议：<span class="menu">格式:</span> CSV、<span class="menu">单位:</span> 毫米 (mm)、勾 <span class="menu">生成包含正面和背面定位的单个文件</span>；为了和截图里的 Gerber 一致，<span class="menu">使用 钻孔/定位 文件原点</span> 没勾（绝对原点）。</figcaption></figure>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">7.6</span>导出设置：JLC 要什么，QB12 的脚本做了什么</h3>
+    <div class="txt">
+      <p>QB12 的生产文件不是在对话框里点出来的，而是 <span class="net">export_jlc.sh</span> 调用 KiCad 自带的命令行工具 <strong>kicad-cli</strong>（10.0.6）导出的：对话框里的每个勾选项，在命令行里都是一个参数，没写的就用默认值。下面是脚本里干活的那几行原文。点一个参数或下面一张卡片，看它对应对话框里的哪一项、JLC 怎么要求。</p>
+    </div>
+    <pre class="code p7-code p7-sh" id="p7-sh" aria-label="export_jlc.sh 第 9–15 行和坐标转换部分"></pre>
+    <div class="p7-setgrid" id="p7-set" role="list"></div>
+    <div class="tip" id="p7-x2tip"></div>
+    <div class="two">
+      <div class="card p7-ft">
+        <h4>一键的办法：Fabrication Toolkit 插件</h4>
+        <p>不想记这么多选项，可以装 JLC 官方教程推荐的 <strong>Fabrication Toolkit</strong>（作者 bennymeg）。它在 KiCad 官方插件库里：项目管理器打开 <span class="menu">扩展内容管理器</span>，搜名字安装。装好后 PCB 编辑器工具栏多一个按钮，点一下就生成 Gerber 压缩包、<span class="net">bom.csv</span>、<span class="net">positions.csv</span>（列名已经是 Designator、Mid X、Mid Y、Rotation、Layer），默认还会自动修正旋转角。</p>
+        <p>它的 BOM 列是 Designator、Footprint、Quantity、Value、LCSC Part #（用 Value 代替 Comment），料号从封装的字段里找，认 <span class="net">LCSC Part #</span>、<span class="net">LCSC PN</span> 等十几种写法。所以料号字段只能有一个说法：QB12 的封装里曾经同时有 <span class="net">LCSC</span> 和 <span class="net">LCSC Part</span> 两个字段，22 个不一致（<a href="#p2">第 2 课</a>），这时插件填进 BOM 的是哪一个，取决于它认哪个名字。</p>
+      </div>
+      <div class="card p7-ft">
+        <h4>那 QB12 为什么没用插件？</h4>
+        <p>脚本里没写原因，多半是因为整块板都是脚本做的：摆放、布线、铺铜都在命令行里跑，导出也就顺手用 kicad-cli，参数写死在脚本里，每次导出完全一样。BOM 则绕开 KiCad，直接从 <span class="net">netlist.py</span> 生成，料号只有这一个来源。</p>
+        <p>你自己在 KiCad 里画板，两条路都行：对话框照 7.2、7.3、7.5 节的设置点，或者用插件一键导出。不管哪条路，导出后都要用查看器把文件看一遍（下一节）。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">7.7</span>上传前：把 zip 打开看一遍</h3>
+    <div class="txt">
+      <p>工厂的 AOI 拿你的 Gerber 当标准答案，电测也只查“和设计一不一样”。Gerber 本身错了，后面没有一道工序能发现。所以上传前，用 Gerber 查看器打开<strong>真正要上传的那个 zip</strong>，不是 KiCad 里的板子。</p>
+      <p>下面六项：前五项来自 JLC 的 KiCad 教程和下单流程，第六项是 QB12 值得多看一眼的钢网层。逐项点开，查看器切到该看的那一层；点过的打一个勾。</p>
+    </div>
+    <div class="widget">
+      <div class="stage p7-stage">
+        <div class="p7-left"><div id="p7-ckv"></div></div>
+        <div class="card explain">
+          <ol class="p7-ck" id="p7-ck"></ol>
+          <p class="status" id="p7-ck-st" aria-live="polite"></p>
+        </div>
+      </div>
+    </div>
+    <div class="two">
+      <div class="howto"><b>KICAD 里自己做</b>
+        <span>KiCad 自带 Gerber 查看器：项目管理器里点 <span class="menu">Gerber 查看器</span>，然后 <span class="menu">文件 → 打开 Zip 归档文件...</span>，选你要上传的 zip。右边的层管理器里每个文件一层，可以逐层开关、改颜色。</span>
+        <span>嘉立创那边：上传 zip 以后，系统自动识别板子尺寸和层数，点 Gerber Viewer 再看一遍。还可以把同一个 zip 丢进免费的 JLCDFM（jlcdfm.com，国内是 jlc-dfm.com），它会检查走线、阻焊、钻孔、丝印、装配五大类问题，在图上标出位置。</span>
+      </div>
+      <figure class="fig p7-shot"><img src="@@ASSET:kicad_gerbview.webp@@" alt="KiCad 10.0.6 的 Gerber 查看器，打开了 QB12 的 9 个 Gerber 和 2 个钻孔文件，右边层管理器 1 到 11 层" loading="lazy"><figcaption>KiCad 10.0.6 截图：Gerber 查看器里打开 QB12_Gerber.zip 的 9 个 Gerber 和 2 个钻孔文件，标题是 “QB12-NPTH.drl — Gerber 查看器”（当前选中的是第 11 层 NPTH）。右边层管理器每个文件一层，1–9 是 Gerber，10、11 是 PTH、NPTH 钻孔文件。</figcaption></figure>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">7.8</span>自测三题</h3>
+    <div class="quiz">
+      <details><summary>为什么钻孔要分成 PTH 和 NPTH 两个文件？QB12 的 NPTH 孔是哪几个？</summary>
+        <div class="ans"><p id="p7-q1"></p><button class="show" data-p7q="1">在板上标出来</button></div></details>
+      <details><summary>J1（USB-C）在本课坐标里是 (26.5, 33.6)，为什么 CPL 里它的 Mid Y 是 4.400mm？</summary>
+        <div class="ans"><p id="p7-q2"></p><button class="show" data-p7q="2">在板上标出来</button></div></details>
+      <details><summary>下单页的贴片预览里，U2 看起来转了 90°。该怎么办？</summary>
+        <div class="ans"><p>先别慌：KiCad 的 0° 和 JLC 的 0° 本来就可能不一样。看预览里 U2 上的红点（方向标记）有没有对上板子丝印上的 1 脚标记。对不上，就把 CPL 里 U2 那一行的 Rotation 改 90°（预览里看着改对为止），或者不改直接下单，让工程师按丝印修正；丝印和 CPL 矛盾时默认按丝印贴。最后别忘了点确认：没确认的元件不会贴。</p><button class="show" data-p7q="3">看 U2 的角度</button></div></details>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">下一课</span>文件齐了，去下单</h3>
+    <div class="next">
+      <a class="card" href="#p8" style="text-decoration:none;color:inherit"><b>下一课 · 第 8 课</b><h4>下单与到货</h4><p>把这一课的 zip、BOM、CPL 传到嘉立创：每个选项怎么选、贴片预览怎么核对、付款前停下来；板子到手先看、再量、再上电。</p></a>
+    </div>
+  </div>
+</section>

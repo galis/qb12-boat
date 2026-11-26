@@ -1,0 +1,216 @@
+<section class="lesson" id="p1">
+  <div class="lhead"><span class="lnum">1</span><div><h2>PCB 是什么做的</h2><p>学完能说清：一块双层板从上到下有哪几层、每层是什么材料、有多厚；KiCad 里的 F.Cu、F.Mask、F.Silkscreen、F.Paste、Edge.Cuts 各对应板上的什么；工厂按什么顺序把它做出来；QB12 下单时板材、铜厚、阻焊颜色、表面处理怎么选。</p></div></div>
+
+  <div class="sec">
+    <h3><span class="k">1.1</span>拆开看：一块双层板有几层</h3>
+    <div class="txt">
+      <p>PCB 是一块叠起来的“三明治”：中间一块硬的绝缘板（<strong>FR-4</strong>），上下两面各贴一层<strong>铜</strong>；铜外面刷一层<strong>阻焊</strong>油，只在要焊的地方留洞；最外面再印上白色的<strong>丝印</strong>字。</p>
+      <p>QB12 是<strong>双层板</strong>，只有顶层、底层两层铜（<span id="p1-ncu"></span>）。下图用 QB12 设计文件里每一层的真实图形画成，再把层与层拉开。点任意一层，或点图下面的按钮，看它是什么、为什么要有它。</p>
+    </div>
+    <div class="widget p1-isow">
+      <div class="ctrls">
+        <span class="lab">叠法</span>
+        <button class="btn" data-p1iso="open" aria-pressed="true">拆开</button>
+        <button class="btn" data-p1iso="shut" aria-pressed="false">合上</button>
+        <span class="lab p1-gap">颜色</span>
+        <button class="btn" data-p1col="real" aria-pressed="true">实物颜色</button>
+        <button class="btn" data-p1col="kicad" aria-pressed="false">KiCad 里的颜色</button>
+      </div>
+      <div class="p1-isostage">
+        <div class="p1-isoleft">
+          <svg id="p1-iso" role="img" aria-label="QB12 各层拆开的示意图：从上到下钢网、顶层丝印、顶层阻焊、顶层铜、FR-4 芯板、底层铜、底层阻焊、底层丝印。可点击每一层"></svg>
+          <p class="cap" id="p1-isocap">示意：层与层之间的距离和厚度都没按比例，真实厚度见 1.2。图形是 QB12 每一层的真实图形。</p>
+          <div class="ctrls p1-chips" id="p1-isochips" role="group" aria-label="选一层"></div>
+        </div>
+        <div class="card explain p1-isocard" aria-live="polite">
+          <h4 id="p1-il-t"></h4>
+          <p id="p1-il-why"></p>
+          <div class="states" id="p1-il-facts"></div>
+          <p class="p1-more" id="p1-il-more"></p>
+        </div>
+      </div>
+    </div>
+    <div class="txt">
+      <p>注意最上面那一层“钢网”（F.Paste）和“板框”（Edge.Cuts）：它们在 KiCad 里也叫“层”，但不是板子上的一层材料。钢网是贴片时刷锡膏用的一张钢片，板框是工厂切外形的那条线。这些层最后都各自变成一个文件交给工厂（<a href="#p7">第 7 课</a>细讲）：</p>
+    </div>
+    <div class="tbl p1-rt"><table id="p1-ltab">
+      <thead><tr><th>KiCad 层</th><th>是什么</th><th>在成品板上</th><th>QB12 导出成</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+    <div class="two">
+      <div class="howto"><b>KICAD 里自己做</b>
+        <span>PCB 编辑器右边的 <span class="menu">外观</span> 面板有三个标签：<span class="menu">层</span>、<span class="menu">对象</span>、<span class="menu">网络</span>。在 <span class="menu">层</span> 标签里点层名，它就成了当前层；点层名前面的眼睛图标，显示或隐藏这一层。</span>
+        <span>面板下面展开 <span class="menu">层显示选项</span>，<span class="menu">非活动层:</span> 可以选 正常 / 暗显 / 隐藏，按 <kbd>H</kbd> 在三种之间轮换。选“隐藏”就只剩当前层，和上图点一层差不多。<span class="menu">翻转电路板视图</span> 让你从背面看。</span>
+        <span>层名在中文界面里也保持英文（F.Cu、F.Silkscreen…），F 是 Front（顶面），B 是 Back（底面）。</span>
+      </div>
+      <figure class="fig p1-shot"><img src="@@ASSET:kicad_layers_panel.webp@@" alt="KiCad 10.0.6 外观面板的层标签：F.Cu、B.Cu、F.Paste、F.Silkscreen、F.Mask、Edge.Cuts 等层，每层前面有颜色块和眼睛图标" loading="lazy"><figcaption>KiCad 10.0.6 截图：打开 QB12 后右边的 外观 面板。上面三个标签 层 / 对象 / 网络；层 标签从 F.Cu 列到 User.4，每层一个颜色块和一个眼睛（显示开关）；下面是 ▶层显示选项（点开有 非活动层 等）、预设 (Ctrl+Tab) 和 视角 (Option+Tab) 两个下拉框。</figcaption></figure>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">1.2</span>有多厚：FR-4 芯板和 1 oz 铜</h3>
+    <div class="txt">
+      <p>板厚是下单时要选的第一个数。QB12 按 <span id="p1-th"></span> 设计，这是最常用的厚度，KiCad 新建板默认也是 1.6 mm。</p>
+      <p>1.6 mm 里绝大部分是 <strong>FR-4 芯板</strong>：玻璃纤维布浸环氧树脂压成的硬板，FR 是 flame retardant（阻燃）的缩写。两面的铜厚用“盎司”说：<strong>1 oz</strong> 就是 1 盎司铜均匀摊在 1 平方英尺上，约 35 µm（0.035 mm）。阻焊油更薄，JLC 写的是至少 10 µm。切到“按真实比例”看看铜到底有多薄。</p>
+    </div>
+    <div class="widget p1-thw">
+      <div class="ctrls">
+        <button class="btn" data-p1th="sch" aria-pressed="true">示意（厚度放大）</button>
+        <button class="btn" data-p1th="real" aria-pressed="false">按真实比例</button>
+        <span class="lab" id="p1-thlab" aria-live="polite"></span>
+      </div>
+      <div class="p1-thbox"><svg id="p1-thsvg" viewBox="0 0 640 300" role="img" aria-label="QB12 板子的剖面：阻焊、铜、FR-4 芯板、铜、阻焊，可切换按真实比例"></svg></div>
+      <div class="readout" id="p1-thro"></div>
+    </div>
+    <div class="two p1-two">
+      <div class="widget">
+        <b class="p1-wh">铜厚：1 oz 还是 2 oz</b>
+        <div class="ctrls">
+          <button class="btn" data-p1oz="1" aria-pressed="true">1 oz（35 µm）</button>
+          <button class="btn" data-p1oz="2" aria-pressed="false">2 oz（70 µm）</button>
+        </div>
+        <svg id="p1-ozsvg" viewBox="0 0 360 96" role="img" aria-label="1 oz 和 2 oz 铜蚀刻后线条截面的示意对比"></svg>
+        <div class="p1-checks" id="p1-ozck" aria-live="polite"></div>
+        <p class="cap">铜越厚越难蚀刻得整齐，所以 JLC 给 2 oz 定的最小线距更大。示意图，不按比例。</p>
+      </div>
+      <div class="widget">
+        <b class="p1-wh">Tg：板子多热会变软</b>
+        <svg id="p1-tgsvg" viewBox="0 0 360 150" role="img" aria-label="温度标尺：普通 FR-4 的 Tg 约 130 到 140 摄氏度，无铅回流焊峰值 245 到 260 摄氏度，分解温度约 300 到 310 摄氏度"></svg>
+        <p class="p1-tgtxt">Tg（玻璃化转变温度）是树脂从硬的“玻璃态”变软的温度，不是熔点。贴片过回流炉时温度远高于 Tg，板子会在厚度方向膨胀；Tg 越低，这种膨胀和应力越大。JLC 说消费电子、简单双层板用普通 FR-4（Tg 约 130–140 °C）就够，QB12 正是这一类。</p>
+      </div>
+    </div>
+    <div class="two">
+      <div class="howto"><b>KICAD 里自己做</b>
+        <span><span class="menu">文件 → 电路板配置...</span>，左边选 <span class="menu">电路板叠层 → 物理叠层</span>。左上角 <span class="menu">铜层:</span> 选 2；表格从上到下就是 1.1 的那几层，每层填一个厚度（8.0.9 和 10.0.6 的中文界面都把这一列的标题错译成了“线宽”，其实是厚度）。表格下面的 <span class="menu">电路板叠层厚度:</span> 是这些厚度加起来的和，要等于你打算下单的板厚。</span>
+        <span>KiCad 用这个厚度导出 3D 模型、算经过过孔的网络长度；但它<strong>不会</strong>自动变成下单选项：上传 Gerber 后下单页能自动认出尺寸和层数，板厚、铜厚还要你自己选（<a href="#p8">第 8 课</a>）。</span>
+        <span id="p1-stkhonest"></span>
+      </div>
+      <figure class="fig p1-shot"><img src="@@ASSET:kicad_stackup.webp@@" alt="KiCad 10.0.6 电路板配置对话框的物理叠层页：铜层 2，表格列出 F.Silkscreen、F.Paste、F.Mask、F.Cu、介质 1（类型 Core，FR4）、B.Cu、B.Mask、B.Paste、B.Silkscreen 及各自厚度，下面是 电路板叠层厚度 1.6 mm" loading="lazy"><figcaption>KiCad 10.0.6 截图：QB12 的 电路板配置 → 电路板叠层 → 物理叠层。铜层 2；阻焊 0.01 mm、铜 0.035 mm、芯板“介质 1”1.51 mm（FR4，Epsilon R 4.5），底下的 电路板叠层厚度 是 1.6 mm。</figcaption></figure>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">1.3</span>阻焊和丝印：哪里盖住、哪里露铜、印什么字</h3>
+    <div class="txt">
+      <p>铜露在空气里会氧化；焊接时，熔化的锡还会顺着铜线流开，把挨着的两个脚连在一起。所以除了要焊的地方，整块板都刷一层<strong>阻焊</strong>（solder mask，常说的“绿油”）。要焊的焊盘上留一个洞，叫<strong>开窗</strong>。</p>
+      <p>KiCad 的 F.Mask 层上画的不是油，而是这些<strong>洞</strong>：画了的地方没有油，没画的地方全部盖油。<strong>丝印</strong>是印在阻焊上面的字和框，只给人看；凡是开窗的地方，丝印会被裁掉，免得油墨印到焊盘上。按下面的五步，在 QB12 的电机驱动 U2 附近看一遍。</p>
+    </div>
+    <div class="widget">
+      <div class="ctrls" id="p1-mkbtns" role="group" aria-label="阻焊和丝印的五个画面">
+        <button class="btn" data-p1mk="0" aria-pressed="false">① 铜 F.Cu</button>
+        <button class="btn" data-p1mk="1" aria-pressed="false">② 叠上开窗 F.Mask</button>
+        <button class="btn" data-p1mk="2" aria-pressed="false">③ 成品：盖油后</button>
+        <button class="btn" data-p1mk="3" aria-pressed="false">④ 丝印 F.Silkscreen</button>
+        <button class="btn" data-p1mk="4" aria-pressed="false">⑤ 翻到底面</button>
+      </div>
+      <div class="stage p1-mkstage">
+        <div id="p1-mkbv"></div>
+        <div class="card explain" aria-live="polite">
+          <h4 id="p1-mk-t"></h4>
+          <p id="p1-mk-x"></p>
+          <div class="states" id="p1-mk-f"></div>
+        </div>
+      </div>
+    </div>
+    <div class="two">
+    <div class="howto"><b>KICAD 里自己做</b>
+      <span>在 外观 面板里只留 F.Cu 和 F.Mask，就能一眼看出哪些焊盘开了窗。开窗默认和焊盘一样大：<span class="menu">电路板配置 → 电路板叠层 → 阻焊/锡膏</span> 里的 <span class="menu">阻焊扩展:</span> 默认是 0，嘉立创现在也按 1:1 开窗，保持 0 就行。过孔盖不盖油也在这一页：<span class="menu">过孔盖油:</span> 后面的 <span class="menu">顶层</span> / <span class="menu">底层</span>，新板默认都勾，QB12 也是两面盖油。</span>
+      <span>新建文字的默认字粗只有 0.1 mm，比 JLC 要的 0.15 mm 细。在 <span class="menu">电路板配置 → 文本与图形 → 默认</span> 里把丝印的线宽改成 0.15 mm、字高至少 1 mm。导出 Gerber 时勾上 <span class="menu">剔除阻焊开窗中的丝印</span>（<a href="#p7">第 7 课</a>）。</span>
+    </div>
+      <figure class="fig p1-shot"><img src="@@ASSET:kicad_mask_paste.webp@@" alt="KiCad 10.0.6 电路板配置对话框的阻焊/锡膏页：阻焊扩展 0 mm、阻焊桥最小宽度 0 mm、阻焊层到铜的间距 0 mm，过孔盖油 顶层和底层都已勾选" loading="lazy"><figcaption>KiCad 10.0.6 截图：QB12 的 电路板配置 → 电路板叠层 → 阻焊/锡膏。阻焊扩展、阻焊桥 (绿油桥) 最小宽度、阻焊层到铜的间距 都是 0；过孔盖油: 顶层 ☑ 底层 ☑。左边树里往下就是 文本与图形 → 默认。</figcaption></figure>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">1.4</span>工厂怎么一步步把它做出来</h3>
+    <div class="txt">
+      <p>双层板不用多层板那样一层层压起来，工厂直接拿一张两面都贴了铜的板（<strong>覆铜板</strong>）开始做。开工前，工程师先拿你的文件做一遍工程审核（CAM / DFM），看线宽、孔径、离板边的距离做不做得出来；出货前还有一道终检。中间就是下面这 11 步。</p>
+      <p>点“下一步”或“▶ 播放”。上面是一小段板子的剖面（示意，厚度夸张了很多），下面是 QB12 自己在这一步的样子。</p>
+    </div>
+    <div class="widget p1-fabw">
+      <div class="ctrls">
+        <button class="btn primary" id="p1-fplay">▶ 播放</button>
+        <button class="btn" id="p1-fprev" aria-label="上一步">← 上一步</button>
+        <button class="btn" id="p1-fnext" aria-label="下一步">下一步 →</button>
+        <span class="lab" id="p1-flab" aria-live="polite"></span>
+        <span class="p1-sp"></span>
+        <span class="lab">下面的板子</span>
+        <button class="btn" data-p1fc="made" aria-pressed="true">成品颜色</button>
+        <button class="btn" data-p1fc="kicad" aria-pressed="false">用到的 KiCad 层</button>
+      </div>
+      <div class="p1-steps" id="p1-fsteps" role="group" aria-label="11 道工序，可点击"></div>
+      <div class="stage p1-fstage">
+        <div class="p1-fleft">
+          <div class="p1-xbox"><svg id="p1-xsec" viewBox="0 0 640 230" role="img" aria-label="一小段双层板的剖面，随工序变化"></svg><p class="cap">剖面是示意：铜、阻焊、干膜的厚度都放大了很多。</p></div>
+          <div id="p1-fbv"></div>
+        </div>
+        <div class="card explain p1-fcard" aria-live="polite">
+          <h4 id="p1-f-t"></h4>
+          <p id="p1-f-x"></p>
+          <div class="states" id="p1-f-f"></div>
+          <p class="p1-design" id="p1-f-d"></p>
+          <p class="p1-src" id="p1-f-s"></p>
+          <a class="p1-more" id="p1-f-l" href="#p2"></a>
+        </div>
+      </div>
+    </div>
+    <div class="howto"><b>KICAD 里自己做</b>
+      <span>这些工序都不在 KiCad 里，但每一步用的都是你从 KiCad 导出的文件：钻孔用钻孔文件，蚀刻用 F.Cu / B.Cu，阻焊用 F.Mask / B.Mask，丝印用 F.Silkscreen / B.Silkscreen，成型用 Edge.Cuts。点上面的“用到的 KiCad 层”看每一步对应哪一层。</span>
+      <span>想提前看看工厂会看到什么：<span class="menu">视图 → 3D 查看器</span>（<kbd>Alt</kbd>+<kbd>3</kbd>）看成品的样子，导出后用 Gerber 查看器逐层核对（<a href="#p6">第 6 课</a>、<a href="#p7">第 7 课</a>）。</span>
+    </div>
+  </div>
+
+  <div class="sec" id="p1-s5">
+    <h3><span class="k">1.5</span>下单时选什么：表面处理、阻焊颜色、板材</h3>
+    <div class="txt">
+      <p>开窗露出来的铜不能就那么放着：会氧化，氧化了就不好焊。所以出厂前要在焊盘上再盖一层保护、又能焊的东西，叫<strong>表面处理</strong>。JLC 列出的选项有有铅喷锡、无铅喷锡、沉金和 OSP，这里比较前三种：<strong>喷锡</strong>（HASL，焊盘上覆一层焊锡、用热风整平，银色）和<strong>沉金</strong>（ENIG，化学镀镍再浸一层很薄的金，金色）。</p>
+      <p>喷锡便宜，但表面不平，不适合脚很密的芯片；沉金平整，但更贵，价格跟着金价走。阻焊颜色主要是好不好看，但也有两点实际差别：黑、白油的阻焊桥要求更宽；经济型贴片对有些颜色只给喷锡。下面换着选，看看 QB12 的 USB-C 口附近会变成什么样。</p>
+    </div>
+    <div class="widget">
+      <div class="ctrls">
+        <span class="lab">表面处理</span>
+        <button class="btn" data-p1fin="lf" aria-pressed="true">无铅喷锡</button>
+        <button class="btn" data-p1fin="pb" aria-pressed="false">有铅喷锡</button>
+        <button class="btn" data-p1fin="enig" aria-pressed="false">沉金</button>
+        <span class="lab p1-gap">阻焊</span>
+        <button class="btn" data-p1msk="green" aria-pressed="true">绿</button>
+        <button class="btn" data-p1msk="black" aria-pressed="false">黑</button>
+        <button class="btn" data-p1msk="blue" aria-pressed="false">蓝</button>
+      </div>
+      <div class="stage p1-fnstage">
+        <div id="p1-fnbv"></div>
+        <div class="card explain" aria-live="polite">
+          <h4 id="p1-fn-t"></h4>
+          <div class="p1-checks" id="p1-fn-ck"></div>
+          <p class="cap">颜色是示意，不是实物照片。</p>
+        </div>
+      </div>
+    </div>
+    <div class="txt">
+      <p>把上面这些和 1.2 的板厚、铜厚放在一起，就是 QB12 下单时 PCB 部分要选的东西。下面是这门课的建议和理由。这些选项都不在 Gerber 文件里，工厂也没有写明默认值，<strong>每一项都以下单页上实际能选的为准</strong>（<a href="#p8">第 8 课</a>一项项走一遍）。</p>
+    </div>
+    <div class="tbl p1-rt"><table id="p1-rec">
+      <thead><tr><th>选项</th><th>QB12 建议</th><th>为什么</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+    <div class="howto"><b>KICAD 里自己做</b>
+      <span><span class="menu">电路板配置 → 电路板叠层 → 板面处理</span> 里有 <span class="menu">镀铜处理:</span>（未指定 / 含铅喷锡 / 无铅喷锡 / 沉金 …）。KiCad 文档说明，这里的设置目前只写进 Gerber 任务文件（.gbrjob）；QB12 上传的压缩包里没有这个文件，所以填不填工厂都看不到。</span>
+      <span><span class="menu">物理叠层</span> 表格里可以给阻焊、丝印选颜色；在 3D 查看器里勾 <span class="menu">使用电路板叠层颜色</span>，就能先看看黑油、蓝油的效果。</span>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">1.6</span>自测三题</h3>
+    <div class="quiz">
+      <details><summary>KiCad 的 F.Mask 层上画着 QB12 每个焊盘的形状。成品板上，这些地方是有阻焊油还是没有？过孔为什么是绿的？</summary>
+        <div class="ans"><p id="p1-q1"></p><button class="show" data-p1q="1">在板上看</button></div></details>
+      <details><summary>1 oz 铜大约多厚？两层铜加起来占 1.6 mm 板厚的多少？QB12 为什么不选 2 oz？</summary>
+        <div class="ans"><p id="p1-q2"></p><button class="show" data-p1q="2">按真实比例看</button></div></details>
+      <details><summary>工厂是先把铜蚀刻成线路，还是先钻孔？为什么是这个顺序？</summary>
+        <div class="ans"><p id="p1-q3"></p><button class="show" data-p1q="3">看这几步</button></div></details>
+    </div>
+    <div class="next">
+      <a class="card" href="#p2" style="text-decoration:none;color:inherit"><b>下一课 · 第 2 课</b><h4>封装：从符号到焊盘</h4><p>这一课看到的每个开窗、每块钢网开口，都来自元件的封装。下一课讲封装里的焊盘怎么定尺寸、脚距，以及它怎么和立创编号对上。</p></a>
+    </div>
+  </div>
+</section>

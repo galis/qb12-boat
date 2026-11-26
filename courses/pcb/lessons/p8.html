@@ -1,0 +1,257 @@
+<section class="lesson" id="p8">
+  <div class="lhead"><span class="lnum">8</span><div><h2>下单与到货</h2><p>学完能说清：嘉立创下单页上每一步填什么、为什么；QB12 为什么选标准型贴片（经济型不贴 U1 模组）；预览里怎么认出转错的元件；钱花在哪几项上；板子寄到以后按什么顺序看、量、通电。</p></div></div>
+
+  <div class="sec" id="p8-s1">
+    <h3><span class="k">8.1</span>下单页走一遍：从上传文件到付款</h3>
+    <div class="txt">
+      <p>工厂不看你的 KiCad 工程，只看两样东西：你上传的文件，和你在下单页上选的选项。文件是<a href="#p7">第 7 课</a>导出来的那几份；选项决定板子做多厚、什么颜色、贴不贴元件、贴哪种。下面把一张 QB12 订单拆成 8 步，左边是下单页的示意图，右边是这一步要想清楚的事。</p>
+    </div>
+    <div class="tip p8-rule"><b>规矩：付款只能你自己点。</b>让 Claude 帮你准备订单时，它做到第 7 步就停下：文件传好、参数填好、料号和方向核对完，把页面截图和要你确认的地方列给你。第 8 步“提交并付款”由你自己看过以后点。</div>
+    <div class="widget p8-orderbox">
+      <div class="ctrls">
+        <button class="btn" id="p8-o-prev" aria-label="上一步">← 上一步</button>
+        <button class="btn primary" id="p8-o-next" aria-label="下一步">下一步 →</button>
+        <span class="lab" id="p8-o-lab" aria-live="polite"></span>
+      </div>
+      <div class="p8-rail" id="p8-o-rail" role="group" aria-label="下单的 8 个步骤"></div>
+      <div class="stage p8-ostage">
+        <div class="p8-mock" aria-hidden="false">
+          <div class="p8-mock-bar"><i></i><i></i><i></i><span>下单页 · 示意图，不是真网页，按钮和文字以实际页面为准</span></div>
+          <div class="p8-mock-body" id="p8-o-mock"></div>
+        </div>
+        <div class="card explain p8-ocard" aria-live="polite">
+          <h4 id="p8-o-title"></h4>
+          <p id="p8-o-why"></p>
+          <div class="states" id="p8-o-facts"></div>
+          <div class="status warn" id="p8-o-warn" hidden></div>
+          <a class="p8-more" id="p8-o-more" href="#p8"></a>
+        </div>
+      </div>
+    </div>
+    <div class="howto"><b>KICAD 里自己做</b><span>下单这件事在网页上做，不在 KiCad 里。KiCad 这边要准备好的是<a href="#p7">第 7 课</a>的三样东西：Gerber 和钻孔文件的压缩包、BOM、坐标文件。改了板子就要重新导一遍，别拿旧压缩包去下单。</span></div>
+  </div>
+
+  <div class="sec" id="p8-s2">
+    <h3><span class="k">8.2</span>板子参数：每一项怎么选</h3>
+    <div class="txt">
+      <p>上传以后，大部分选项都有默认值，真正要动脑子的只有几项：阻焊颜色、表面处理、板厚和铜厚要和设计时的假设一致；数量按需要选；还有一行小字：工厂要不要在你板子上印一串编号。</p>
+      <p>点下面的按钮换颜色和表面处理，查看器里是 QB12 做出来的样子；下面一行会告诉你这个组合在经济型贴片的表里能不能选。QB12 实际走标准型（8.3），标准型有没有同样的限制，以下单页为准。</p>
+    </div>
+    <div class="widget p8-parbox">
+      <div class="ctrls" role="group" aria-label="阻焊颜色">
+        <span class="lab">阻焊颜色</span>
+        <button class="btn" data-p8mask="green" aria-pressed="true">绿油</button>
+        <button class="btn" data-p8mask="black" aria-pressed="false">黑油</button>
+        <button class="btn" data-p8mask="blue" aria-pressed="false">蓝油</button>
+        <span class="lab p8-gap">表面处理</span>
+        <button class="btn" data-p8fin="hasl" aria-pressed="true">喷锡</button>
+        <button class="btn" data-p8fin="enig" aria-pressed="false">沉金</button>
+        <span class="lab p8-gap">看哪面</span>
+        <button class="btn" data-p8side="top" aria-pressed="true">顶面</button>
+        <button class="btn" data-p8side="bottom" aria-pressed="false">底面（编号位置）</button>
+      </div>
+      <div id="p8-pbv"></div>
+      <div class="status" id="p8-par-status" aria-live="polite"></div>
+    </div>
+    <div class="tbl"><table class="p8-ptbl">
+      <thead><tr><th>选项</th><th>QB12 选</th><th>为什么</th></tr></thead>
+      <tbody id="p8-par-rows"></tbody>
+    </table></div>
+    <div class="howto"><b>KICAD 里自己做</b><span>板厚在 <span class="menu">文件 → 电路板配置... → 电路板叠层 → 物理叠层</span> 里（KiCad 10 新建板默认 1.6 mm），下单页选的板厚要和这里一样。想指定编号印在哪：在底面丝印（B.Silkscreen）上留一块空地，再按下单页“客编”选项的说明做。QB12 的 <span class="net">finalize.py</span> 在底面写了一行 <span class="net">JLCJLCJLCJLC</span> 占位（切到“底面”能看到）。</span></div>
+  </div>
+
+  <div class="sec" id="p8-s3">
+    <h3><span class="k">8.3</span>SMT 贴片：QB12 选标准型（经济型不贴 U1 模组）</h3>
+    <div class="txt">
+      <p>SMT 贴片就是工厂替你把元件焊上去：钢网刷锡膏、贴片机放元件、回流焊炉熔锡。嘉立创分两种：<strong>经济型</strong>只贴一面、板子小也能贴、做得快；<strong>标准型</strong>能贴两面、检测项目多，但单板至少 70 × 70 mm，还要求工艺边和 Mark 点（贴片机找位置用的光点）。</p>
+      <p>下面把 QB12 的数字和两种的门槛逐项对一遍。先说结论：<strong>QB12 实际下单选的是标准型</strong>，因为经济型不贴 ESP32 模组 U1；这一节前面几项对下来经济型都够得着，卡住的是这一行。</p>
+    </div>
+    <div class="tbl"><table class="p8-smttbl">
+      <thead><tr><th>项目</th><th>QB12</th><th>经济型</th><th>标准型</th></tr></thead>
+      <tbody id="p8-smt-rows"></tbody>
+    </table></div>
+    <div class="two">
+      <div class="widget">
+        <div class="ctrls" role="group" aria-label="看哪种贴法">
+          <button class="btn" data-p8pan="eco" aria-pressed="true">经济型：单板</button>
+          <button class="btn" data-p8pan="std1" aria-pressed="false">标准型：单板</button>
+          <button class="btn" data-p8pan="auto" aria-pressed="false">标准型：嘉立创加工艺边</button>
+        </div>
+        <svg id="p8-pan" viewBox="-2 -14 120 98" role="img" aria-label="QB12 板子和贴片尺寸门槛按同一比例画"></svg>
+        <p class="cap" id="p8-pan-cap"></p>
+      </div>
+      <div class="txt">
+        <p><strong>结论：QB12 选标准型。</strong>经济型不贴 ESP32 模组 U1；退一步选经济型，就得自己手焊 U1，而它底部有焊盘，要用热风枪。所以选标准型：贴片面只选顶面，贴 2 片，让工厂把 U1 一起贴好。</p>
+        <p>标准型对小板的门槛是工艺边和 Mark 点，QB12 没画，这一项<strong>嘉立创自动加</strong>：下单后他们给板子加上工艺边，拼成约 7.0 × 6.6 cm 的一块，不用自己拼板、不用回 KiCad 改。代价是费用里多出治具这些项（8.6）。</p>
+        <div class="status warn" id="p8-smt-warn"></div>
+      </div>
+    </div>
+    <div class="howto"><b>KICAD 里自己做</b><span>QB12 只贴顶面（标准型也能贴两面，但只贴一面省事、也便宜），所以布局时就把所有贴片件放在顶层（F.Cu）。导出坐标文件时用 <span class="menu">文件 → 制造输出 → 元件定位文件 (.pos, .gbr)...</span>（打开的对话框叫“生成布置文件”，导出按钮叫“生成坐标文件”）只导顶层；QB12 的 <span class="net">export_jlc.sh</span> 用的是 <span class="net">--side front</span>。</span></div>
+  </div>
+
+  <div class="sec" id="p8-s4">
+    <h3><span class="k">8.4</span>BOM、坐标和料号：51 个元件一个个对上</h3>
+    <div class="txt">
+      <p>传完 BOM 和坐标文件，页面会把每一行和元件库里的料号配对，列成一张表让你确认。这里要看三件事：每一行配上的料对不对；哪些是<strong>基础库</strong>、哪些是<strong>扩展库</strong>；库里还有没有货。</p>
+      <p>基础库的料一直装在贴片机上，不用换料；扩展库的料要工人临时装上去，所以每用一<strong>种</strong>扩展料，就多一笔换料费（按种算，不按个数算）。</p>
+    </div>
+    <div class="readout" id="p8-bom-ro"></div>
+    <div class="widget p8-bombox">
+      <div class="ctrls" role="group" aria-label="筛选 BOM">
+        <span class="lab">只看</span>
+        <button class="btn" data-p8f="all" aria-pressed="true">全部</button>
+        <button class="btn" data-p8f="基础" aria-pressed="false">基础库</button>
+        <button class="btn" data-p8f="扩展" aria-pressed="false">扩展库</button>
+        <button class="btn" data-p8f="polar" aria-pressed="false">有方向的（8.5 要核对）</button>
+      </div>
+      <div class="p8-bomgrid">
+        <div class="tbl p8-bomtbl"><table>
+          <thead><tr><th>位号</th><th>型号 / 值</th><th>封装</th><th>立创编号</th><th>库</th></tr></thead>
+          <tbody id="p8-bom-rows"></tbody>
+        </table></div>
+        <div id="p8-bbv"></div>
+      </div>
+      <p class="cap">点表里的一行，查看器里会标出这些元件。表的内容就是交给工厂的 <span class="net">QB12_BOM_嘉立创SMT.csv</span>，“库”一栏来自 <span class="net">netlist.py</span>（2026-10-13 在立创商城核对的；分类和库存都会变，下单时以页面为准。U3 例外：它是 10-23 才换的料，从 ME6211 换成 AP2112K-3.3TRG1，立创编号 C51118，不在 10-13 那次核对里）。</p>
+    </div>
+    <div class="two">
+      <div class="txt">
+        <p><strong>三个数要对上。</strong>BOM 里的数量加起来、坐标文件的行数、页面上确认要贴的元件数，QB12 都应该是 <b id="p8-n51"></b>。少一个就有一个元件不贴：页面上没有点“确认”的元件不会贴，哪怕 BOM 里有。</p>
+        <p id="p8-th-txt"></p>
+      </div>
+      <div class="txt">
+        <p><strong>料号只有一个出处。</strong>QB12 的立创编号都写在 <span class="net">netlist.py</span> 里，BOM 由它生成。<a href="#p2">第 2 课</a>讲过，封装里曾经有一份过期的编号字段，22 个是错的；交给工厂的 BOM 一直是对的。下单页上配出来的型号和你想要的不一样时，回到这一个出处去查。</p>
+        <p><strong>库存会变。</strong>同一个编号今天有货，下周可能缺货；有的料还有最小用量和损耗备料，用不完的不会寄给你。</p>
+      </div>
+    </div>
+    <div class="howto"><b>KICAD 里自己做</b><span>手工画原理图的话，把立创编号填进每个符号的一个字段里，表头写成 <span class="net">LCSC Part #</span>。插件能省事：<strong>Fabrication Toolkit</strong>（在 KiCad 自带的 <span class="menu">扩展内容管理器</span> 里就能装）一键导出 Gerber 压缩包、<span class="net">bom.csv</span> 和 <span class="net">positions.csv</span>；<strong>kicad-jlcpcb-tools</strong> 能在 KiCad 里直接搜嘉立创的元件库、分配编号。</span></div>
+  </div>
+
+  <div class="sec" id="p8-s5">
+    <h3><span class="k">8.5</span>贴片预览：找出转错的元件</h3>
+    <div class="txt">
+      <p>料号对了，还得放对方向。坐标文件里写的旋转角是按你的封装算的，工厂的 0° 不一定和你的 0° 一样，所以预览里有的元件会转错。预览会在每个元件模型上画一个<strong>红点</strong>，它不叫“1 脚”，只是方向标记：红点和板子丝印上的点（或二极管的杠）在同一头，方向就对。</p>
+      <p>下面 6 格是 QB12 上的真元件：焊盘的形状、位置和角度都来自设计文件；盖在上面的深色块是预览里的元件模型（示意）。有几个转错了，点出你觉得错的，再点“核对”。</p>
+    </div>
+    <div class="widget p8-gamebox">
+      <div class="ctrls">
+        <button class="btn primary" id="p8-g-check">核对</button>
+        <button class="btn" id="p8-g-new">再来一局</button>
+        <span class="lab" id="p8-g-lab" aria-live="polite"></span>
+      </div>
+      <div class="p8-tiles" id="p8-tiles" role="group" aria-label="6 个元件的贴片预览，点选转错的"></div>
+      <div class="legendrow p8-glegend"><span><i class="p8-lg-pad"></i>板上的焊盘</span><span><i class="p8-lg-silk"></i>板上的丝印标记</span><span><i class="p8-lg-body"></i>元件模型（示意）</span><span><i class="p8-lg-dot"></i>预览里的红点</span></div>
+      <div class="status" id="p8-g-status" aria-live="polite">点格子选中，再点一次取消。</div>
+    </div>
+    <div class="two">
+      <div class="txt">
+        <p><strong>最危险的是对称的封装。</strong>SOT-23 这种一边 2 个脚、一边 1 个脚的，转错了脚对不上焊盘，一眼就能看出来。TP4056 的 8 个脚、USBLC6 的 6 个脚左右对称，转 180° 以后每个脚都还落在焊盘上，焊出来看着很整齐，可每个脚都接错了网络。这种只能靠红点和丝印标记去对。</p>
+      </div>
+      <div class="txt">
+        <p><strong>工厂会帮你看，但别全指望。</strong>不会改旋转角也可以直接下单，工程师会按丝印上的极性标记检查、改正；丝印和坐标文件对不上的时候，默认<strong>按丝印贴</strong>。所以极性标记一定要画清楚：二极管画三角指向阴极，或者在阴极一侧画一条杠。QB12 要逐个核对的有 <b id="p8-npolar"></b> 个元件（8.4 的“有方向的”）。</p>
+      </div>
+    </div>
+    <div class="howto"><b>KICAD 里自己做</b><span>下单前先在 <span class="menu">视图 → 3D 查看器</span>（<kbd>Alt</kbd>+<kbd>3</kbd>）里看一遍，元件模型的方向和丝印对不对。预览里个别元件方向不对：Fabrication Toolkit 可以给那个封装加一个 <span class="net">FT Rotation Offset</span> 字段（正值 = 逆时针，单位度），重新导出坐标文件；kicad-jlcpcb-tools 自带一张常见封装的旋转修正表。</span></div>
+  </div>
+
+  <div class="sec" id="p8-s6">
+    <h3><span class="k">8.6</span>钱、时间，和寄来的是什么</h3>
+    <div class="txt">
+      <p>价格天天变，这里除了 QB12 自己这一单的实付，不写别的金额，只讲钱花在哪几项上。有的项<strong>每单收一次</strong>，和贴几块无关；有的项<strong>跟着块数涨</strong>。拖动滑块看看：块数少的时候，每块板分摊的固定费用就高。具体金额以下单页的报价为准。</p>
+    </div>
+    <div class="widget p8-costbox">
+      <div class="slider"><label for="p8-qty">贴几块 <span id="p8-qty-v">2</span></label><input type="range" id="p8-qty" min="2" max="50" step="1" value="2"></div>
+      <div class="p8-cost">
+        <div class="card p8-cfix"><b>每单一次</b><ul id="p8-cost-fix"></ul></div>
+        <div class="card p8-cvar"><b>跟着块数涨</b><ul id="p8-cost-var"></ul></div>
+      </div>
+      <p class="cap">费用项目来自 JLC 的贴片报价说明；有的项只在标准型里有，QB12 走标准型，这些都要付。经济型能贴的块数上限，几处官方说法不一样（50 块 / 30 块以上要拼板），以下单页为准。QB12 自己贴 2 片，滑块默认也是 2。</p>
+    </div>
+    <div class="two">
+      <div class="widget">
+        <b class="p8-h">从付款到收货（示意，不按比例）</b>
+        <ol class="p8-tl" id="p8-tl"></ol>
+        <p class="cap">最快的“24 小时出 5 块”只适用于 100 × 100 mm 以内、标准配置；节假日另算。</p>
+      </div>
+      <div class="txt">
+        <p><strong>贴片单要先付款。</strong>只做光板时可以选“审核通过再付款”；带贴片的订单不行，因为一下单就会占用元件库存。付款以后工厂审核文件、生产、发货。</p>
+        <p><strong>QB12 这一单实付（10-27 付款）：</strong>PCB ¥73.74，SMT ¥559.84；贴片的极性确认选了“工程师协助”，要加 ¥10。贴片这一笔比光板贵得多，钱主要花在贴片上。</p>
+        <p><strong>光板还是贴好的板。</strong>只下 PCB、不选 SMT，寄来的是光板：<span id="p8-bare"></span>，U2、U4 肚子底下的散热焊盘烙铁根本够不着。选了 SMT，<b id="p8-n51b"></b> 个元件全部焊好寄来。</p>
+      </div>
+    </div>
+    <div class="two p8-boxrow">
+      <div class="widget">
+        <b class="p8-h">包裹里有什么，还要自己准备什么</b>
+        <svg id="p8-plug" viewBox="0 -2 98 53" role="img" aria-label="QB12 板子左边三个插座分别接左电机、右电机和电池（示意）"></svg>
+        <p class="cap">板子轮廓和三个插座的位置来自设计文件；插头、线、电机和电池是示意。</p>
+      </div>
+      <div class="p8-pack">
+        <div class="card"><b class="p8-yes">寄来的</b><p id="p8-pack-yes"></p></div>
+        <div class="card"><b class="p8-no">不会寄来的</b><p>钢网（不随货发）；没贴上去的元件、多出来的料（海关原因不随货发）。</p></div>
+        <div class="card"><b class="p8-diy">你自己准备的</b><p id="p8-pack-diy"></p></div>
+      </div>
+    </div>
+    <div class="howto"><b>KICAD 里自己做</b><span>想估焊点费，先知道板上有多少焊盘：<span class="menu">检查 → 显示电路板统计报告</span> 能列出焊盘、过孔和元件的数量。插头的正负要和背面丝印一致，所以背面的 <span class="net">+</span> <span class="net">−</span> 这种字在画板时就要印上（QB12 由 <span class="net">finalize.py</span> 印在 J2 旁边）。</span></div>
+  </div>
+
+  <div class="sec" id="p8-s7">
+    <h3><span class="k">8.7</span>到货：先看，再量，最后才通电</h3>
+    <div class="txt">
+      <p>新板子出问题，最常见的是三种：脚之间连了锡、元件转错了、少了一个。它们大多看得见、量得出，<strong>通电之前</strong>就能发现。所以顺序是：先用眼睛看，再不通电量电阻，然后只插 USB 通电，最后一样一样接电池、接电机。每一步只多加一样东西，出了问题马上知道是哪一块。</p>
+      <p>电压该是多少、程序怎么烧，电路课第 9 课的上电清单讲过；这里讲板子这一侧：哪些地方要看、表笔放在哪。勾选的进度只存在这个浏览器里。</p>
+    </div>
+    <div class="widget p8-checkbox">
+      <div class="ctrls"><span class="lab" id="p8-c-prog">已完成 0 / 0</span><button class="btn" id="p8-c-reset">清空勾选</button></div>
+      <div class="p8-cbar" aria-hidden="true"><div id="p8-c-bar"></div></div>
+      <div class="legendrow p8-clegend"><span><i class="g"></i>不通电</span><span><i class="y"></i>只插 USB</span><span><i class="r"></i>接电池、电机</span></div>
+      <ol class="p8-clist" id="p8-clist"></ol>
+    </div>
+    <div class="widget p8-probebox">
+      <div class="ctrls" role="group" aria-label="选一个要量的网络">
+        <span class="lab">表笔放哪</span>
+        <span id="p8-probe-btns" class="p8-pbtns"></span>
+      </div>
+      <div class="stage p8-pstage">
+        <div id="p8-tbv"></div>
+        <div class="card explain p8-pcard" aria-live="polite">
+          <h4 id="p8-pr-title"></h4>
+          <div class="states" id="p8-pr-facts"></div>
+          <p id="p8-pr-net"></p>
+          <p id="p8-pr-calc"></p>
+          <div class="status" id="p8-pr-ok"></div>
+        </div>
+      </div>
+    </div>
+    <div class="tip"><b>QB12 没有专门的测试点。</b>所以表笔放在电容两端：每颗去耦电容一头接电源、一头接地，0603 也能碰得到。下次画板可以在 VBUS、VSYS、3V3、GND 上各放一个测试焊盘，量起来省事得多。</div>
+    <b class="p8-h">出了问题怎么办</b>
+    <div class="widget p8-fixbox">
+      <div class="ctrls" role="group" aria-label="选一种症状">
+        <button class="btn" data-p8fix="short" aria-pressed="true">电源对地只有几欧</button>
+        <button class="btn" data-p8fix="missing" aria-pressed="false">少了一个元件</button>
+        <button class="btn" data-p8fix="rot" aria-pressed="false">元件方向反了</button>
+        <button class="btn" data-p8fix="volt" aria-pressed="false">通电后某路电压不对</button>
+      </div>
+      <div class="p8-fix" id="p8-fix" aria-live="polite"></div>
+    </div>
+    <div class="howto"><b>KICAD 里自己做</b><span>量之前想知道一个网络上还有哪些焊盘能下表笔：在 PCB 编辑器里把鼠标放在那个焊盘上按 <kbd>`</kbd>（高亮网络），整个网络的铜都会亮起来；按 <kbd>~</kbd>（清除网络高亮）恢复。这页的查看器也一样：点任意一个元件，信息卡里列着它每个脚接哪个网络。</span></div>
+  </div>
+
+  <div class="sec" id="p8-s8">
+    <h3><span class="k">8.8</span>自测三题，和整门课回顾</h3>
+    <div class="quiz">
+      <details><summary>QB12 为什么选标准型贴片，不选经济型？</summary>
+        <div class="ans"><p id="p8-q1"></p><button class="show" data-p8q="1">回到对照表</button></div></details>
+      <details><summary>预览里 U4（TP4056）转了 180°，8 个脚还都落在焊盘上。这为什么危险？怎么发现？</summary>
+        <div class="ans"><p id="p8-q2"></p><button class="show" data-p8q="2">去预览小游戏看看</button></div></details>
+      <details><summary>板子到了，第一次插 USB 之前要量哪几处？量 BAT+ 时为什么要先把 SW1 拨到 OFF？</summary>
+        <div class="ans"><p id="p8-q3"></p><button class="show" data-p8q="3">在板上标出来</button></div></details>
+    </div>
+    <div class="card p8-recap">
+      <h4>九课连起来：QB12 从网表到手里的板子</h4>
+      <ol class="p8-recap-list" id="p8-recap"></ol>
+      <p class="p8-recap-end">到这里，一块板子从“谁和谁连”到“寄到手上、点亮”的每一步你都走过一遍了。下一块板子，可以从<a href="#p0">第 0 课</a>的九步流水线开始，自己在 KiCad 里画。</p>
+    </div>
+    <div class="next">
+      <a class="card" href="#p0" style="text-decoration:none;color:inherit"><b>回到第 0 课</b><h4>全景：从原理图到一块板</h4><p>九步流水线再看一遍，这次每一步你都知道里面发生了什么。</p></a>
+    </div>
+  </div>
+</section>

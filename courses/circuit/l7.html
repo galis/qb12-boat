@@ -1,0 +1,126 @@
+
+<!-- ============ 第 7 课 ============ -->
+<section class="lesson" id="l7">
+  <div class="lhead"><span class="lnum">7</span><div><h2>ESP32 最小系统：让芯片稳稳地跑起来</h2><p>学完能说清：模组里已经有什么、EN 为什么要 1µF 电容、怎么进下载模式、怎么用 ADC 量电池。对应原理图 C 区：U1 和它周围的一圈电阻电容。</p></div></div>
+
+  <div class="sec">
+    <h3><span class="k">7.1</span>模组里已经装好了什么</h3>
+    <div class="txt">
+      <p>用 STM32 做板子时，你要自己放晶振、Flash（有时）、复位电路、下载接口。ESP32-S3-WROOM-1 是一块<strong>模组</strong>：一块小 PCB 上已经焊好了芯片和它离不开的东西，外面罩了一层金属屏蔽壳，整体再当成一个元件焊到我们的板子上。</p>
+    </div>
+    <div class="two">
+      <div class="widget w"><svg id="modsvg" viewBox="0 0 360 300" role="img" aria-label="ESP32-S3-WROOM-1 模组内部示意：芯片、Flash、PSRAM、晶振、天线"></svg></div>
+      <div class="txt" style="gap:10px">
+        <p><strong>ESP32-S3 芯片</strong>：双核 240MHz，带蓝牙、Wi-Fi、USB。</p>
+        <p><strong>8MB Flash</strong>：放程序，相当于 STM32 内部的 Flash，只是放在芯片外面。型号里的 N8 就是它。</p>
+        <p><strong>2MB PSRAM</strong>：额外的内存，型号里的 R2。小船用不上这么多，但不加钱。</p>
+        <p><strong>40MHz 晶振</strong>：时钟源，蓝牙对频率要求很准，所以必须用晶振。</p>
+        <p><strong>板载天线</strong>：模组顶端那段弯弯曲曲的铜线。它下面不能有铜，这就是 PCB 上天线区整片留空的原因。</p>
+        <p>所以模组外面只需要补四样东西：<strong>电源和去耦</strong>（第 6 课）、<strong>EN 复位</strong>、<strong>BOOT 启动选择</strong>、<strong>USB</strong>。这四样加起来就叫“最小系统”。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">7.2</span>EN：等电源稳了再开机</h3>
+    <div class="txt">
+      <p>EN 是 ESP32 的“开机键”：高电平芯片工作，低电平芯片复位。和 STM32 的 NRST 一样，低电平有效的是复位。</p>
+      <p>数据手册要求：电源先稳定下来，EN 再变高。我们用 R7（10kΩ）从 3V3 上拉、C7（1µF）接地，组成一个 <strong>RC 延时</strong>：上电时电容是空的，EN 从 0V 开始，通过电阻慢慢充上去。时间常数 τ = R × C = 10kΩ × 1µF = 10ms，大约 14ms 后 EN 越过“高电平”的门槛（约 2.5V），芯片才开始启动，这时 3V3 早就稳了。</p>
+      <p>复位键 SW3 并在 C7 两端：按下时把 EN 直接短到地，芯片复位；松开后电容重新充电，芯片重新启动。</p>
+    </div>
+    <div class="widget w">
+      <div class="ctrls"><button class="btn primary" id="enPow">上电</button><button class="btn" id="enRst">按一下 RESET</button></div>
+      <svg id="ensvg" viewBox="0 0 640 230" role="img" aria-label="上电和复位时 3V3 与 EN 的电压曲线"></svg>
+      <div class="legendrow"><span><i style="background:var(--c2)"></i>3V3 电源</span><span><i style="background:var(--c3)"></i>EN</span><span>虚线：芯片认为“高电平”的门槛</span></div>
+      <p class="status" id="enText">点“上电”。</p>
+    </div>
+    <div class="tip"><b>为什么电容不大不小是 1µF</b>：太小，延时不够，电源还在爬升芯片就启动了，可能启动失败；太大，开机慢、复位键松开后要等很久。10kΩ + 1µF 是乐鑫推荐的值，同时还能滤掉 EN 线上的小干扰，免得电机一转就误复位。</div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">7.3</span>BOOT：开机那一刻看一眼 IO0</h3>
+    <div class="txt">
+      <p>ESP32 在 EN 变高的一瞬间，会去看几个特殊引脚（叫 strapping 引脚）的电平，决定这次怎么启动。最重要的是 <strong>IO0</strong>：</p>
+      <p>IO0 是高电平 → 正常运行 Flash 里的程序。IO0 是低电平 → 进入<strong>下载模式</strong>，等电脑把新程序发过来。</p>
+      <p>平时 R8（10kΩ）把 IO0 拉高，所以开机就运行程序。按住 SW2（BOOT）会把 IO0 接地。这和 STM32 的 BOOT0 脚是同一个思路，只是电平意义反过来。</p>
+      <p>开机以后 IO0 就是一个普通引脚，程序可以拿它当按键用。实船固件就是：<strong>运行中长按 BOOT 约 1.5 秒</strong>，切换手柄模式和手机模式，选择存进 flash，板子重启后生效。</p>
+    </div>
+    <div class="widget w">
+      <div class="ctrls">
+        <button class="btn" id="btBoot" aria-pressed="false">按住 BOOT（SW2）</button>
+        <button class="btn primary" id="btRst">按一下 RESET（SW3）</button>
+      </div>
+      <div class="wscroll"><svg id="btsvg" viewBox="0 0 700 200" role="img" aria-label="BOOT 和 RESET 按键决定 ESP32 的启动方式"></svg></div>
+      <p class="status" id="btText"></p>
+    </div>
+    <div class="txt">
+      <p>实际烧录时，大多数情况根本不用按键：ESP32-S3 的原生 USB 可以让电脑直接把它切进下载模式，点“上传”就行。按键是留给“程序把 USB 搞坏了”的时候用的，比如程序一上来就死循环或进了深度睡眠，电脑连不上它。这时：<strong>按住 BOOT → 按一下 RESET → 松开 BOOT</strong>，就能强行进下载模式，重新烧一个正常的程序。</p>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">7.4</span>原生 USB：一根线下载、打印、调试</h3>
+    <div class="txt">
+      <p>STM32 下载程序，要么用 ST-Link，要么经过 CH340 这类 USB 转串口芯片。ESP32-S3 芯片里自带一个 <strong>USB 串口 + JTAG</strong> 控制器，固定在 IO19（D−）和 IO20（D+）上。插上数据线，电脑上会出现一个串口，能做三件事：</p>
+      <p><strong>烧录程序</strong>；<strong>看串口打印</strong>（Arduino 里打开 “USB CDC On Boot”，<span class="net">Serial.println()</span> 就从这根线出来）；<strong>单步调试</strong>（JTAG，进阶用法）。</p>
+      <p>所以原理图上 USB 这一块，只有 U5 一颗保护芯片，没有任何转换芯片。</p>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">7.5</span>用 ADC 量电池：先分压，再读数</h3>
+    <div class="txt">
+      <p>电池最高 4.2V，ESP32 引脚最多只能接 3.3V，ADC 能准确测量的范围更是只到 2.9V 左右。所以先用两颗 100kΩ（R11、R12）把电池电压<strong>一分为二</strong>：4.2V 变 2.1V，3.0V 变 1.5V，正好落在 ADC 的舒服区间。程序读出来再乘 2 就是电池电压。</p>
+      <p>为什么用 100kΩ 这么大的电阻？分压电阻一直挂在电池上耗电，100kΩ + 100kΩ 只漏 21µA。代价是阻抗高，ADC 采样时会“吸”一口电，电压瞬间被拉低读不准。所以在 ADC 脚上并了 C8（100nF）：采样时从电容里取电，电容再由电阻慢慢补满。</p>
+    </div>
+    <div class="widget w">
+      <div class="slider"><label for="adcV">电池电压 <span id="adcVV">3.80 V</span></label><input type="range" id="adcV" min="3.0" max="4.2" step="0.01" value="3.8"></div>
+      <div class="two">
+        <div class="wscroll sm"><svg id="adcsvg" viewBox="0 0 520 220" role="img" aria-label="电池电压经两颗 100kΩ 分压后送进 ESP32 的 IO1"></svg></div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="readout">
+            <div class="ro"><small>IO1 上的电压</small><b id="adcPin">1.90 V</b></div>
+            <div class="ro"><small>程序读到</small><b id="adcMv">1900 mV</b></div>
+            <div class="ro"><small>换算回电池</small><b id="adcBat">3.80 V</b></div>
+            <div class="ro"><small>大约剩余电量</small><b id="adcPct">约 55 %</b></div>
+          </div>
+        </div>
+      </div>
+      <pre class="code" id="adcCode"></pre>
+      <p class="status" id="adcText"></p>
+    </div>
+    <div class="txt">
+      <p>USB 检测（R17、R18 → IO9）是一模一样的电路，只是上面接的是 VBUS：插着 USB 读到约 2.5V（VBUS 高于 4.2V 就算插着，低于 3.8V 才算拔掉，中间留一段回滞）。只接电池、没插 USB 时也不是 0V：ESP32 运行时 D+ 的上拉会经 USBLC6 内部的二极管倒灌到 VBUS，VBUS 上有约 2V（IO9 上约 1V，倒灌电流约 0.2mA，无害），所以程序不能拿“有没有电压”判断，要用 4.2V / 3.8V 这两个门槛。两个都接在 ADC1 的通道上，避开会和无线功能抢资源的 ADC2。</p>
+      <p>注意分压的上端接的是 <span class="net p">BAT_SW</span>，在电源开关 Q2 后面。关机时连这 21µA 都不漏。</p>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">7.6</span>ESP32 的引脚都用在哪了</h3>
+    <div class="tbl"><table>
+      <thead><tr><th>引脚</th><th>网络</th><th>方向</th><th>干什么</th></tr></thead>
+      <tbody>
+        <tr><td>IO4 / IO5</td><td>AIN1 / AIN2</td><td>输出 PWM</td><td>左电机，第 8 课</td></tr>
+        <tr><td>IO6 / IO7</td><td>BIN1 / BIN2</td><td>输出 PWM</td><td>右电机，第 8 课</td></tr>
+        <tr><td>IO15</td><td>nSLEEP</td><td>输出</td><td>拉高唤醒电机驱动，平时被 R9 拉低</td></tr>
+        <tr><td>IO16</td><td>nFAULT</td><td>输入</td><td>电机驱动报警，R10 上拉到 3V3，出故障时被拉低</td></tr>
+        <tr><td>IO1</td><td>VBAT_ADC</td><td>ADC 输入</td><td>电池电压的一半</td></tr>
+        <tr><td>IO9</td><td>USB_DET</td><td>ADC 输入</td><td>USB 电压的一半，判断有没有插 USB</td></tr>
+        <tr><td>IO2</td><td>LED_STAT</td><td>输出</td><td>状态灯 LED3，经 R6 1kΩ 限流。这是推挽输出，引脚自己出 3.3V 点灯，和第 3 课的开漏不同</td></tr>
+        <tr><td>IO0</td><td>BOOT</td><td>启动选择</td><td>R8 上拉、SW2 接地</td></tr>
+        <tr><td>IO19 / IO20</td><td>USB_DN / USB_DP</td><td>USB</td><td>原生 USB，下载和调试</td></tr>
+        <tr><td>EN</td><td>EN</td><td>复位</td><td>R7 + C7 延时，SW3 复位</td></tr>
+      </tbody>
+    </table></div>
+    <div class="txt"><p>其余引脚都空着。选引脚时特意避开了 IO3、IO45、IO46 这几个 strapping 引脚，免得外部电路影响开机。将来想加灯光、舵机、蜂鸣器，还有十几个空脚可用。</p></div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">7.7</span>自测</h3>
+    <div class="quiz">
+      <details><summary>把 C7 从 1µF 换成 10µF，开机会有什么变化？</summary><div class="ans"><p>RC 时间常数变成 100ms，EN 要约 140ms 才变高，开机和按复位后的重启都慢了十倍。能用，但没必要。</p><button class="show" data-nets="EN">在原理图上标出 EN</button></div></details>
+      <details><summary>程序烧坏了，电脑认不出 USB 串口，怎么救？</summary><div class="ans"><p>按住 BOOT 不放，按一下 RESET 再松开，最后松开 BOOT。芯片开机时 IO0 是低电平，进入下载模式，电脑就能重新认出它，烧一个正常的程序进去。</p><button class="show" data-nets="BOOT">在原理图上标出 BOOT</button></div></details>
+      <details><summary>程序读到 VBAT_ADC 是 1650mV，电池还剩多少电？</summary><div class="ans"><p>电池电压 = 1.65 × 2 = 3.3V，接近放空，大约只剩百分之几。这时该停船回来充电了。</p><button class="show" data-nets="VBAT_ADC">在原理图上标出 VBAT_ADC</button></div></details>
+    </div>
+  </div>
+</section>

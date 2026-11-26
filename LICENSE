@@ -1,0 +1,28 @@
+Boat QB12
+Copyright (c) 2026 galis.huang
+
+本仓库按内容类型使用三种许可证 / This repository uses three licenses by content type:
+
+1. 硬件设计 / Hardware designs — CERN-OHL-P-2.0
+   hardware/ 目录（包括生成 PCB 和船体模型的脚本），以及 outputs/QB12/ 里的
+   Gerber、BOM、坐标文件、STL、USDZ、原理图 PDF 和 KiCad 工程包。
+   The hardware/ directory (including the scripts that generate the PCB and
+   hull models) and the manufacturing files in outputs/QB12/.
+   Full text: LICENSES/CERN-OHL-P-2.0.txt
+
+2. 代码 / Software — MIT
+   firmware/、viewer/、tools/，以及 courses/ 里的构建和测试脚本
+   （build.py、integrate.py、tools/）。
+   firmware/, viewer/, tools/, and the build and test scripts in courses/.
+   Full text: LICENSES/MIT.txt
+
+3. 文档和课程 / Documentation and courses — CC BY 4.0
+   docs/、courses/ 里的课文和页面（包括 outputs/QB12/ 里的课程 HTML）、
+   README、CLAUDE.md、PLAN.template.md。
+   docs/, lesson content and pages in courses/ (including the course HTML
+   files in outputs/QB12/), READMEs, CLAUDE.md, PLAN.template.md.
+   Full text: LICENSES/CC-BY-4.0.txt
+
+第三方内容（元件封装和 3D 模型等）不在以上范围内，见 NOTICE.md。
+Third-party content (component footprints, 3D models, etc.) is not covered by
+the licenses above; see NOTICE.md.

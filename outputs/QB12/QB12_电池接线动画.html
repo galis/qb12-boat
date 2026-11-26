@@ -1,0 +1,158 @@
+<!doctype html><html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>QB12 电池接线动画</title>
+<style>
+:root{--bg:#14181a;--fg:#e6e8ea;--mut:#9aa3ab;--bd:#456;--btn:#223;--on:#3a6}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:15px -apple-system,"PingFang SC",sans-serif}
+#wrap{max-width:980px;margin:0 auto;padding:12px 16px}
+button{margin:2px;padding:7px 13px;border:1px solid var(--bd);background:var(--btn);color:var(--fg);border-radius:6px;cursor:pointer;font-size:14px}
+button.on{background:var(--on);color:#fff}
+#cap{font-size:20px;font-weight:700;margin:8px 2px 2px}#sub{color:var(--mut);margin:2px;min-height:44px;line-height:1.5}
+#warn{color:#ffb454;margin:2px;min-height:22px;font-weight:600}
+svg{width:100%;height:auto;background:#e3e8ec;border-radius:10px;border:1px solid #2b3338}
+#dots{margin:6px 2px;display:flex;gap:6px;flex-wrap:wrap}#dots i{width:26px;height:6px;border-radius:3px;background:#34404a;cursor:pointer}#dots i.on{background:#3a6}
+</style></head><body><div id="wrap">
+<div><button id="play">暂停</button><button id="prev">上一步</button><button id="next">下一步</button><button id="rep">重播本步</button></div>
+<div id="cap"></div><div id="sub"></div><div id="warn"></div>
+<svg viewBox="0 0 900 430" id="s" role="img" aria-label="电池线接 PH2.0 插头线的动画">
+ <defs><marker id="ar" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8z" fill="#9aa3ab"/></marker></defs>
+ <!-- PCB 和 J2（右侧） -->
+ <g id="pcbg"><rect x="640" y="20" width="250" height="120" rx="6" fill="#1f6b3a" stroke="#134"/>
+  <text x="765" y="40" fill="#cfe9d5" font-size="13" text-anchor="middle">PCB（板上 J2 电池座）</text>
+  <rect x="640" y="70" width="46" height="46" rx="3" fill="#e9e6dc" stroke="#887"/>
+  <rect x="664" y="78" width="3" height="30" fill="#6b6" opacity=".0"/>
+  <text x="663" y="62" fill="#fff" font-size="13" text-anchor="middle">J2</text>
+  <text x="650" y="88" fill="#d33" font-size="14" font-weight="700">+</text><text x="650" y="108" fill="#111" font-size="14" font-weight="700">−</text>
+ </g>
+ <!-- 电池 -->
+ <g id="bat"><rect x="40" y="150" width="270" height="130" rx="10" fill="#2a3f8f" stroke="#17255c" stroke-width="2"/>
+  <text x="175" y="205" fill="#dfe6ff" font-size="17" text-anchor="middle">603450 锂电池</text><text x="175" y="228" fill="#aeb9e6" font-size="14" text-anchor="middle">3.7V 1200mAh 50×34×6 mm</text>
+  <rect x="310" y="168" width="34" height="94" rx="3" fill="#2f8f4a" stroke="#165"/><text x="327" y="272" fill="#9ec" font-size="11" text-anchor="middle">保护板</text></g>
+ <!-- 电池线（红 + / 黑 −） -->
+ <g id="bw"><line id="bwr" stroke="#d33" stroke-width="6" stroke-linecap="round"/><line id="bwk" stroke="#111" stroke-width="6" stroke-linecap="round"/>
+  <line id="bwrt" stroke="#d8a25a" stroke-width="3" stroke-linecap="round"/><line id="bwkt" stroke="#d8a25a" stroke-width="3" stroke-linecap="round"/></g>
+ <!-- 插头线 -->
+ <g id="hw"><line id="hwr" stroke="#d33" stroke-width="6" stroke-linecap="round"/><line id="hwk" stroke="#111" stroke-width="6" stroke-linecap="round"/>
+  <line id="hwrt" stroke="#c0c4c8" stroke-width="3" stroke-linecap="round"/><line id="hwkt" stroke="#c0c4c8" stroke-width="3" stroke-linecap="round"/>
+  <g id="hs"><rect id="hs1" height="12" rx="4" fill="#4a7ad8" opacity=".85"/><rect id="hs2" height="12" rx="4" fill="#4a7ad8" opacity=".85"/></g>
+  <circle id="sj1" r="5" fill="#cfd3d8" opacity="0"/><circle id="sj2" r="5" fill="#cfd3d8" opacity="0"/>
+  <g id="hou"><rect id="houb" width="46" height="46" rx="3" fill="#f2efe4" stroke="#887" stroke-width="2"/><text id="hout" font-size="11" fill="#555" text-anchor="middle">PH2.0</text></g></g>
+ <!-- 烙铁 -->
+ <g id="iron" opacity="0"><polygon points="0,0 70,-32 80,-20 10,10" fill="#b0b6bb"/><rect x="70" y="-36" width="110" height="22" rx="6" transform="rotate(-24 70 -36)" fill="#c0793a"/></g>
+ <!-- 万用表 -->
+ <g id="dmm" opacity="0"><rect x="60" y="340" width="150" height="76" rx="8" fill="#e0c53a" stroke="#765"/><rect x="72" y="350" width="126" height="30" rx="3" fill="#cfe2c0"/><text id="dmmt" x="135" y="372" font-size="20" text-anchor="middle" fill="#123">0.00 V</text>
+  <circle cx="90" cy="400" r="6" fill="#d33"/><circle cx="180" cy="400" r="6" fill="#222"/></g>
+ <!-- 剪刀线 -->
+ <g id="cut" opacity="0"><line x1="0" y1="-26" x2="0" y2="26" stroke="#ffb454" stroke-width="2" stroke-dasharray="5 4"/><text x="0" y="-32" fill="#ffb454" font-size="13" text-anchor="middle">在这里剪</text></g>
+ <text id="tag1" fill="#345" font-size="13"></text><text id="tag2" fill="#345" font-size="13"></text>
+</svg>
+<div id="dots"></div>
+<div style="color:var(--mut);margin-top:6px;font-size:13px">示意图，不按比例。颜色：红=正极，黑=负极；蓝色小管=热缩管；银色=焊点。板上 J2 的 1 脚（标 +）是电池正极 BAT+，2 脚是 GND（来自 project/pcb/netlist.py）。</div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const STEPS=[
+ ["0  备料：电池两根裸线，插头线一头带胶壳","电池（远阳 FLY.603450.1200）出厂是两根裸线，没有插头；插头线（韩下 HX 2.0-2P，单头镀锡 200 mm，26AWG 红黑各一根）一头已经压好端子装进 PH2.0 胶壳，另一头线头镀锡。两样东西焊在一起，就得到带 PH2.0 插头的电池。","",90],
+ ["1  先量极性：红线是不是正极","用万用表直流电压挡，红表笔碰电池红线、黑表笔碰黑线，读数应为正的 3.7–4.2 V。电池线的颜色不一定对，以万用表为准。","颜色不可信：到货后必须量；电池线的两个线头不要碰到一起（短路会发热）。",100],
+ ["2  剪线：电池线和插头线都留短","板子 J2 到电池后墙只有约 15 mm，加上走线，两根线各留 30–40 mm 就够，越短越不容易碰到别的东西。插头线从胶壳端量起约 40 mm 处剪断，线头剥去 2 mm 绝缘层。","一次只剪一根线，另一根的线头先用胶带包住，避免两个线头碰在一起。",110],
+ ["3  先套热缩管，再焊","把两小段热缩管（Ø1.5 × 6 mm）分别套在插头线的红线、黑线上，推远一点，不然焊接时会被烫缩。","忘记先套热缩管，焊完就没法补了，只能重焊。",100],
+ ["4  红对红、黑对黑，一根一根焊","线头搭在一起（绞合 2 圈），烙铁加热，焊锡润湿后移开。两个焊点在长度方向上错开约 8 mm，这样热缩管之后两个焊点不会碰在一起。先焊红线，再焊黑线。","焊接时间 3 秒内；电池线别被烙铁烫到。",150],
+ ["5  热缩管推到焊点上，吹热风收紧","热缩管把每个焊点单独包起来，防止短路。没有热风枪可以用烙铁的侧面靠近，不要碰到。","收紧后拉一下，焊点不应被拉开。",100],
+ ["6  胶壳对准 J2 插入","PH2.0 胶壳有防呆方向，平行于电路板水平推进 J2 底座，红线对应 J2 的 + 脚（1 脚）。不要用蛮力。","插上之前再量一次：胶壳红线端的金属端子对 J2 的 + 焊盘应该是导通的。",110],
+ ["7  完成：电池放进电池仓","电池线穿过后墙缺口走到 J2。电池底下贴双面泡棉胶，上面用两根橡皮筋压住。","第一次上电前，用万用表量 J2 的两个脚，+ 脚应该是 +3.7V 左右，没有短路。",110]];
+let si=0,t=0,playing=true,last=0;
+const E=x=>{x=Math.min(1,Math.max(0,x));return x*x*(3-2*x)};
+const L=(a,b,k)=>a+(b-a)*k;
+function setLine(id,x1,y1,x2,y2){const e=$(id);e.setAttribute('x1',x1);e.setAttribute('y1',y1);e.setAttribute('x2',x2);e.setAttribute('y2',y2)}
+function draw(){
+ const k=E(t);
+ // 电池位置（固定）；电池线：从保护板右边 x=344 起，红 y=190，黑 y=240
+ const bwEnd=(si>=2)?(si>=7?380:400):470;           // 电池线长度
+ const redY=190,blkY=240;
+ // 步 2 以后电池线被剪短
+ let bwL=(si<2)?470:(si==2?L(470,400,k):400);
+ const bx=344;
+ setLine('bwr',bx,redY,bwL,redY);setLine('bwk',bx,blkY,bwL,blkY);
+ // 线头（裸铜）：长 14
+ const strip=si>=2?(si==2?L(0,14,k):14):14;
+ setLine('bwrt',bwL,redY,bwL+(si>=4?0:strip),redY);setLine('bwkt',bwL,blkY,bwL+(si>=4?0:strip),blkY);
+ // 插头线：胶壳在右，线向左，线头在左端
+ // 步 0：胶壳放在右下(780,330)，线到 x=560；步 2 剪短后线头到 ~ 470；焊接后胶壳靠近 J2；步 6 插入 J2
+ let hx,hy; // 胶壳左上角
+ let hwTip; // 线头 x
+ const rY=(y)=>y;
+ const startX=700,dockX=686;      // 步0 的胶壳位置 / J2 插入位置
+ if(si<2){hx=770;hy=300;hwTip=560}
+ else if(si==2){hx=770;hy=300;hwTip=L(560,640,k)}
+ else if(si<6){hx=770;hy=300;hwTip=640}
+ else hx=770;
+ // 对接位置：焊接时线头与电池线头在 x≈ 480 重合（红 y=190 对 690? 用各自线端）
+ // 为了简单：焊接发生在两线头在中间 x=560, 把插头线向左移动到 si>=3 的位置：红线 y=190，黑线 y=240，胶壳在右
+ let hwY_r,hwY_k,houX,houY,tipX;
+ if(si<3){ hwY_r=330;hwY_k=370;houX=780;houY=315;tipX=(si<2?520:(si==2?L(520,640,k):640));}
+ else{
+   const m=si==3?k:1;
+   hwY_r=L(330,redY,m);hwY_k=L(370,blkY,m);houX=780;houY=L(315,(redY+blkY)/2-23,m);tipX=L(640,bwL+14*0,m);
+   if(si>=4)tipX=bwL;   // 焊在一起
+ }
+ let hou=[houX,houY];
+ // 步 6：整体平移，胶壳到 J2：胶壳移到 x=686+... 板在 y 20..140，J2 在 (640..686, 70..116)；把电池+线整体上移？ 用 pan 变换
+ let pan=[0,0];
+ const g=$('hw'),gb=$('bw'),gB=$('bat');
+ if(si==6){pan=[ -L(0,0,k),0]}
+ // 画插头线
+ setLine('hwr',tipX,hwY_r,houX,hwY_r);setLine('hwk',tipX,hwY_k,houX,hwY_k);
+ setLine('hwrt',tipX,hwY_r,tipX+(si>=4?0:-0),hwY_r);setLine('hwkt',tipX,hwY_k,tipX,hwY_k);
+ const hb=$('houb');hb.setAttribute('x',houX);hb.setAttribute('y',houY);const ht=$('hout');ht.setAttribute('x',houX+23);ht.setAttribute('y',houY+27);
+ // 插头线线头：si<4 时露出 12px
+ const tipLen=si>=4?0:12;
+ setLine('hwrt',tipX,hwY_r,tipX-tipLen,hwY_r);setLine('hwkt',tipX,hwY_k,tipX-tipLen,hwY_k);
+ // 焊点和热缩管
+ const sj1=$('sj1'),sj2=$('sj2');
+ const hs1=$('hs1'),hs2=$('hs2');
+ sj1.setAttribute('opacity',si>=4&&(si>4||t>.3)?1:0);sj2.setAttribute('opacity',si>=4&&(si>4||t>.75)?1:0);
+ sj1.setAttribute('cx',bwL-0);sj1.setAttribute('cy',redY);sj2.setAttribute('cx',bwL+10);sj2.setAttribute('cy',blkY);
+ // 热缩管
+ hs1.setAttribute('opacity',si>=3?.85:0);hs2.setAttribute('opacity',si>=3?.85:0);
+ let hsX=si<4?L(600,620,0):0;
+ let hsx1,hsx2,hsw;
+ if(si==3){hsx1=L(840,620,0);hsw=70;hsx1=620;hsx2=620;}
+ else if(si<=4){hsx1=620;hsx2=620;hsw=60}
+ else {const m=si==5?k:1;hsx1=L(620,bwL-16,m);hsx2=L(620,bwL-6,m);hsw=L(60,40,m)}
+ if(si==3){hs1.setAttribute('y',redY-6+ (hwY_r-redY)*0);}
+ hs1.setAttribute('x',hsx1);hs1.setAttribute('width',hsw);hs1.setAttribute('y',hwY_r-6);
+ hs2.setAttribute('x',hsx2);hs2.setAttribute('width',hsw);hs2.setAttribute('y',hwY_k-6);
+ if(si==5){hs1.setAttribute('y',L(hwY_r-6,redY-6,0));hs2.setAttribute('y',L(hwY_k-6,blkY-6,0));}
+ if(si>=5){hs1.setAttribute('fill',k>.6||si>5?'#2d55b3':'#4a7ad8');hs2.setAttribute('fill',k>.6||si>5?'#2d55b3':'#4a7ad8');}
+ else{hs1.setAttribute('fill','#4a7ad8');hs2.setAttribute('fill','#4a7ad8')}
+ // 万用表
+ $('dmm').setAttribute('opacity',(si==1||si==7)?1:0);
+ $('dmmt').textContent=si==1?(t>.5?'+3.92 V':'0.00 V'):'+3.92 V';
+ // 剪线标记
+ const cut=$('cut');cut.setAttribute('opacity',si==2&&t<.55?1:0);
+ cut.setAttribute('transform','translate('+(t<.5?400:640)+','+(t<.5?215:350)+')');
+ // 烙铁
+ const iron=$('iron');
+ if(si==4){const y=t<.5?redY:blkY;const x=bwL;iron.setAttribute('opacity',1);iron.setAttribute('transform','translate('+(x+6)+','+(y-4)+')');}
+ else iron.setAttribute('opacity',0);
+ // 步 6：插入 J2：把电池+线+胶壳整体向 PCB 移动，演示成：PCB 靠近
+ const pc=$('pcbg');
+ if(si>=6){const m=si==6?k:1;
+   // 胶壳目标：J2 插座（x=640..686, y=70..116）；胶壳现在 (780, houY)。用平移整组把胶壳推到 J2 位置
+   const dx=-(780-690)*m,dy=((70+23)-(houY+23))*m;
+   [$('hw'),$('bw'),$('bat')].forEach(e=>e.setAttribute('transform','translate('+dx+','+dy+')'));
+ }else{[$('hw'),$('bw'),$('bat')].forEach(e=>e.setAttribute('transform',''))}
+ $('tag1').textContent='';$('tag2').textContent='';
+ const T1=$('tag1');
+ if(si==0){T1.textContent='电池线（红 +、黑 −，裸线）';T1.setAttribute('x',350);T1.setAttribute('y',172)}
+ if(si==0){const T2=$('tag2');T2.textContent='插头线（一头胶壳，一头镀锡）';T2.setAttribute('x',560);T2.setAttribute('y',305)}
+ $('s').setAttribute('data-step',si);
+}
+function setStep(i,tt){si=(i+STEPS.length)%STEPS.length;t=tt||0;$('cap').textContent=STEPS[si][0];$('sub').textContent=STEPS[si][1];$('warn').textContent=STEPS[si][2]?'注意：'+STEPS[si][2]:'';
+ [...$('dots').children].forEach((d,j)=>d.classList.toggle('on',j==si));draw()}
+STEPS.forEach((s,i)=>{const d=document.createElement('i');d.onclick=()=>{pause();setStep(i,1)};$('dots').appendChild(d)});
+function pause(){playing=false;$('play').textContent='播放'}
+$('play').onclick=()=>{playing=!playing;$('play').textContent=playing?'暂停':'播放'};
+$('prev').onclick=()=>{pause();setStep(si-1,1)};$('next').onclick=()=>{pause();setStep(si+1,1)};$('rep').onclick=()=>{setStep(si,0)};
+function loop(ts){requestAnimationFrame(loop);const dt=Math.min(.05,(ts-last)/1000||0);last=ts;
+ if(playing){t+=dt/(STEPS[si][3]/60);if(t>=1.35){setStep(si+1,0)}else draw()}}
+setStep(0,0);requestAnimationFrame(loop);
+</script></body></html>

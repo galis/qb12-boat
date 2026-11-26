@@ -1,0 +1,175 @@
+
+<!-- ============ 第 5 课 ============ -->
+<section class="lesson" id="l5">
+  <div class="lhead"><span class="lnum">5</span><div><h2>USB 与电池自动切换：两路电源怎么让路</h2><p>学完能说清：插拔 USB 时板子为什么不会断电重启、电池为什么不会被 USB 直接灌电、Q1 为什么要“倒着装”。对应原理图 B 区下面一行：Q1、R13、D1。</p></div></div>
+
+  <div class="sec">
+    <h3><span class="k">5.1</span>要解决的问题</h3>
+    <div class="txt">
+      <p>VSYS 有两个可能的来源：USB 的 5V 和电池。我们希望：</p>
+      <p><strong>插着 USB</strong>：全板用 USB 的电，电池只交给 TP4056 慢慢充，不参与供电（第 3 课 3.6 讲过原因）。</p>
+      <p><strong>拔掉 USB</strong>：电池立刻接手，中间不能断电，否则 ESP32 会重启、手柄会掉线。</p>
+      <p><strong>任何时候</strong>：电不能倒着流。电池不能往 USB 口倒灌，USB 也不能绕过 TP4056 直接往电池里灌。</p>
+      <p>做到这些只用了三个元件：一颗肖特基二极管 D1、一颗 P-MOS 管 Q1、一颗电阻 R13。</p>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">5.2</span>三个元件各管一件事</h3>
+    <div class="basics">
+      <div class="card"><b>D1：USB 这一路的单向阀</b><p>VBUS 经 D1 到 VSYS。电流只能从 USB 流向 VSYS；用电池时 VBUS 是 0V，D1 反向截止，电池的电不会倒流到 USB 口。</p></div>
+      <div class="card"><b>Q1：电池这一路的开关</b><p>Q1 的栅极接在 VBUS 上。有 USB 时栅极是 5V，比源极（VSYS）还高，Q1 关断；没 USB 时栅极变成 0V，Q1 完全导通。等于“有 USB 就自动断开电池”。</p></div>
+      <div class="card"><b>R13：拔掉 USB 后把栅极拉到地</b><p>拔掉 USB 后 VBUS 那根线就悬空了，R13（10kΩ）把它拉到 0V，Q1 才能可靠导通。顺带也让 VBUS 上残留的电很快放掉。</p></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">5.3</span>插拔一次看看</h3>
+    <div class="txt"><p>点按钮插上或拔掉 USB，下方的时序图会把切换的那几毫秒放慢播放。电源开关 SW1 默认拨在 ON。</p></div>
+    <div class="widget w">
+      <div class="ctrls">
+        <button class="btn primary" id="apTog">拔掉 USB</button>
+        <div class="slider" style="min-width:220px;flex:1">
+          <label for="apVb">电池电压 <span id="apVbV">3.80 V</span></label>
+          <input type="range" id="apVb" min="3.0" max="4.2" step="0.05" value="3.8">
+        </div>
+      </div>
+      <div class="wscroll"><svg id="apsvg" viewBox="0 0 760 310" role="img" aria-label="USB 和电池自动切换电路：D1、Q1、R13"></svg></div>
+      <div class="readout">
+        <div class="ro"><small>VBUS</small><b id="apVBUS">5.00 V</b></div>
+        <div class="ro"><small>VSYS</small><b id="apVSYS">4.60 V</b></div>
+        <div class="ro"><small>Q1 的 Vgs</small><b id="apVgs">+0.40 V</b></div>
+        <div class="ro"><small>Q1</small><b id="apQ1">关断</b></div>
+        <div class="ro"><small>D1</small><b id="apD1">导通</b></div>
+        <div class="ro"><small>电池</small><b id="apBat">在充电</b></div>
+      </div>
+      <p class="status" id="apText"></p>
+      <div class="card" style="padding:12px">
+        <svg id="apchart" viewBox="0 0 640 230" role="img" aria-label="切换过程的电压时序图：VBUS、VSYS、电池电压"></svg>
+        <div class="legendrow"><span><i style="background:var(--c1)"></i>VBUS</span><span><i style="background:var(--c2)"></i>VSYS（全板）</span><span><i style="background:var(--c3)"></i>电池（虚线）</span><span>横轴：毫秒</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">5.4</span>拔掉 USB 的那一瞬间</h3>
+    <div class="txt">
+      <p>时序图里能看到三个阶段，这是整节课最精彩的地方：</p>
+      <p><strong>① D1 还在供电</strong>：VBUS 开始往下掉，VSYS 跟着掉，始终比 VBUS 低一个二极管压降（约 0.4V）。</p>
+      <p><strong>② 体二极管先顶上</strong>：VSYS 掉到比电池低 0.5V 左右时，Q1 的体二极管自动导通（方向正好是电池 → VSYS），把 VSYS 托住。这时 Q1 的栅极还没降下来，管子本身还没开，是这颗“天生的二极管”在临时供电。</p>
+      <p><strong>③ Q1 完全导通</strong>：VBUS 继续降，栅极比源极低过了阈值，Q1 打开，导通电阻只有几十毫欧，VSYS 回到几乎等于电池电压。</p>
+      <p>整个过程 VSYS 最低也只比电池低半伏，ESP32 那边有稳压芯片和电容兜着，完全感觉不到。插上 USB 时反过来走一遍，同样不断电。</p>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">5.5</span>Q1 为什么要倒着装</h3>
+    <div class="txt">
+      <p>第 4 课的 Q2，源极 S 接电池，这是 P-MOS 最常见的接法。Q1 却是反过来的：漏极 D 接电池这边（BAT_SW），源极 S 接 VSYS。原因全在体二极管的方向上。</p>
+    </div>
+    <div class="tbl"><table>
+      <thead><tr><th>接法</th><th>体二极管方向</th><th>插着 USB 时会怎样</th></tr></thead>
+      <tbody>
+        <tr><td>QB12 的接法：D 接电池，S 接 VSYS</td><td>电池 → VSYS</td><td>VSYS（4.6V）比电池高，二极管反向截止，USB 的电进不了电池。拔掉 USB 时它又能先导通顶上，正好两头都占便宜。</td></tr>
+        <tr><td>反过来：S 接电池，D 接 VSYS</td><td>VSYS → 电池</td><td>USB 的 4.6V 会顺着体二极管直接灌进电池，完全绕过 TP4056，没有恒流、没有 4.2V 截止，电池会被过充。</td></tr>
+      </tbody>
+    </table></div>
+    <div class="tip"><b>Q2 和 Q1 背靠背</b>：Q2 的体二极管指向电池，Q1 的体二极管指向 VSYS，方向相反。所以只要两颗都关断，无论哪边电压高，电流都过不去。关机时电池彻底隔离，靠的就是这一对。</div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">5.6</span>为什么 D1 用肖特基二极管</h3>
+    <div class="txt">
+      <p>普通硅二极管导通时压降约 0.7–1V，肖特基二极管只有 0.3–0.45V。SS34 是 3A 的肖特基管，压降低有两个好处：</p>
+      <p><strong>发热少</strong>：1A 电流时，SS34 发热约 0.4W，普通二极管要 0.7–1W。</p>
+      <p><strong>VSYS 留得够高</strong>：插着 USB 时 VSYS 约 4.6V，比满电电池的 4.2V 还高 0.4V，Q1 的体二极管稳稳反偏，电池保持隔离。压降太大的话，VSYS 可能接近甚至低于电池电压，电池就会偷偷参与供电，TP4056 判断不出充满。</p>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">5.7</span>自测</h3>
+    <div class="quiz">
+      <details><summary>插着 USB 时，Q1 的栅极和源极各是多少伏？为什么它是关断的？</summary><div class="ans"><p>栅极接 VBUS = 5V，源极接 VSYS ≈ 4.6V，Vgs = +0.4V。P-MOS 要 Vgs 为负（约 −0.9V 以下）才导通，正的 Vgs 只会让它关得更死。</p><button class="show" data-nets="VBUS,VSYS">在原理图上标出 VBUS、VSYS</button></div></details>
+      <details><summary>把 R13 漏焊了，会出什么问题？</summary><div class="ans"><p>拔掉 USB 后，VBUS 那根线悬空，上面还挂着 C1 等电容，电压慢慢漏，Q1 栅极迟迟降不下来，可能停在“半开”状态发热，VSYS 一直靠体二极管供电，比电池低 0.5V。R13 保证栅极被干脆地拉到 0V。</p><button class="show" data-nets="VBUS">在原理图上标出 VBUS（R13 在上面）</button></div></details>
+      <details><summary>电源开关拨在 OFF，插上 USB，板子会亮吗？电池会充电吗？</summary><div class="ans"><p>都会。USB 经 D1 直接给 VSYS 供电，不经过 Q2，所以板子照常工作（方便烧录）；TP4056 的 BAT 脚直接接在电池上，也不经过 Q2，所以照样充电。SW1 只管电池往外供电这一路。</p><button class="show" data-nets="BAT+,BAT_SW">在原理图上标出 BAT+、BAT_SW</button></div></details>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 第 6 课 ============ -->
+<section class="lesson" id="l6">
+  <div class="lhead"><span class="lnum">6</span><div><h2>3.3V 稳压与去耦：给 ESP32 一口稳定的电</h2><p>学完能说清：LDO 怎么把变来变去的 VSYS 稳成 3.3V、电池低到多少它就撑不住、ESP32 旁边为什么要并一大一小两颗电容。对应原理图 B 区右上：U3、C3、C4，以及 C 区的 C5、C6。</p></div></div>
+
+  <div class="sec">
+    <h3><span class="k">6.1</span>LDO 的原理：一个自动拧的水龙头</h3>
+    <div class="txt">
+      <p>ESP32 要的电压是 3.0–3.6V，VSYS 却在 3.0V 到 4.6V 之间变来变去。U3（AP2112K）是一颗 <strong>LDO 线性稳压器</strong>，作用是不管输入怎么变，输出都稳在 3.3V。</p>
+      <p>它里面有三样东西：一个可以调节通断程度的管子（相当于水龙头），一个精准的基准电压，一个放大器。放大器不停地比较输出电压和基准：输出高了就把龙头拧小，低了就拧大，一秒钟调整上百万次。</p>
+      <p>代价是：输入和输出之间多出来的电压，全部在这个“龙头”上变成热。发热 = (输入电压 − 3.3V) × 电流。所以它叫“线性”稳压，效率等于 3.3 ÷ 输入电压。</p>
+    </div>
+    <div class="widget w">
+      <div class="two">
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div class="slider"><label for="ldoVin">输入 VSYS <span id="ldoVinV">4.60 V</span></label><input type="range" id="ldoVin" min="2.8" max="5" step="0.05" value="4.6"></div>
+          <div class="ctrls"><button class="btn" data-vin="4.6">插 USB 4.6V</button><button class="btn" data-vin="4.2">满电 4.2V</button><button class="btn" data-vin="3.5">剩一点 3.5V</button><button class="btn" data-vin="3.15">快没电 3.15V</button></div>
+          <div class="slider"><label for="ldoI">ESP32 用电 <span id="ldoIV">100 mA</span></label><input type="range" id="ldoI" min="10" max="500" step="10" value="100"></div>
+          <div class="ctrls"><button class="btn" data-ia="40">空闲 40mA</button><button class="btn" data-ia="100">蓝牙连接 100mA</button><button class="btn" data-ia="300">发射峰值 300mA</button></div>
+        </div>
+        <div><svg id="ldosvg" viewBox="0 0 360 250" role="img" aria-label="LDO 输入电压被分成输出的 3.3V 和变成热量的部分"></svg></div>
+      </div>
+      <div class="readout">
+        <div class="ro"><small>输出 3V3</small><b id="ldoOut">3.30 V</b></div>
+        <div class="ro"><small>压差（龙头上的电压）</small><b id="ldoDrop">1.30 V</b></div>
+        <div class="ro"><small>LDO 发热</small><b id="ldoP">0.13 W</b></div>
+        <div class="ro"><small>效率</small><b id="ldoEff">72 %</b></div>
+      </div>
+      <p class="status" id="ldoText"></p>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">6.2</span>最小压差：电池低了为什么撑不住</h3>
+    <div class="txt">
+      <p>龙头开到最大也有一点电阻，所以输入至少要比 3.3V 高一点点，这个差值叫<strong>最小压差</strong>（dropout）。AP2112K 的数据手册（3.3V 版）写着：300mA 时 125mV，600mA 时 250mV（典型值）。也就是说电池 3.45V 以上、电流不超过 300mA 时，3V3 都能稳住。</p>
+      <p>电池再低，LDO 就“放弃治疗”，输出等于输入减去压差，一路跟着往下掉。掉到 3.0V 以下，ESP32 就会欠压重启。所以程序里要盯着电池电压：低于 3.6V 先让电机减速并闪灯提醒，低于 3.3V 就停船（要回升到 3.5V 才放开，免得电机一停电池回弹、反复启停）。上面的滑块拖到 3.15V、电流调到 300mA 就能看到这个情况。</p>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">6.3</span>去耦电容：ESP32 脚边的小水箱</h3>
+    <div class="txt">
+      <p>ESP32 的用电不是平平稳稳的。蓝牙每次发射，电流会在几微秒内从几十毫安跳到两三百毫安。LDO 调节需要时间，PCB 走线本身又有一点电感，电流突然变大时，电跟不上，ESP32 脚上的电压就会往下一沉。</p>
+      <p>解决办法是在 ESP32 电源脚旁边放电容，就像在水龙头边上放一个小水箱：用水突然变多时，先从水箱里取，等主水管反应过来再把水箱补满。这块板放了两颗：</p>
+      <p><strong>C6 100nF</strong>：个头小、内部电感小，反应最快，专门对付纳秒级的尖刺。<strong>C5 10µF</strong>：存的电多，对付持续几微秒到几十微秒的大口用电。一大一小搭配，从快到慢都照顾到。STM32 每个 VDD 脚边那颗 100nF 也是这个道理。</p>
+    </div>
+    <div class="widget w">
+      <div class="ctrls">
+        <button class="btn primary" id="dcGo">ESP32 开始发射</button>
+        <span class="lab" style="margin-left:8px">C5 10µF</span><button class="btn" data-c5="1" aria-pressed="true">有</button><button class="btn" data-c5="0" aria-pressed="false">没有</button>
+        <span class="lab" style="margin-left:8px">C6 100nF</span><button class="btn" data-c6="1" aria-pressed="true">有</button><button class="btn" data-c6="0" aria-pressed="false">没有</button>
+      </div>
+      <svg id="dcsvg" viewBox="0 0 640 240" role="img" aria-label="示波器：ESP32 电源脚上的电压在发射瞬间的变化"></svg>
+      <p class="status" id="dcText">点“ESP32 开始发射”，看电源脚上的电压。</p>
+    </div>
+    <div class="txt">
+      <p>LDO 两边也各有电容：输入 C3（1µF）、输出 C4（10µF）。AP2112K 的数据手册写着配 1µF 陶瓷电容就能稳定（建议用 X7R 或 X5R）。LDO 内部靠反馈环路调节，输出端电容太小时，环路可能不稳、自己振荡起来。</p>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">6.4</span>为什么不用效率更高的开关稳压</h3>
+    <div class="txt">
+      <p>DC-DC 开关稳压效率能到 90%，LDO 在 USB 供电时只有 70% 左右。但这里 ESP32 平均只用 0.1A，LDO 多发的热只有 0.1W 量级，电池续航主要被电机吃掉，换 DC-DC 省不了多少电。LDO 外围只要两颗电容，没有电感、没有开关噪声，对蓝牙射频更友好，小板子上它是更省心的选择。</p>
+      <p>AP2112K 的静态电流只有 55µA（自己维持工作用的电），长时间开机也几乎不耗电，这也是选它的原因之一。</p>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="k">6.5</span>自测</h3>
+    <div class="quiz">
+      <details><summary>插着 USB、ESP32 用 100mA 时，U3 发多少热？</summary><div class="ans"><p>(4.6 − 3.3) × 0.1 = 0.13W，SOT-23-5 封装完全没问题。</p><button class="show" data-nets="VSYS,3V3">在原理图上标出 VSYS、3V3</button></div></details>
+      <details><summary>电池 3.3V 时，3V3 还有 3.3V 吗？</summary><div class="ans"><p>没有了。输入都只有 3.3V，再减去压差，300mA 时大约只剩 3.18V。ESP32 还能工作（下限 3.0V），但已经没有余量，蓝牙一发射就可能掉到 3.0V 以下重启。所以电池到 3.6V 左右就该提醒充电，3.3V 直接停机。</p></div></details>
+      <details><summary>U3 的 EN 脚接在哪？为什么？</summary><div class="ans"><p>接 VSYS。EN 是使能脚，高电平工作。直接接输入，等于只要 VSYS 有电，3.3V 就开着。整板的开关由前面的 Q2 负责，这里不需要再单独控制。</p><button class="show" data-nets="VSYS">在原理图上标出 VSYS</button></div></details>
+    </div>
+  </div>
+</section>

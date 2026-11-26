@@ -1,0 +1,22 @@
+
+/* 第 5–9 课 */
+:root{--c1:#56B4E9;--c2:#E69F00;--c3:#CC79A7}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){--c1:#0072B2;--c2:#B86E00;--c3:#A8508A}}
+:root[data-theme="light"]{--c1:#0072B2;--c2:#B86E00;--c3:#A8508A}
+.code{margin:0;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:14px 16px;font-family:var(--f-mono);font-size:13px;line-height:1.65;overflow-x:auto;white-space:pre;color:var(--fg);tab-size:2;max-height:70vh}
+.code .cm{color:var(--muted)} .code .kw{color:var(--sig)} .code .n{color:var(--pow)}
+.hov{font-size:13.5px;color:var(--muted);font-variant-numeric:tabular-nums;min-height:1.5em}
+.simgrid{display:grid;grid-template-columns:260px minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:760px){.simgrid{grid-template-columns:minmax(0,1fr)}}
+.simleft{display:flex;flex-direction:column;gap:10px;align-items:center;min-width:0}
+#joy{width:240px;max-width:100%;height:auto;touch-action:none;cursor:grab;border-radius:50%;display:block}
+#joy:active{cursor:grabbing}
+.simright{display:flex;flex-direction:column;gap:8px;min-width:0}
+#pond{width:100%;display:block;border-radius:12px;border:1px solid var(--line);background:var(--panel2)}
+.dpad{justify-content:center}
+#bcTbl tr.done td{color:var(--muted)}
+#bcTbl tr.done td:nth-child(2){text-decoration:line-through}
+#bcTbl input{width:18px;height:18px;accent-color:var(--ok);cursor:pointer}
+#recap .card{transition:border-color .2s}
+#recap .card:hover{border-color:var(--sig)}
+.done-foot{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
