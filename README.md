@@ -25,7 +25,9 @@
 
 ## 直接用成品
 
-- **看课**：用浏览器打开 `outputs/QB12/QB12_电路课.html`、`outputs/QB12/QB12_PCB课.html`，单文件，不用联网。
+**在线看课和 3D 预览：https://galis.github.io/qb12-boat/**
+
+- **看课**：上面的网址，或者下载后用浏览器打开 `outputs/QB12/QB12_电路课.html`、`outputs/QB12/QB12_PCB课.html`，单文件，不用联网。
 - **做板子**：嘉立创下单用 `outputs/QB12/` 里的 `QB12_Gerber.zip`、`QB12_BOM_嘉立创SMT.csv`、`QB12_CPL_坐标文件.csv`。ESP32 模组要选标准型 SMT（经济型不贴）。
 - **打印船体**：`QB12_hull.stl`、`QB12_deck.stl`、`QB12_canopy.stl`、`QB12_knob.stl`（旋钮打 2 个）。我们用的是树脂打印。
 - **烧固件**：见 `firmware/README.md`。

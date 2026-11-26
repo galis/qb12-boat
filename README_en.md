@@ -27,7 +27,9 @@ Code comments and documents are in Simplified Chinese.
 
 ## Use the ready-made files
 
-- **Courses**: open `outputs/QB12/QB12_电路课.html` (circuit) or `outputs/QB12/QB12_PCB课.html` (PCB) in a browser. Single files, work offline.
+**Courses and 3D preview online: https://galis.github.io/qb12-boat/**
+
+- **Courses**: use the link above, or open `outputs/QB12/QB12_电路课.html` (circuit) or `outputs/QB12/QB12_PCB课.html` (PCB) in a browser. Single files, work offline.
 - **Board**: order with `QB12_Gerber.zip`, `QB12_BOM_嘉立创SMT.csv` (BOM) and `QB12_CPL_坐标文件.csv` (pick-and-place) from `outputs/QB12/`. Choose standard SMT assembly so the ESP32 module gets placed.
 - **Hull**: print `QB12_hull.stl`, `QB12_deck.stl`, `QB12_canopy.stl` and two `QB12_knob.stl`. Ours was resin-printed.
 - **Firmware**: see `firmware/README.md`.

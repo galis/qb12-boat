@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Boat QB12</title>
+<meta name="description" content="手柄遥控的 3D 打印双体船：ESP32-S3 主控板、船体、固件，以及电路课和 PCB 课。">
+<style>
+:root {
+  --bg: #f7f7f5; --card: #ffffff; --text: #1c1d1f; --muted: #5d6168; --line: #e3e3df;
+  --accent: #1f6feb; --accent-soft: #e8f0fe; --tag: #f1f1ee;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111214; --card: #1a1b1e; --text: #e8e8e6; --muted: #a0a3a8; --line: #2c2d31;
+    --accent: #6ea8fe; --accent-soft: #1c2a40; --tag: #24252a;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font: 16px/1.65 -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+}
+main { max-width: 960px; margin: 0 auto; padding: 40px 16px 64px; }
+h1 { font-size: 32px; line-height: 1.25; margin: 0 0 8px; letter-spacing: -0.01em; }
+.sub { color: var(--muted); margin: 0 0 24px; }
+.heros { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.hero { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; border-radius: 12px; border: 1px solid var(--line); display: block; background: #eef0f2; }
+@media (max-width: 620px) { .heros { grid-template-columns: 1fr; } }
+h2 { font-size: 20px; margin: 40px 0 12px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+a.card {
+  display: block; padding: 16px 18px; border-radius: 10px; background: var(--card);
+  border: 1px solid var(--line); color: inherit; text-decoration: none; transition: border-color .15s, transform .15s;
+}
+a.card:hover { border-color: var(--accent); transform: translateY(-1px); }
+a.card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.card b { display: block; font-size: 17px; margin-bottom: 4px; }
+.card span { color: var(--muted); font-size: 14px; }
+.size { display: inline-block; margin-top: 8px; font-size: 12px; padding: 1px 8px; border-radius: 99px; background: var(--tag); color: var(--muted); }
+.primary { background: var(--accent-soft); border-color: transparent; }
+table { width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; font-size: 15px; }
+td { padding: 10px 14px; border-top: 1px solid var(--line); vertical-align: top; }
+tr:first-child td { border-top: 0; }
+td:first-child { white-space: nowrap; color: var(--muted); width: 1%; }
+a { color: var(--accent); }
+.note { color: var(--muted); font-size: 14px; }
+footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+@media (max-width: 520px) { h1 { font-size: 26px; } td:first-child { white-space: normal; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Boat QB12</h1>
+  <p class="sub">手柄遥控的 3D 打印双体船：自己画的 ESP32-S3 主控板、脚本生成的船体、固件，配两门网页课。<br>
+  A gamepad-controlled, 3D-printed RC catamaran with its own board, firmware and two courses (in Chinese).</p>
+  <div class="heros">
+    <img class="hero" src="assets/qb12_boat.jpg" alt="QB12 双体船渲染图：灰色船身、红色水线下">
+    <img class="hero" src="outputs/QB12/QB12_PCB_3D_预览.png" alt="QB12 主控板 3D 渲染：ESP32-S3 模组、USB-C、电机和电池接口">
+  </div>
+
+  <h2>课程</h2>
+  <div class="grid">
+    <a class="card primary" href="outputs/QB12/QB12_电路课.html"><b>电路课 · 10 课</b><span>从 USB-C 供电、锂电充电、稳压讲到 H 桥和 PWM，全部以这块板子为例。</span></a>
+    <a class="card primary" href="outputs/QB12/QB12_PCB课.html"><b>PCB 课 · 9 课</b><span>从原理图、布局、布线讲到 DRC 和下单，带可交互的板子视图。</span><i class="size">3.8 MB</i></a>
+  </div>
+
+  <h2>3D 和动画</h2>
+  <div class="grid">
+    <a class="card" href="outputs/QB12/QB12_3D预览.html"><b>3D 预览</b><span>整船可拖动旋转，船体、甲板、舱罩可以拆开看。</span><i class="size">2.4 MB</i></a>
+    <a class="card" href="outputs/QB12/QB12_装配动画.html"><b>装配动画</b><span>一步步装电机、尾轴、板子、电池和甲板。</span><i class="size">12.5 MB</i></a>
+    <a class="card" href="outputs/QB12/QB12_电池接线动画.html"><b>电池接线动画</b><span>电池裸线焊到插头线上：先量极性，剪短，套热缩管，红对红、黑对黑。</span></a>
+  </div>
+
+  <h2>做一艘</h2>
+  <table>
+    <tr><td>主控板</td><td><a href="outputs/QB12/QB12_Gerber.zip">Gerber</a> · <a href="outputs/QB12/QB12_BOM_嘉立创SMT.csv">BOM</a> · <a href="outputs/QB12/QB12_CPL_坐标文件.csv">坐标文件</a> · <a href="outputs/QB12/QB12_原理图_RevA.pdf">原理图 PDF</a> · <a href="outputs/QB12/QB12_KiCad工程.zip">KiCad 工程</a><br><span class="note">2 层，56 × 38 mm。ESP32 模组要选标准型贴片（经济型不贴）。</span></td></tr>
+    <tr><td>船体</td><td><a href="outputs/QB12/QB12_hull.stl">船体</a> · <a href="outputs/QB12/QB12_deck.stl">甲板</a> · <a href="outputs/QB12/QB12_canopy.stl">舱罩</a> · <a href="outputs/QB12/QB12_knob.stl">旋钮</a>（打 2 个）<br><span class="note">我们用的是树脂打印。</span></td></tr>
+    <tr><td>固件</td><td><a href="https://github.com/galis/qb12-boat/tree/main/firmware">firmware/</a>：Xbox 手柄模式和手机 Wi‑Fi 网页模式，编译和烧录见那里的 README。</td></tr>
+    <tr><td>源文件</td><td><a href="https://github.com/galis/qb12-boat">GitHub 仓库</a>：KiCad 工程、船体脚本、装配检查、课程源码。</td></tr>
+  </table>
+
+  <h2>现状（Rev A）</h2>
+  <p>板子已打样、上电，桌面测试全部通过。第一次下水能跑，但蓝牙不到 10 m 就断，推测是 PCB 天线离水面太近、手柄发射功率小。固件已经加了手机 Wi‑Fi 模式，距离还没实测；Rev B 打算换外接天线的模组。</p>
+
+  <footer>
+    硬件 CERN-OHL-P-2.0 · 代码 MIT · 文档和课程 CC BY 4.0 · 见 <a href="https://github.com/galis/qb12-boat/blob/main/LICENSE">LICENSE</a> 和 <a href="https://github.com/galis/qb12-boat/blob/main/NOTICE.md">NOTICE</a>
+  </footer>
+</main>
+</body>
+</html>

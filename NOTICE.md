@@ -17,7 +17,7 @@ They are included only so that the KiCad project opens with 3D models. Check the
 
 | 内容 | 用在哪里 | 许可证 | 获取方式 |
 |---|---|---|---|
-| three.js 0.128.0 | `viewer/` 和课程里的 3D 页面，从 cdn.jsdelivr.net 加载 | MIT | 自动加载 |
+| three.js r128（0.128.0） | `viewer/` 生成的 3D 预览和装配动画，从 cdnjs.cloudflare.com、cdn.jsdelivr.net 加载 | MIT | 自动加载 |
 | Freerouting 1.9.0 | `hardware/pcb/` 自动布线 | GPL-3.0 | 从 https://github.com/freerouting/freerouting/releases/tag/v1.9.0 下载，放到 `tools/freerouting-1.9.0.jar` |
 | Bluepad32 板包（esp32-bluepad32） | `firmware/` | 见其项目 | `firmware/build.sh` 第一次运行时自动安装 |
 | 元件数据手册 | 设计参考 | 各厂商 | 在立创商城按料号搜索（例如 TP4056 是 C16581） |
