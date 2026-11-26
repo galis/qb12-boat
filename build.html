@@ -7,14 +7,9 @@
 <meta name="description" content="Boat QB12 船体怎么打印、要买哪些材料和工具。">
 <style>
 :root {
+  color-scheme: light;
   --bg: #f7f7f5; --card: #ffffff; --text: #1c1d1f; --muted: #5d6168; --line: #e3e3df;
   --accent: #1f6feb; --accent-soft: #e8f0fe; --tag: #f1f1ee; --warn: #9a6700; --warn-soft: #fff8e5;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #111214; --card: #1a1b1e; --text: #e8e8e6; --muted: #a0a3a8; --line: #2c2d31;
-    --accent: #6ea8fe; --accent-soft: #1c2a40; --tag: #24252a; --warn: #e3b341; --warn-soft: #2a2414;
-  }
 }
 * { box-sizing: border-box; }
 body {
@@ -44,7 +39,7 @@ li { margin: 4px 0; }
 a { color: var(--accent); }
 footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
 td:first-child { white-space: nowrap; }
-@media (max-width: 720px) { .wrap table { min-width: 720px; } }
+@media (max-width: 720px) { .wrap table { min-width: 860px; } }
 @media (max-width: 520px) { h1 { font-size: 25px; } th, td { padding: 8px 10px; } }
 </style>
 </head>
@@ -67,7 +62,7 @@ td:first-child { white-space: nowrap; }
 
   <h3>我们怎么打的</h3>
   <ul>
-    <li>在<b>嘉立创 3D 打印</b>下单，<b>光敏树脂（SLA）</b>，我们用过 9600 树脂。上传 4 个 STL，旋钮数量填 2。</li>
+    <li>在<b>嘉立创 3D 打印</b>下单：<b>9600 光敏树脂（SLA），哑光白</b>，表面处理选「打磨-粗磨」，交期 96 小时。上传 4 个 STL，旋钮数量填 2。我们 2026-11 下单时 4 种 5 件合计约 ¥119（不含运费）。</li>
     <li>船体和甲板最长 239 mm，大多数桌面树脂打印机放不下，找代打比较省事。</li>
     <li>下单备注里写上：尾管两端 Ø2.4 的小孔<b>不要堵、不要扩</b>；电机卡环内圈不要留支撑痕；内腔洗干净。</li>
     <li>审核如果报「法向错误」，可能是误报（我们用 trimesh 查过没有翻转的面），可以选官方人工处理。</li>
@@ -91,23 +86,23 @@ td:first-child { white-space: nowrap; }
   </ol>
 
   <h2 id="parts">材料清单</h2>
-  <p>主控板上的元件已经在 <a href="outputs/QB12/QB12_BOM_嘉立创SMT.csv">BOM</a> 里，嘉立创贴好。下面是板子以外要自己买的。<kbd>搜索词</kbd>可以直接在淘宝或立创商城里搜，规格按「规格」一列核对。</p>
+  <p>主控板上的元件已经在 <a href="outputs/QB12/QB12_BOM_嘉立创SMT.csv">BOM</a> 里，嘉立创贴好。下面是板子以外要自己买的。<kbd>搜索词</kbd>可以直接在淘宝或立创商城里搜，规格按「规格」一列核对。「我们买的」是 2026 年 10–11 月实际下单的商品页，价格是当时的单价（不含运费），<b>链接可能失效，失效了就按规格搜</b>。</p>
   <div class="wrap"><table>
-    <tr><th>零件</th><th>规格</th><th>数量</th><th>搜索词</th></tr>
-    <tr><td>电机</td><td>万宝至 RF-130CH-12250，Ø17.1 × 22.8 mm，6 V，轴 Ø1.5。卡环按这个尺寸做的，换型号要改模型</td><td class="n">2（另备 2 个）</td><td><kbd>RF-130CH-12250</kbd></td></tr>
-    <tr><td>尾轴</td><td>304 不锈钢光轴 Ø2 mm，切成 2 根，每根至少 136 mm，两根切成一样长</td><td class="n">1 根，≥ 30 cm</td><td><kbd>304 不锈钢光轴 2mm</kbd></td></tr>
-    <tr><td>联轴器</td><td>硅胶管，内径 1.3 mm（外径 2.3），每段 ≤ 10 mm，连电机轴和尾轴</td><td class="n">2 段</td><td><kbd>硅胶管 内径1.3</kbd></td></tr>
-    <tr><td>螺旋桨</td><td>尼龙二叶，直径 26 mm，孔径约 1.95（直接插 Ø2 轴），<b>正反各一个</b></td><td class="n">1 对</td><td><kbd>26mm 螺旋桨 正反桨 2mm孔</kbd></td></tr>
-    <tr><td>电池</td><td>603450 锂聚合物电池，3.7 V 1200 mAh，<b>带保护板</b>，不超过 50 × 34 × 6 mm（电池仓内腔 51 × 35）</td><td class="n">1</td><td><kbd>603450 锂电池 1200mAh 保护板</kbd></td></tr>
-    <tr><td>电池插头线</td><td>PH2.0-2P 端子线，一头带胶壳，200 mm，26AWG（立创 C5221412）。焊到电池裸线上，插板子 J2</td><td class="n">1</td><td><kbd>PH2.0 2P 端子线 单头</kbd></td></tr>
-    <tr><td>电机线</td><td>PH2.0-2P 端子线，单头，100 mm，26AWG。另一头焊电机，插 J3、J4</td><td class="n">2</td><td><kbd>PH2.0 2P 端子线 单头 10cm</kbd></td></tr>
-    <tr><td>电机滤波电容</td><td>瓷片电容 100 nF（印字 104），每个电机两端焊一个</td><td class="n">2</td><td><kbd>瓷片电容 104 50V</kbd></td></tr>
-    <tr><td>密封泡棉条</td><td>单面背胶 EVA 或硅胶泡棉条，厚 1 mm、宽 3 mm，贴船体顶面一圈槽，舱罩裙边也贴一圈</td><td class="n">约 2 m</td><td><kbd>背胶泡棉条 1mm厚 3mm宽</kbd></td></tr>
-    <tr><td>双面泡棉胶</td><td>厚约 0.8 mm，宽 1 cm，粘电池</td><td class="n">一小段</td><td><kbd>3M 双面泡棉胶 0.8mm</kbd></td></tr>
-    <tr><td>橡皮筋</td><td>普通橡皮筋。2 根压电池、2 根压舱罩</td><td class="n">4</td><td><kbd>橡皮筋</kbd></td></tr>
-    <tr><td>硅脂</td><td>硅基润滑脂，抹尾轴孔</td><td class="n">1 小支</td><td><kbd>硅脂 润滑</kbd></td></tr>
-    <tr><td>热缩管</td><td>Ø2–3 mm，包焊点</td><td class="n">少量</td><td><kbd>热缩管 套装</kbd></td></tr>
-    <tr><td>手柄</td><td>Xbox Series 无线手柄（型号 1914，蓝牙），固件 v5.15 以上。没有手柄也可以用手机连船上的 Wi‑Fi 热点，网页遥控</td><td class="n">1（可选）</td><td>—</td></tr>
+    <tr><th>零件</th><th>规格</th><th>数量</th><th>参考价</th><th>搜索词</th><th>我们买的</th></tr>
+    <tr><td>电机</td><td>万宝至 RF-130CH-12250，Ø17.1 × 22.8 mm，6 V，轴 Ø1.5。卡环按这个尺寸做的，换型号要改模型</td><td class="n">2（另备 2 个）</td><td class="n">¥3.9 / 个</td><td><kbd>RF-130CH-12250</kbd></td><td class="n"><a href="https://item.taobao.com/item.htm?id=777254703042">淘宝</a></td></tr>
+    <tr><td>尾轴</td><td>304 不锈钢光轴 Ø2 mm，切成 2 根，每根至少 136 mm，两根切成一样长</td><td class="n">1 根，≥ 30 cm</td><td class="n">¥3 / 米</td><td><kbd>304 不锈钢光轴 2mm</kbd></td><td class="n"><a href="https://item.taobao.com/item.htm?id=550718372525">淘宝</a></td></tr>
+    <tr><td>联轴器</td><td>硅胶管，内径 1.3 mm（外径 2.3），每段 ≤ 10 mm，连电机轴和尾轴</td><td class="n">2 段</td><td class="n">—</td><td><kbd>硅胶管 内径1.3</kbd></td><td class="n"><a href="https://item.taobao.com/item.htm?id=620285430839">淘宝</a></td></tr>
+    <tr><td>螺旋桨</td><td>尼龙二叶，直径 26 mm，孔径约 1.95（直接插 Ø2 轴），<b>正反各一个</b></td><td class="n">1 对</td><td class="n">¥3.5 / 对</td><td><kbd>26mm 螺旋桨 正反桨 2mm孔</kbd></td><td class="n"><a href="https://item.taobao.com/item.htm?id=611498899811">淘宝</a></td></tr>
+    <tr><td>电池</td><td>603450 锂聚合物电池，3.7 V 1200 mAh，<b>带保护板</b>，不超过 50 × 34 × 6 mm（电池仓内腔 51 × 35）</td><td class="n">1</td><td class="n">¥6.3</td><td><kbd>603450 锂电池 1200mAh 保护板</kbd></td><td class="n"><a href="https://item.taobao.com/item.htm?id=591890680034">淘宝</a></td></tr>
+    <tr><td>电池插头线</td><td>PH2.0-2P 端子线，一头带胶壳，200 mm，26AWG。焊到电池裸线上，插板子 J2</td><td class="n">1（起订 5）</td><td class="n">¥1.1 / 条</td><td><kbd>C5221412</kbd></td><td class="n"><a href="https://so.szlcsc.com/global.html?k=C5221412">立创商城</a></td></tr>
+    <tr><td>电机线</td><td>PH2.0-2P 端子线，单头，100 mm，26AWG。另一头焊电机，插 J3、J4</td><td class="n">2</td><td class="n">¥2.1 / 20 条</td><td><kbd>PH2.0 2P 端子线 单头 10cm</kbd></td><td class="n"><a href="https://item.taobao.com/item.htm?id=800307627200">淘宝</a></td></tr>
+    <tr><td>电机滤波电容</td><td>瓷片电容 100 nF（印字 104），每个电机两端焊一个</td><td class="n">2</td><td class="n">¥2 / 50 个</td><td><kbd>瓷片电容 104 50V</kbd></td><td class="n"><a href="https://item.taobao.com/item.htm?id=959826854156">淘宝</a></td></tr>
+    <tr><td>密封泡棉条</td><td>单面背胶泡棉条，厚 1 mm、宽 3 mm，贴船体顶面一圈槽，舱罩裙边也贴一圈</td><td class="n">约 2 m</td><td class="n">¥13.8</td><td><kbd>背胶泡棉条 1mm厚 3mm宽</kbd></td><td class="n"><a href="https://detail.tmall.com/item.htm?id=987997131816">天猫</a></td></tr>
+    <tr><td>双面泡棉胶</td><td>厚约 0.8 mm，宽 1 cm，粘电池</td><td class="n">一小段</td><td class="n">¥9.1 / 3 m</td><td><kbd>3M 双面泡棉胶 0.8mm</kbd></td><td class="n"><a href="https://item.taobao.com/item.htm?id=14603730781">淘宝</a></td></tr>
+    <tr><td>橡皮筋</td><td>普通橡皮筋。2 根压电池、2 根压舱罩</td><td class="n">4</td><td class="n">¥2.6 / 100 条</td><td><kbd>橡皮筋</kbd></td><td class="n"><a href="https://item.taobao.com/item.htm?id=895954744587">淘宝</a></td></tr>
+    <tr><td>硅脂</td><td>硅基润滑脂，抹尾轴孔</td><td class="n">1 小支</td><td class="n">¥7</td><td><kbd>硅脂 润滑</kbd></td><td class="n"><a href="https://item.taobao.com/item.htm?id=1063377263139">淘宝</a></td></tr>
+    <tr><td>热缩管</td><td>Ø2–3 mm，包焊点</td><td class="n">少量</td><td class="n">—</td><td><kbd>热缩管 套装</kbd></td><td class="n">—</td></tr>
+    <tr><td>手柄</td><td>Xbox Series 无线手柄（型号 1914，蓝牙），固件 v5.15 以上。没有手柄也可以用手机连船上的 Wi‑Fi 热点，网页遥控</td><td class="n">1（可选）</td><td class="n">—</td><td>—</td><td class="n">—</td></tr>
   </table></div>
   <p class="note">规格来自设计文件和我们实际买的东西。商家页面上的尺寸不一定准，电机、电池到手先用卡尺量一下；和上面不一样就改 <code>build_model.py</code> 里的 <code>MOTOR_*</code>、<code>BAT_*</code>，重跑装配检查再出 STL。</p>
 
